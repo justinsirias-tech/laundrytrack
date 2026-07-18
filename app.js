@@ -672,17 +672,31 @@ const updateKanbanBoard = () => {
             const qrUrl = `https://api.qrserver.com/v1/create-qr-code/?size=80x80&data=${qrData}`;
             return `
             <div class="kanban-card" draggable="true" data-id="${order.id}">
-                <div class="card-header">
-                    <span class="card-id">${order.id}</span>
-                    <i data-lucide="grip-horizontal" style="color: var(--text-muted); width: 16px;"></i>
+                <div class="card-header" style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 0.6rem; border-bottom: 1px solid rgba(34, 41, 69, 0.05); padding-bottom: 0.4rem;">
+                    <span class="card-id" style="font-size: 0.85rem; font-weight: 700; color: var(--primary);">#${order.id}</span>
+                    <div style="display: flex; align-items: center; gap: 0.4rem;">
+                        <span style="font-size: 0.7rem; color: var(--text-muted); font-weight: 600;">${order.date}</span>
+                        <i data-lucide="grip-horizontal" style="color: var(--text-muted); width: 14px; height: 14px;"></i>
+                    </div>
                 </div>
-                <div style="display: flex; gap: 10px; align-items: center; margin-bottom: 0.5rem;">
-                    <img src="${qrUrl}" alt="QR" style="cursor: pointer; width: 44px; height: 44px; border-radius: 4px; padding: 2px; background: white; border: 1px solid var(--border-glass);" title="Click to print QR Tag" draggable="false" />
-                    <div class="card-title" style="margin-bottom: 0;">${order.customerName}</div>
+                
+                <div style="display: flex; justify-content: space-between; align-items: center; gap: 0.75rem; margin-bottom: 0.6rem;">
+                    <div style="display: flex; flex-direction: column; gap: 0.25rem; overflow: hidden; width: 100%;">
+                        <div class="card-title" style="margin: 0; font-size: 1.05rem; font-weight: 700; color: var(--text-main); white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">${order.customerName}</div>
+                        <div style="display: flex; flex-wrap: wrap; gap: 0.25rem;">
+                            <span class="service-type-badge" style="font-size: 0.7rem; color: #fff; background: var(--primary); padding: 0.15rem 0.45rem; border-radius: 6px; font-weight: 600; text-transform: uppercase; letter-spacing: 0.3px; white-space: nowrap;">
+                                ${t(order.serviceType)}
+                            </span>
+                        </div>
+                    </div>
+                    <img src="${qrUrl}" alt="QR" style="cursor: pointer; width: 44px; height: 44px; border-radius: 6px; padding: 2px; background: white; border: 1px solid var(--border-glass); flex-shrink: 0;" title="Click to print QR Tag" draggable="false" />
                 </div>
-                <div class="card-meta">
-                    <span>${t(order.serviceType)}</span>
-                    <span style="display: flex; gap: 4px; align-items: center;">${itemsHtml}</span>
+                
+                <div style="border-top: 1px dashed rgba(34, 41, 69, 0.1); padding-top: 0.5rem; display: flex; flex-direction: column; gap: 0.25rem;">
+                    <div style="font-size: 0.65rem; text-transform: uppercase; color: var(--text-muted); font-weight: 700; letter-spacing: 0.5px;">Items</div>
+                    <div class="card-items-list" style="display: flex; flex-wrap: wrap; gap: 0.25rem 0.4rem; font-size: 0.8rem; line-height: 1.4;">
+                        ${itemsHtml}
+                    </div>
                 </div>
             </div>
         `}).join('');
