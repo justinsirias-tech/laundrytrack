@@ -385,7 +385,7 @@ app.post('/api/categories/assign', async (req, res) => {
 app.get('/api/clothing-brands', async (req, res) => {
     try {
         const result = await pool.query('SELECT name FROM clothing_brands ORDER BY name ASC');
-        res.json(result.rows.map(row => row.name));
+        res.json(result.rows);
     } catch (err) {
         console.error(err);
         res.status(500).json({ error: err.message });
