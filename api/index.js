@@ -32,8 +32,11 @@ const ensureDb = async () => {
 };
 
 app.use('/api', async (req, res, next) => {
+    console.log(`[API Request] ${req.method} ${req.path}`);
     try {
+        console.log('Ensuring DB...');
         await ensureDb();
+        console.log('DB Ensured.');
     } catch (e) {
         console.error('Failed to initialize DB', e);
     }
@@ -133,30 +136,33 @@ const initDatabase = async () => {
         console.log('Database tables successfully initialized.');
 
         // Seed default clothing types if empty
-        const typesCount = await pool.query('SELECT COUNT(*) FROM clothing_types');
+        const typesCount = await client.query('SELECT COUNT(*) FROM clothing_types');
         if (parseInt(typesCount.rows[0].count) === 0) {
             console.log('Seeding default clothing types into database...');
             for (const name of DEFAULT_CLOTHING_TYPES) {
-                await pool.query('INSERT INTO clothing_types (name) VALUES ($1) ON CONFLICT DO NOTHING', [name]);
+                await client.query('INSERT INTO clothing_types (name) VALUES ($1) ON CONFLICT DO NOTHING', [name]);
             }
         }
 
         // Seed default categories if empty
-        const catsCount = await pool.query('SELECT COUNT(*) FROM item_categories');
+        const catsCount = await client.query('SELECT COUNT(*) FROM item_categories');
         if (parseInt(catsCount.rows[0].count) === 0) {
             console.log('Seeding default categories and assignments into database...');
             for (const cat of DEFAULT_CATEGORIES) {
-                await pool.query('INSERT INTO item_categories (id, name) VALUES ($1, $2)', [cat.id, cat.name]);
+                await client.query('INSERT INTO item_categories (id, name) VALUES ($1, $2)', [cat.id, cat.name]);
                 for (const item of cat.items) {
-                    await pool.query('INSERT INTO category_items (category_id, clothing_type) VALUES ($1, $2) ON CONFLICT DO NOTHING', [cat.id, item]);
+                    await client.query('INSERT INTO category_items (category_id, clothing_type) VALUES ($1, $2) ON CONFLICT DO NOTHING', [cat.id, item]);
                 }
             }
         }
 
         // Seed default clothing brands
-        console.log('Syncing default clothing brands in database...');
-        for (const name of DEFAULT_CLOTHING_BRANDS) {
-            await pool.query('INSERT INTO clothing_brands (name) VALUES ($1) ON CONFLICT DO NOTHING', [name]);
+        const brandsCount = await client.query('SELECT COUNT(*) FROM clothing_brands');
+        if (parseInt(brandsCount.rows[0].count) === 0) {
+            console.log('Syncing default clothing brands in database...');
+            for (const name of DEFAULT_CLOTHING_BRANDS) {
+                await client.query('INSERT INTO clothing_brands (name) VALUES ($1) ON CONFLICT DO NOTHING', [name]);
+            }
         }
 
     } catch (err) {
@@ -171,9 +177,13 @@ const initDatabase = async () => {
 
 // 1. Get all orders
 app.get('/api/orders', async (req, res) => {
+    console.log('GET /api/orders route handler entered');
     try {
+        console.log('Querying orders...');
         const ordersRes = await pool.query('SELECT * FROM orders ORDER BY created_at ASC');
+        console.log('Orders query complete. Querying items...');
         const itemsRes = await pool.query('SELECT * FROM order_items');
+        console.log('Items query complete.');
         
         // Group items by order ID
         const itemsMap = {};
@@ -201,9 +211,10 @@ app.get('/api/orders', async (req, res) => {
             items: itemsMap[order.id] || []
         }));
         
+        console.log('Sending response for GET /api/orders');
         res.json(formattedOrders);
     } catch (err) {
-        console.error(err);
+        console.error('Error in GET /api/orders:', err);
         res.status(500).json({ error: err.message });
     }
 });
@@ -395,7 +406,7 @@ app.post('/api/clothing-brands', async (req, res) => {
 });
 
 // Initialize Database on boot
-initDatabase().catch(console.error);
+dbInitPromise = initDatabase().then(() => { dbInitialized = true; }).catch(console.error);
 
 // Start server locally if not in a serverless environment
 if (process.env.NODE_ENV !== 'production') {
