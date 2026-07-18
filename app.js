@@ -2060,10 +2060,20 @@ const openOrderModal = (orderId) => {
         const itemQrUrl = `https://api.qrserver.com/v1/create-qr-code/?size=100x100&data=${encodeURIComponent(item.trackingId)}`;
 
         return `
-        <div class="added-item-row" style="background: var(--bg-glass-solid); border: 1px solid var(--border-glass); color: var(--text-main);">
-            <div class="added-item-info">
+        <div class="added-item-row" style="background: var(--bg-glass-solid); border: 1px solid var(--border-glass); color: var(--text-main); display: flex; align-items: center; gap: 1rem; padding: 0.75rem 1rem;">
+            <!-- Touchscreen checklist verification checkbox -->
+            <div style="display: flex; align-items: center; justify-content: center; flex-shrink: 0;">
+                <label class="item-check-container" style="margin: 0;">
+                    <input type="checkbox" class="item-verify-checkbox" style="position: absolute; opacity: 0; cursor: pointer; height: 0; width: 0;" />
+                    <span class="checkmark-circle">
+                        <i data-lucide="check" class="check-icon-svg" style="width: 16px; height: 16px; color: #fff; display: none;"></i>
+                    </span>
+                </label>
+            </div>
+
+            <div class="added-item-info" style="flex-grow: 1;">
                 <div class="added-item-details">
-                    <div style="display: flex; justify-content: space-between; align-items: start;">
+                    <div style="display: flex; justify-content: space-between; align-items: start; width: 100%;">
                         <div>
                             <span class="added-item-title" style="color: ${item.colorHex}; font-weight: 600; font-size: 1rem;">
                                 ${translateItemName(item.type)} 
@@ -2077,7 +2087,7 @@ const openOrderModal = (orderId) => {
                             </span>
                             ${photoThumbnail}
                         </div>
-                        <div style="display: flex; flex-direction: column; align-items: center; gap: 0.5rem;">
+                        <div style="display: flex; flex-direction: column; align-items: center; gap: 0.5rem; flex-shrink: 0; margin-left: 1rem;">
                             <img src="${itemQrUrl}" style="width: 48px; height: 48px; border-radius: 4px; border: 1px solid var(--border-glass);" title="Item QR Code" />
                             <button type="button" class="btn btn-secondary" onclick="printItemQrCode('${item.trackingId}', '${item.type}')" style="padding: 0.25rem 0.5rem; font-size: 0.7rem; border-radius: 6px; display: flex; align-items: center; gap: 0.25rem;">
                                 <i data-lucide="printer" style="width: 12px; height: 12px;"></i> Print Tag
@@ -2091,6 +2101,33 @@ const openOrderModal = (orderId) => {
     }).join('');
     itemsList.innerHTML = itemsHtml;
     
+    // Set up verification checklist progress counter
+    const verifyProgress = document.getElementById('modalVerifyProgress');
+    if (verifyProgress) {
+        verifyProgress.style.display = 'block';
+        const totalItems = order.items.length;
+        const updateVerifyCount = () => {
+            const checkedCount = itemsList.querySelectorAll('.item-verify-checkbox:checked').length;
+            if (currentLanguage === 'th') {
+                verifyProgress.innerText = `ตรวจสอบแล้ว ${checkedCount}/${totalItems} รายการ`;
+            } else {
+                verifyProgress.innerText = `Checked ${checkedCount}/${totalItems} items`;
+            }
+            if (checkedCount === totalItems) {
+                verifyProgress.style.color = '#15803d';
+                verifyProgress.style.backgroundColor = '#dcfce7';
+            } else {
+                verifyProgress.style.color = 'var(--primary)';
+                verifyProgress.style.backgroundColor = 'rgba(34, 41, 69, 0.05)';
+            }
+        };
+        updateVerifyCount();
+        
+        itemsList.querySelectorAll('.item-verify-checkbox').forEach(cb => {
+            cb.addEventListener('change', updateVerifyCount);
+        });
+    }
+
     modalOverlay.classList.add('active');
     
     if (typeof lucide !== 'undefined') {

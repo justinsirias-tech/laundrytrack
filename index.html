@@ -459,7 +459,12 @@
                     </div>
                 </div>
                 
-                <h3 class="modal-subtitle" data-i18n="items_list">Items List</h3>
+                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 0.5rem; margin-top: 1.5rem;">
+                    <h3 class="modal-subtitle" data-i18n="items_list" style="margin: 0;">Items List</h3>
+                    <div id="modalVerifyProgress" style="font-size: 0.85rem; font-weight: 600; color: var(--primary); background: rgba(34, 41, 69, 0.05); padding: 0.25rem 0.6rem; border-radius: 20px; display: none;">
+                        Checked 0/0 items
+                    </div>
+                </div>
                 <div class="modal-items-list" id="modalItemsList">
                     <!-- Items populated by JS -->
                 </div>

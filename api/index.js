@@ -137,6 +137,11 @@ const initDatabase = async () => {
         await client.query('CREATE INDEX IF NOT EXISTS idx_orders_created_at ON orders (created_at DESC)');
         await client.query('CREATE INDEX IF NOT EXISTS idx_order_items_order_id ON order_items (order_id)');
 
+        // Run migrations for order_items table schema
+        await client.query('ALTER TABLE order_items ADD COLUMN IF NOT EXISTS service_type VARCHAR(100)');
+        await client.query('ALTER TABLE order_items ADD COLUMN IF NOT EXISTS defect_image TEXT');
+        await client.query('ALTER TABLE order_items ADD COLUMN IF NOT EXISTS tracking_id VARCHAR(100)');
+
         await client.query('COMMIT');
         console.log('Database tables successfully initialized.');
 
@@ -202,7 +207,10 @@ app.get('/api/orders', async (req, res) => {
                 color: item.color,
                 colorHex: item.color_hex,
                 issueImage: item.issue_image,
-                issueLevel: item.issue_level
+                issueLevel: item.issue_level,
+                serviceType: item.service_type || 'Same as Order',
+                defectImage: item.defect_image || '',
+                trackingId: item.tracking_id || ''
             });
         });
         
@@ -241,8 +249,8 @@ app.post('/api/orders', async (req, res) => {
         if (items && items.length > 0) {
             for (const item of items) {
                 await client.query(
-                    'INSERT INTO order_items (order_id, type, brand, color, color_hex, issue_image, issue_level) VALUES ($1, $2, $3, $4, $5, $6, $7)',
-                    [id, item.type, item.brand, item.color, item.colorHex, item.issueImage, item.issueLevel]
+                    'INSERT INTO order_items (order_id, type, brand, color, color_hex, issue_image, issue_level, service_type, defect_image, tracking_id) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10)',
+                    [id, item.type, item.brand, item.color, item.colorHex, item.issueImage, item.issueLevel, item.serviceType || 'Same as Order', item.defectImage || '', item.trackingId || '']
                 );
             }
         }

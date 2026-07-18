@@ -1770,3 +1770,51 @@ img[src*="logo.clearbit.com"],
 .mix-colors-btn.active i {
     color: var(--primary) !important;
 }
+
+/* Order Details verification checklist styling */
+.item-check-container {
+    display: block;
+    position: relative;
+    cursor: pointer;
+    user-select: none;
+    width: 28px;
+    height: 28px;
+}
+
+.item-check-container input {
+    position: absolute;
+    opacity: 0;
+    cursor: pointer;
+    height: 0;
+    width: 0;
+}
+
+.item-check-container .checkmark-circle {
+    position: absolute;
+    top: 0;
+    left: 0;
+    height: 28px;
+    width: 28px;
+    background-color: #fff;
+    border: 2px solid var(--border-glass);
+    border-radius: 50%;
+    transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.item-check-container:hover .checkmark-circle {
+    border-color: var(--primary);
+    transform: scale(1.05);
+}
+
+.item-check-container input:checked ~ .checkmark-circle {
+    background-color: #10b981 !important; /* Premium green indicator for verification completion */
+    border-color: #10b981 !important;
+    box-shadow: 0 2px 4px rgba(16, 185, 129, 0.2);
+}
+
+.item-check-container input:checked ~ .checkmark-circle .check-icon-svg {
+    display: block !important;
+}
