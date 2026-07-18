@@ -147,7 +147,13 @@ const i18n = {
         "Wash & Fold": "Wash & Fold",
         "Dry Cleaning": "Dry Cleaning",
         "Ironing Only": "Ironing Only",
-        "Premium Care": "Premium Care"
+        "Premium Care": "Premium Care",
+        
+        wash_fold: "Wash & Fold",
+        dry_cleaning: "Dry Cleaning",
+        ironing_only: "Ironing Only",
+        wash_iron: "Wash & Iron",
+        premium_care: "Premium Care"
     },
     th: {
         dashboard: "แผงควบคุมหลัก",
@@ -229,7 +235,13 @@ const i18n = {
         "Wash & Fold": "ซักและพับ",
         "Dry Cleaning": "ซักแห้ง",
         "Ironing Only": "รีดเท่านั้น",
-        "Premium Care": "ซักแห้งและดูแลพิเศษพรีเมียม"
+        "Premium Care": "ซักแห้งและดูแลพิเศษพรีเมียม",
+        
+        wash_fold: "ซักและพับ",
+        dry_cleaning: "ซักแห้ง",
+        ironing_only: "รีดเท่านั้น",
+        wash_iron: "ซักและรีด",
+        premium_care: "ดูแลพิเศษพรีเมียม"
     }
 };
 
