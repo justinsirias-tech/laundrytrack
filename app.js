@@ -934,11 +934,28 @@ const updateActiveItemIconColor = () => {
     }
 };
 
+const renderActiveColorCheckmark = () => {
+    document.querySelectorAll('.color-swatch').forEach(s => {
+        if (s.classList.contains('active')) {
+            const isLight = s.dataset.color === 'White' || s.dataset.color === 'Cream' || s.dataset.color === 'Beige' || s.dataset.color === 'Yellow' || s.dataset.color === 'Khaki';
+            s.innerHTML = `<i data-lucide="check" style="width: 22px; height: 22px; color: ${isLight ? '#000000' : '#FFFFFF'}; font-weight: bold;"></i>`;
+        } else {
+            s.innerHTML = '';
+        }
+    });
+    if (typeof lucide !== 'undefined') {
+        lucide.createIcons();
+    }
+};
+
 const bindSwatchClick = (swatch) => {
     swatch.addEventListener('click', (e) => {
         document.querySelectorAll('.color-swatch').forEach(s => s.classList.remove('active'));
-        customColorWrapper.classList.remove('active');
+        if (customColorWrapper) {
+            customColorWrapper.classList.remove('active');
+        }
         swatch.classList.add('active');
+        renderActiveColorCheckmark();
         selectedColor = { name: swatch.dataset.color, hex: swatch.style.background || swatch.style.backgroundColor };
         updateActiveItemIconColor();
     });
@@ -1580,6 +1597,7 @@ if (form) {
                     if (s.dataset.color === 'Black') s.classList.add('active');
                     else s.classList.remove('active');
                 });
+                renderActiveColorCheckmark();
                 updateActiveItemIconColor();
                 
                 refreshAllViews();
@@ -1769,6 +1787,7 @@ const loadAllData = async () => {
 
 // Initialize
 document.addEventListener('DOMContentLoaded', () => {
+    renderActiveColorCheckmark();
     if (typeof lucide !== 'undefined') {
         lucide.createIcons();
     }
