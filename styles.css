@@ -1,35 +1,35 @@
 :root {
-    --bg-dark: #0B0F19;
-    --bg-glass: rgba(16, 25, 43, 0.65);
-    --bg-glass-solid: #0e1628;
-    --bg-glass-hover: rgba(16, 25, 43, 0.85);
-    --border-glass: rgba(0, 229, 255, 0.25);
+    --bg-dark: #F8FAFC;
+    --bg-glass: #FFFFFF;
+    --bg-glass-solid: #FFFFFF;
+    --bg-glass-hover: #F1F5F9;
+    --border-glass: #E2E8F0;
     
-    --primary: #00E5FF;
-    --primary-hover: #00B8CC;
-    --secondary: #FF007F;
-    --accent: #B000FF;
+    --primary: #222945;
+    --primary-hover: #181D33;
+    --secondary: #4F46E5;
+    --accent: #3B82F6;
     
-    --text-main: #FFFFFF;
-    --text-muted: #8A9BB3;
+    --text-main: #222945;
+    --text-muted: #64748B;
     
-    --status-blue: #00E5FF;
-    --status-purple: #B000FF;
-    --status-orange: #FF007F;
-    --status-green: #00FF9D;
-    --status-gray: #8A9BB3;
+    --status-blue: #3B82F6;
+    --status-purple: #8B5CF6;
+    --status-orange: #F97316;
+    --status-green: #10B981;
+    --status-gray: #64748B;
     
     --font-main: 'Outfit', 'Inter', sans-serif;
     
     --transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1);
     
     /* Issue level colors */
-    --issue-normal-bg: rgba(255, 255, 255, 0.05);
-    --issue-normal-text: #8A9BB3;
-    --issue-warning-bg: rgba(255, 165, 0, 0.15);
-    --issue-warning-text: #FFA500;
-    --issue-extreme-bg: rgba(255, 0, 127, 0.15);
-    --issue-extreme-text: #FF007F;
+    --issue-normal-bg: #F1F5F9;
+    --issue-normal-text: #64748B;
+    --issue-warning-bg: #FEF3C7;
+    --issue-warning-text: #D97706;
+    --issue-extreme-bg: #FEE2E2;
+    --issue-extreme-text: #EF4444;
 }
 
 * {
@@ -45,21 +45,17 @@ body {
     height: 100vh;
     overflow: hidden;
     background-image: 
-        radial-gradient(circle at 10% 20%, rgba(0, 229, 255, 0.1), transparent 40%),
-        radial-gradient(circle at 90% 80%, rgba(255, 0, 127, 0.1), transparent 40%),
-        radial-gradient(circle at 50% 50%, rgba(176, 0, 255, 0.08), transparent 50%);
+        radial-gradient(circle at 10% 20%, rgba(34, 41, 69, 0.015), transparent 40%),
+        radial-gradient(circle at 90% 80%, rgba(79, 70, 229, 0.015), transparent 40%);
 }
 
 .glass-panel {
     background: var(--bg-glass);
-    backdrop-filter: blur(20px);
-    -webkit-backdrop-filter: blur(20px);
     border: 1px solid var(--border-glass);
     border-radius: 16px;
     box-shadow: 
-        0 4px 30px rgba(0, 0, 0, 0.5), 
-        0 1px 3px rgba(0, 0, 0, 0.3),
-        inset 0 0 0 1px rgba(0, 229, 255, 0.1);
+        0 10px 15px -3px rgba(34, 41, 69, 0.03), 
+        0 4px 6px -2px rgba(34, 41, 69, 0.01);
 }
 
 .app-container {
@@ -94,9 +90,7 @@ body {
 .brand h1 {
     font-size: 1.5rem;
     font-weight: 700;
-    background: linear-gradient(to right, var(--primary), var(--secondary));
-    -webkit-background-clip: text;
-    -webkit-text-fill-color: transparent;
+    color: var(--primary);
 }
 
 .nav-menu {
@@ -128,9 +122,9 @@ body {
 }
 
 .nav-item.active {
-    background: linear-gradient(135deg, var(--primary), var(--accent));
+    background: var(--primary);
     color: white;
-    box-shadow: 0 0 15px rgba(0, 229, 255, 0.6);
+    box-shadow: 0 4px 12px rgba(34, 41, 69, 0.15);
 }
 
 .sidebar-footer {
@@ -441,13 +435,14 @@ body {
 }
 
 .btn-primary {
-    background: linear-gradient(135deg, var(--primary), var(--accent));
+    background: var(--primary);
     color: white;
 }
 
 .btn-primary:hover {
-    box-shadow: 0 0 15px rgba(0, 229, 255, 0.6);
-    transform: translateY(-2px);
+    background: var(--primary-hover);
+    box-shadow: 0 4px 10px rgba(34, 41, 69, 0.12);
+    transform: translateY(-1px);
 }
 
 .btn-secondary {
@@ -681,9 +676,9 @@ body {
 
 .item-type-btn.active {
     border-color: var(--primary) !important;
-    background: linear-gradient(135deg, rgba(99, 102, 241, 0.08), rgba(139, 92, 246, 0.08)) !important;
+    background: rgba(34, 41, 69, 0.06) !important;
     color: var(--primary) !important;
-    box-shadow: 0 4px 12px rgba(99, 102, 241, 0.12) !important;
+    box-shadow: none !important;
 }
 
 .color-swatches {
@@ -1366,9 +1361,9 @@ body {
 
 .brand-pill-btn.active {
     border-color: var(--primary) !important;
-    background: linear-gradient(135deg, rgba(99, 102, 241, 0.08), rgba(139, 92, 246, 0.08)) !important;
+    background: rgba(34, 41, 69, 0.06) !important;
     color: var(--primary) !important;
-    box-shadow: 0 4px 12px rgba(99, 102, 241, 0.12) !important;
+    box-shadow: none !important;
 }
 
 /* POS Container Layout */
