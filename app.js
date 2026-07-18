@@ -1,5 +1,5 @@
 // Data Models
-const statuses = ['Received', 'Washing', 'Drying', 'Ready', 'Delivered'];
+const statuses = ['Received', 'Wash & Dry', 'Ironing', 'Packing', 'Ready', 'Delivered'];
 
 // Local Storage Keys
 const STORAGE_KEY = 'tls_orders';
@@ -123,9 +123,10 @@ const i18n = {
         mixed_services: "Mixed Services",
         
         Received: "Received",
-        Washing: "Washing",
-        Drying: "Drying",
-        Ready: "Ready for Pickup",
+        "Wash & Dry": "Wash & Dry",
+        Ironing: "Ironing",
+        Packing: "Packing",
+        Ready: "Ready for Delivery",
         Delivered: "Delivered",
         
         admin_settings: "Admin Settings",
@@ -204,9 +205,10 @@ const i18n = {
         mixed_services: "บริการผสม",
         
         Received: "ได้รับผ้าแล้ว",
-        Washing: "กำลังซัก",
-        Drying: "กำลังอบแห้ง",
-        Ready: "ซักเสร็จพร้อมรับ",
+        "Wash & Dry": "ซักและอบแห้ง",
+        Ironing: "กำลังรีด",
+        Packing: "กำลังแพ็ค",
+        Ready: "ซักเสร็จพร้อมส่ง",
         Delivered: "ส่งมอบสำเร็จ",
         
         admin_settings: "การตั้งค่าระบบ",
@@ -529,7 +531,7 @@ const updateDashboardStats = () => {
     
     const stats = [
         { title: currentLanguage === 'th' ? 'ออเดอร์ค้างส่งทั้งหมด' : 'Total Active', value: orders.filter(o => o.status !== 'Delivered').length, icon: 'list', bg: 'var(--status-blue)' },
-        { title: currentLanguage === 'th' ? 'กำลังซัก' : 'In Washing', value: orders.filter(o => o.status === 'Washing').length, icon: 'waves', bg: 'var(--status-purple)' },
+        { title: currentLanguage === 'th' ? 'กำลังซัก/อบ' : 'In Wash & Dry', value: orders.filter(o => o.status === 'Wash & Dry').length, icon: 'waves', bg: 'var(--status-purple)' },
         { title: t('Ready'), value: orders.filter(o => o.status === 'Ready').length, icon: 'check-square', bg: 'var(--status-green)' },
         { title: currentLanguage === 'th' ? 'ส่งมอบแล้วทั้งหมด' : 'Delivered (All Time)', value: orders.filter(o => o.status === 'Delivered').length, icon: 'truck', bg: 'var(--status-gray)' }
     ];
