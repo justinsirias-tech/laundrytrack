@@ -1217,6 +1217,22 @@ const renderAddedItems = () => {
         listContainer.innerHTML = `<div class="empty-cart-placeholder">${currentLanguage === 'th' ? 'ไม่มีรายการในออเดอร์' : 'No items added yet.'}</div>`;
         return;
     }
+
+    const standardColors = [
+        { name: 'White', hex: '#FFFFFF' },
+        { name: 'Black', hex: '#000000' },
+        { name: 'Blue', hex: '#3b82f6' },
+        { name: 'Navy', hex: '#1e3a8a' },
+        { name: 'Red', hex: '#ef4444' },
+        { name: 'Green', hex: '#22c55e' },
+        { name: 'Yellow', hex: '#f59e0b' },
+        { name: 'Orange', hex: '#f97316' },
+        { name: 'Purple', hex: '#8b5cf6' },
+        { name: 'Pink', hex: '#ec4899' },
+        { name: 'Grey', hex: '#9ca3af' },
+        { name: 'Brown', hex: '#78350f' },
+        { name: 'Teal', hex: '#14b8a6' }
+    ];
     
     listContainer.innerHTML = currentDraftItems.map((item, index) => {
         let levelBadge = `<span class="issue-badge issue-badge-normal">${t('normal')}</span>`;
@@ -1258,7 +1274,7 @@ const renderAddedItems = () => {
 
         return `
         <div class="pos-cart-item-card">
-            <div class="pos-cart-item-color-strip" style="background: ${item.colorHex};"></div>
+            <div class="pos-cart-item-color-strip" style="background: ${item.colorHex}; cursor: pointer;" title="${currentLanguage === 'th' ? 'คลิกเพื่อเปลี่ยนสี' : 'Click to change color'}" data-index="${index}"></div>
             <div class="pos-cart-item-body">
                 <div class="pos-cart-item-title-row">
                     <span class="pos-cart-item-title">
@@ -1266,9 +1282,14 @@ const renderAddedItems = () => {
                         ${item.serviceType && item.serviceType !== 'Same as Order' ? `<span style="font-size: 0.7rem; color: #fff; background: var(--primary); padding: 0.15rem 0.4rem; border-radius: 4px; margin-left: 0.4rem;">${t(item.serviceType)}</span>` : ''}
                         <span style="font-size: 0.75rem; color: var(--primary); background: rgba(99, 102, 241, 0.1); padding: 0.15rem 0.4rem; border-radius: 4px; margin-left: 0.4rem; font-family: monospace;">${item.trackingId}</span>
                     </span>
-                    <button type="button" class="pos-cart-item-remove-btn" data-index="${index}">
-                        <i data-lucide="trash-2" style="width: 14px; height: 14px;"></i>
-                    </button>
+                    <div style="display: flex; align-items: center; gap: 0.4rem;">
+                        <button type="button" class="pos-cart-item-duplicate-btn" data-index="${index}" title="${currentLanguage === 'th' ? 'คัดลอกรายการ' : 'Duplicate Item'}" style="background: none; border: none; padding: 4px; color: var(--text-muted); cursor: pointer; border-radius: 4px; transition: var(--transition); display: flex; align-items: center; justify-content: center;">
+                            <i data-lucide="copy" style="width: 14px; height: 14px;"></i>
+                        </button>
+                        <button type="button" class="pos-cart-item-remove-btn" data-index="${index}">
+                            <i data-lucide="trash-2" style="width: 14px; height: 14px;"></i>
+                        </button>
+                    </div>
                 </div>
                 <div class="pos-cart-item-meta" style="align-items: center;">
                     <span>${translateColorName ? translateColorName(item.color) : item.color}</span>
@@ -1281,6 +1302,19 @@ const renderAddedItems = () => {
                         <i data-lucide="printer" style="width: 12px; height: 12px;"></i> Print Tag
                     </button>
                 </div>
+                
+                <!-- Inline Color Picker (initially hidden) -->
+                <div class="inline-color-picker" id="inlineColorPicker-${index}" style="display: none; margin-top: 0.6rem; padding-top: 0.5rem; border-top: 1px dashed var(--border-glass); align-items: center; gap: 0.35rem; flex-wrap: wrap;">
+                    <span style="font-size: 0.7rem; color: var(--text-muted); margin-right: 0.25rem;">${currentLanguage === 'th' ? 'เปลี่ยนสี:' : 'Change Color:'}</span>
+                    ${standardColors.map(c => `
+                        <button type="button" class="inline-color-option" data-color-name="${c.name}" data-color-hex="${c.hex}" data-item-index="${index}" style="background: ${c.hex}; width: 18px; height: 18px; border-radius: 50%; border: 1px solid ${c.name === 'White' ? '#ccc' : 'transparent'}; cursor: pointer; transition: transform 0.1s;" title="${c.name}"></button>
+                    `).join('')}
+                    <!-- Custom color picker -->
+                    <label style="display: flex; align-items: center; justify-content: center; width: 18px; height: 18px; border-radius: 50%; border: 1px dashed var(--text-muted); cursor: pointer; background: #fff; position: relative;" title="Custom Color">
+                        <i data-lucide="plus" style="width: 10px; height: 10px; color: var(--text-muted);"></i>
+                        <input type="color" class="inline-custom-color-input" data-item-index="${index}" style="position: absolute; top: 0; left: 0; width: 100%; height: 100%; opacity: 0; cursor: pointer;" />
+                    </label>
+                </div>
             </div>
         </div>
         `;
@@ -1290,13 +1324,72 @@ const renderAddedItems = () => {
         lucide.createIcons();
     }
     
-    // Bind remove button handlers
+    // Bind handlers
     if (typeof listContainer.querySelectorAll === 'function') {
+        // 1. Remove button handlers
         listContainer.querySelectorAll('.pos-cart-item-remove-btn').forEach(btn => {
             btn.addEventListener('click', () => {
                 const index = parseInt(btn.dataset.index);
                 currentDraftItems.splice(index, 1);
                 renderAddedItems();
+            });
+        });
+
+        // 2. Duplicate button handlers
+        listContainer.querySelectorAll('.pos-cart-item-duplicate-btn').forEach(btn => {
+            btn.addEventListener('click', () => {
+                const index = parseInt(btn.dataset.index);
+                const itemToDuplicate = currentDraftItems[index];
+                if (itemToDuplicate) {
+                    const newItem = {
+                        ...itemToDuplicate,
+                        trackingId: `ITM-${Date.now().toString(36).toUpperCase()}-${Math.random().toString(36).substring(2,6).toUpperCase()}`
+                    };
+                    currentDraftItems.splice(index + 1, 0, newItem); // Insert right below the duplicated item
+                    renderAddedItems();
+                }
+            });
+        });
+
+        // 3. Color strip toggle inline picker
+        listContainer.querySelectorAll('.pos-cart-item-color-strip').forEach(strip => {
+            strip.addEventListener('click', () => {
+                const index = strip.dataset.index;
+                const picker = document.getElementById(`inlineColorPicker-${index}`);
+                if (picker) {
+                    const isHidden = picker.style.display === 'none';
+                    // Hide all other inline pickers
+                    listContainer.querySelectorAll('.inline-color-picker').forEach(p => p.style.display = 'none');
+                    picker.style.display = isHidden ? 'flex' : 'none';
+                }
+            });
+        });
+
+        // 4. Inline color option selection
+        listContainer.querySelectorAll('.inline-color-option').forEach(opt => {
+            opt.addEventListener('click', () => {
+                const itemIndex = parseInt(opt.dataset.itemIndex);
+                const colorName = opt.dataset.colorName;
+                const colorHex = opt.dataset.colorHex;
+                if (currentDraftItems[itemIndex]) {
+                    currentDraftItems[itemIndex].color = colorName;
+                    currentDraftItems[itemIndex].colorHex = colorHex;
+                    renderAddedItems();
+                }
+            });
+        });
+
+        // 5. Inline custom color picker selection
+        listContainer.querySelectorAll('.inline-custom-color-input').forEach(input => {
+            input.addEventListener('change', (e) => {
+                const itemIndex = parseInt(input.dataset.itemIndex);
+                const customHex = e.target.value;
+                const colorName = customHex.toUpperCase();
+                if (currentDraftItems[itemIndex]) {
+                    currentDraftItems[itemIndex].color = colorName;
+                    currentDraftItems[itemIndex].colorHex = customHex;
+                    renderAddedItems();
+                }
             });
         });
     }
