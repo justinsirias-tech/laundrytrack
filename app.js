@@ -653,12 +653,9 @@ const updateKanbanBoard = () => {
         const columnOrders = orders.filter(o => o.status === status);
         
         column.innerHTML = columnOrders.map(order => {
-            const itemsHtml = order.items.map(i => `
-                <span style="color: ${i.colorHex || '#64748b'}; font-weight: 600; font-size: 0.8rem;" title="${translateItemName(i.type)}">
-                    ${translateItemName(i.type)}
-                    ${i.serviceType && i.serviceType !== 'Same as Order' ? `<span style="font-size: 0.65rem; color: #fff; background: var(--primary); padding: 0.1rem 0.3rem; border-radius: 3px; margin-left: 0.2rem; font-weight: normal;">${t(i.serviceType)}</span>` : ''}
-                </span>
-            `).join(', ');
+            const totalItemsText = currentLanguage === 'th'
+                ? `${order.items.length} รายการ`
+                : `${order.items.length} ${order.items.length === 1 ? 'item' : 'items'}`;
             
             // Generate a scannable URL for phone cameras
             let appUrl;
@@ -692,10 +689,10 @@ const updateKanbanBoard = () => {
                     <img src="${qrUrl}" alt="QR" style="cursor: pointer; width: 44px; height: 44px; border-radius: 6px; padding: 2px; background: white; border: 1px solid var(--border-glass); flex-shrink: 0;" title="Click to print QR Tag" draggable="false" />
                 </div>
                 
-                <div style="border-top: 1px dashed rgba(34, 41, 69, 0.1); padding-top: 0.5rem; display: flex; flex-direction: column; gap: 0.25rem;">
+                <div style="border-top: 1px dashed rgba(34, 41, 69, 0.1); padding-top: 0.5rem; display: flex; flex-direction: column; gap: 0.15rem;">
                     <div style="font-size: 0.65rem; text-transform: uppercase; color: var(--text-muted); font-weight: 700; letter-spacing: 0.5px;">Items</div>
-                    <div class="card-items-list" style="display: flex; flex-wrap: wrap; gap: 0.25rem 0.4rem; font-size: 0.8rem; line-height: 1.4;">
-                        ${itemsHtml}
+                    <div class="card-items-list" style="font-size: 0.85rem; font-weight: 600; color: var(--text-main);">
+                        ${totalItemsText}
                     </div>
                 </div>
             </div>
