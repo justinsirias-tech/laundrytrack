@@ -1351,7 +1351,7 @@ if (addItemBtn) {
                 .then(res => res.json())
                 .then((data) => {
                     if(data.success) {
-                        clothingBrands.push({ name: data.name, logo_url: data.logo_url });
+                        clothingBrands.push({ name: data.name || formattedBrand, logo_url: data.logo_url || null });
                         initBrandButtons(); // Re-render brand select buttons
                     }
                 })

@@ -403,7 +403,7 @@ app.post('/api/clothing-brands', async (req, res) => {
     if (!name) return res.status(400).json({ error: 'Name is required' });
     try {
         await pool.query('INSERT INTO clothing_brands (name) VALUES ($1) ON CONFLICT DO NOTHING', [name]);
-        res.json({ success: true });
+        res.json({ success: true, name: name });
     } catch (err) {
         console.error(err);
         res.status(500).json({ error: err.message });
