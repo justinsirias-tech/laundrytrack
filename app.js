@@ -854,8 +854,16 @@ const initBrandButtons = () => {
     const container = document.querySelector('.brand-quick-select');
     if (!container) return;
     
+    const searchInput = document.getElementById('brandSearchInput');
+    const filterTerm = searchInput ? searchInput.value.trim().toLowerCase() : '';
+    
     // Sort brands alphabetically
-    const sortedBrands = [...clothingBrands].sort((a, b) => a.name.localeCompare(b.name));
+    let sortedBrands = [...clothingBrands].sort((a, b) => a.name.localeCompare(b.name));
+    
+    // Filter by search term
+    if (filterTerm) {
+        sortedBrands = sortedBrands.filter(b => b.name.toLowerCase().includes(filterTerm));
+    }
     
     const activeBrand = document.getElementById('itemBrand') ? document.getElementById('itemBrand').value.trim() : '';
     
@@ -1524,6 +1532,14 @@ function setupDragAndDrop() {
                 });
             }
         });
+    });
+}
+
+// Brand Search functionality
+const brandSearchInput = document.getElementById('brandSearchInput');
+if (brandSearchInput) {
+    brandSearchInput.addEventListener('input', () => {
+        initBrandButtons();
     });
 }
 
