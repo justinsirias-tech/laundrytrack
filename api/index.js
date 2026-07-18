@@ -132,6 +132,11 @@ const initDatabase = async () => {
             )
         `);
 
+        // Create indexes to optimize query performance
+        await client.query('CREATE INDEX IF NOT EXISTS idx_orders_status ON orders (status)');
+        await client.query('CREATE INDEX IF NOT EXISTS idx_orders_created_at ON orders (created_at DESC)');
+        await client.query('CREATE INDEX IF NOT EXISTS idx_order_items_order_id ON order_items (order_id)');
+
         await client.query('COMMIT');
         console.log('Database tables successfully initialized.');
 
