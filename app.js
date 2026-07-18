@@ -1995,7 +1995,7 @@ document.addEventListener('DOMContentLoaded', () => {
 const modalOverlay = document.getElementById('orderDetailsModal');
 const closeBtns = document.querySelectorAll('.close-modal');
 
-const openOrderModal = (orderId) => {
+const openOrderModal = async (orderId) => {
     const order = orders.find(o => o.id === orderId);
     if (!order) return;
     
@@ -2012,6 +2012,15 @@ const openOrderModal = (orderId) => {
     const modalItemsCount = document.getElementById('modalItemsCount');
     if (modalItemsCount) {
         modalItemsCount.innerText = `(${order.items.length} ${order.items.length === 1 ? 'item' : 'items'})`;
+    }
+
+    // Set up staff operator name input
+    const verifyOperator = document.getElementById('verifyOperator');
+    if (verifyOperator) {
+        verifyOperator.value = localStorage.getItem('tls_verify_operator') || 'Staff';
+        verifyOperator.oninput = (e) => {
+            localStorage.setItem('tls_verify_operator', e.target.value);
+        };
     }
     
     const itemsList = document.getElementById('modalItemsList');
@@ -2064,7 +2073,7 @@ const openOrderModal = (orderId) => {
             <!-- Touchscreen checklist verification checkbox -->
             <div style="display: flex; align-items: center; justify-content: center; flex-shrink: 0;">
                 <label class="item-check-container" style="margin: 0;">
-                    <input type="checkbox" class="item-verify-checkbox" style="position: absolute; opacity: 0; cursor: pointer; height: 0; width: 0;" />
+                    <input type="checkbox" class="item-verify-checkbox" data-tracking-id="${item.trackingId}" data-item-type="${item.type}" style="position: absolute; opacity: 0; cursor: pointer; height: 0; width: 0;" />
                     <span class="checkmark-circle">
                         <i data-lucide="check" class="check-icon-svg" style="width: 16px; height: 16px; color: #fff; display: none;"></i>
                     </span>
@@ -2100,6 +2109,56 @@ const openOrderModal = (orderId) => {
         `;
     }).join('');
     itemsList.innerHTML = itemsHtml;
+
+    // Helper to refresh verification history inside the modal
+    const refreshModalVerifyHistory = async () => {
+        const historyContainer = document.getElementById('modalVerifyHistory');
+        if (!historyContainer) return;
+        
+        try {
+            const res = await fetch(`${API_BASE}/item-verifications/order/${order.id}`);
+            const logs = await res.json();
+            
+            if (logs.length === 0) {
+                historyContainer.innerHTML = `<div style="text-align: center; color: var(--text-muted); padding: 0.5rem;">No history yet. Start verifying items.</div>`;
+                return;
+            }
+            
+            historyContainer.innerHTML = logs.map(log => {
+                const timeStr = new Date(log.verified_at).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+                const dateStr = new Date(log.verified_at).toLocaleDateString([], { month: 'short', day: 'numeric' });
+                const actionText = log.checked 
+                    ? `<span style="color: #10b981; font-weight: bold;">verified</span>` 
+                    : `<span style="color: #f97316; font-weight: bold;">unverified</span>`;
+                const matchingItem = order.items.find(i => i.trackingId === log.tracking_id);
+                const itemName = matchingItem ? translateItemName(matchingItem.type) : 'Item';
+                
+                return `
+                    <div style="display: flex; justify-content: space-between; border-bottom: 1px dashed rgba(34, 41, 69, 0.05); padding: 0.15rem 0; font-size: 0.8rem;">
+                        <span><strong>${log.verified_by}</strong> ${actionText} ${itemName} at <span class="status-badge" style="padding: 0.1rem 0.35rem; font-size: 0.65rem; background: rgba(34, 41, 69, 0.08);">${t(log.status)}</span></span>
+                        <span style="color: var(--text-muted); font-size: 0.7rem;">${dateStr} ${timeStr}</span>
+                    </div>
+                `;
+            }).join('');
+        } catch (err) {
+            console.error("Error loading verification history:", err);
+        }
+    };
+
+    // Load current verified state for checkboxes from database
+    try {
+        const res = await fetch(`${API_BASE}/item-verifications/order/${order.id}/status/${order.status}`);
+        const verifiedStates = await res.json();
+        
+        verifiedStates.forEach(state => {
+            const cb = itemsList.querySelector(`.item-verify-checkbox[data-tracking-id="${state.tracking_id}"]`);
+            if (cb) {
+                cb.checked = state.checked;
+            }
+        });
+    } catch (err) {
+        console.error("Error loading item verification states:", err);
+    }
     
     // Set up verification checklist progress counter
     const verifyProgress = document.getElementById('modalVerifyProgress');
@@ -2123,10 +2182,39 @@ const openOrderModal = (orderId) => {
         };
         updateVerifyCount();
         
+        // Attach change listeners to save state automatically on check/uncheck
         itemsList.querySelectorAll('.item-verify-checkbox').forEach(cb => {
-            cb.addEventListener('change', updateVerifyCount);
+            cb.addEventListener('change', async (e) => {
+                updateVerifyCount();
+                const operatorName = (verifyOperator ? verifyOperator.value.trim() : '') || 'Staff';
+                const payload = {
+                    orderId: order.id,
+                    trackingId: cb.dataset.trackingId,
+                    status: order.status,
+                    checked: cb.checked,
+                    verifiedBy: operatorName
+                };
+                
+                try {
+                    // AUTO SAVE check status to DB
+                    await fetch(`${API_BASE}/item-verifications`, {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify(payload)
+                    });
+                    
+                    // Refresh modal audit log timeline
+                    refreshModalVerifyHistory();
+                } catch (err) {
+                    console.error("Error auto-saving item check:", err);
+                    showToast("Error saving check: " + err.message, "error");
+                }
+            });
         });
     }
+
+    // Load local history list inside modal
+    refreshModalVerifyHistory();
 
     modalOverlay.classList.add('active');
     
@@ -2779,6 +2867,42 @@ if (adminBrandForm) {
 }
 
 // --- ADMIN TABS LOGIC ---
+const loadVerificationLogs = async () => {
+    const tableBody = document.getElementById('verificationLogsTableBody');
+    if (!tableBody) return;
+    
+    try {
+        tableBody.innerHTML = `<tr><td colspan="6" style="text-align: center; color: var(--text-muted); padding: 1.5rem;">Loading logs...</td></tr>`;
+        const res = await fetch(`${API_BASE}/item-verifications`);
+        const logs = await res.json();
+        
+        if (logs.length === 0) {
+            tableBody.innerHTML = `<tr><td colspan="6" style="text-align: center; color: var(--text-muted); padding: 1.5rem;">No verification logs recorded yet.</td></tr>`;
+            return;
+        }
+        
+        tableBody.innerHTML = logs.map(log => {
+            const dateStr = new Date(log.verified_at).toLocaleString();
+            const actionBadge = log.checked 
+                ? `<span class="status-badge text-green">Checked</span>` 
+                : `<span class="status-badge text-orange">Unchecked</span>`;
+            return `
+                <tr>
+                    <td>${dateStr}</td>
+                    <td><strong>${log.verified_by}</strong></td>
+                    <td>${log.order_id}</td>
+                    <td><span style="font-family: monospace; font-size: 0.8rem;">${log.tracking_id}</span></td>
+                    <td><span class="status-badge text-blue">${t(log.status)}</span></td>
+                    <td>${actionBadge}</td>
+                </tr>
+            `;
+        }).join('');
+    } catch (err) {
+        console.error(err);
+        tableBody.innerHTML = `<tr><td colspan="6" style="text-align: center; color: var(--text-muted); padding: 1.5rem;">Error loading logs: ${err.message}</td></tr>`;
+    }
+};
+
 const initAdminTabs = () => {
     const adminTabs = document.querySelectorAll('.admin-tab');
     if (!adminTabs.length) return;
@@ -2808,7 +2932,18 @@ const initAdminTabs = () => {
             if (targetContent) {
                 targetContent.style.display = 'block';
             }
+            
+            // Load logs if tab clicked
+            if (tab.dataset.tab === 'logs') {
+                loadVerificationLogs();
+            }
         });
     });
+    
+    // Set up refresh button
+    const refreshBtn = document.getElementById('refreshVerificationLogsBtn');
+    if (refreshBtn) {
+        refreshBtn.onclick = loadVerificationLogs;
+    }
 };
 

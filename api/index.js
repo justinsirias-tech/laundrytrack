@@ -142,6 +142,20 @@ const initDatabase = async () => {
         await client.query('ALTER TABLE order_items ADD COLUMN IF NOT EXISTS defect_image TEXT');
         await client.query('ALTER TABLE order_items ADD COLUMN IF NOT EXISTS tracking_id VARCHAR(100)');
 
+        // Create table for status checklist verifications and audit logs
+        await client.query(`
+            CREATE TABLE IF NOT EXISTS item_verification_logs (
+                id SERIAL PRIMARY KEY,
+                order_id VARCHAR(50) NOT NULL REFERENCES orders(id) ON DELETE CASCADE,
+                tracking_id VARCHAR(100) NOT NULL,
+                status VARCHAR(50) NOT NULL,
+                checked BOOLEAN NOT NULL DEFAULT FALSE,
+                verified_by VARCHAR(100) NOT NULL,
+                verified_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+            )
+        `);
+        await client.query('CREATE INDEX IF NOT EXISTS idx_verification_logs_order_id_status ON item_verification_logs (order_id, status)');
+
         await client.query('COMMIT');
         console.log('Database tables successfully initialized.');
 
@@ -412,6 +426,64 @@ app.post('/api/clothing-brands', async (req, res) => {
     try {
         await pool.query('INSERT INTO clothing_brands (name) VALUES ($1) ON CONFLICT DO NOTHING', [name]);
         res.json({ success: true, name: name });
+    } catch (err) {
+        console.error(err);
+        res.status(500).json({ error: err.message });
+    }
+});
+
+// 13. Get all item verifications (for global admin logs)
+app.get('/api/item-verifications', async (req, res) => {
+    try {
+        const result = await pool.query('SELECT * FROM item_verification_logs ORDER BY verified_at DESC LIMIT 500');
+        res.json(result.rows);
+    } catch (err) {
+        console.error(err);
+        res.status(500).json({ error: err.message });
+    }
+});
+
+// 14. Get latest checked state of items in order for a specific board status
+app.get('/api/item-verifications/order/:orderId/status/:status', async (req, res) => {
+    const { orderId, status } = req.params;
+    try {
+        const query = `
+            SELECT DISTINCT ON (tracking_id) tracking_id, checked, verified_by, verified_at
+            FROM item_verification_logs
+            WHERE order_id = $1 AND status = $2
+            ORDER BY tracking_id, verified_at DESC
+        `;
+        const result = await pool.query(query, [orderId, status]);
+        res.json(result.rows);
+    } catch (err) {
+        console.error(err);
+        res.status(500).json({ error: err.message });
+    }
+});
+
+// 15. Get all verification logs for a specific order
+app.get('/api/item-verifications/order/:orderId', async (req, res) => {
+    const { orderId } = req.params;
+    try {
+        const result = await pool.query('SELECT * FROM item_verification_logs WHERE order_id = $1 ORDER BY verified_at DESC', [orderId]);
+        res.json(result.rows);
+    } catch (err) {
+        console.error(err);
+        res.status(500).json({ error: err.message });
+    }
+});
+
+// 16. Save an item verification log
+app.post('/api/item-verifications', async (req, res) => {
+    const { orderId, trackingId, status, checked, verifiedBy } = req.body;
+    try {
+        const query = `
+            INSERT INTO item_verification_logs (order_id, tracking_id, status, checked, verified_by)
+            VALUES ($1, $2, $3, $4, $5)
+            RETURNING *
+        `;
+        const result = await pool.query(query, [orderId, trackingId, status, checked, verifiedBy || 'Staff']);
+        res.status(201).json({ success: true, log: result.rows[0] });
     } catch (err) {
         console.error(err);
         res.status(500).json({ error: err.message });

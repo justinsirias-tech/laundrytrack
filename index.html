@@ -369,6 +369,7 @@
                     <div class="admin-tabs" style="display: flex; gap: 1rem; margin-bottom: 1.5rem; border-bottom: 1px solid var(--border-glass); padding-bottom: 0.5rem;">
                         <button class="admin-tab active" data-tab="categories" style="background: none; border: none; font-size: 1rem; font-weight: 600; color: var(--primary); cursor: pointer; padding: 0.5rem 1rem; border-bottom: 2px solid var(--primary);">Items & Categories</button>
                         <button class="admin-tab" data-tab="brands" style="background: none; border: none; font-size: 1rem; font-weight: 600; color: var(--text-muted); cursor: pointer; padding: 0.5rem 1rem; border-bottom: 2px solid transparent;">Brand Database</button>
+                        <button class="admin-tab" data-tab="logs" style="background: none; border: none; font-size: 1rem; font-weight: 600; color: var(--text-muted); cursor: pointer; padding: 0.5rem 1rem; border-bottom: 2px solid transparent;">Verification Logs</button>
                     </div>
 
                     <div id="admin-tab-categories" class="admin-tab-content">
@@ -420,6 +421,34 @@
                             <div id="adminBrandsBoard" style="display: grid; grid-template-columns: repeat(auto-fill, minmax(140px, 1fr)); gap: 1rem; min-height: 150px; max-height: 350px; overflow-y: auto; padding-right: 0.5rem;">
                                 <!-- Brand cards populated by JS -->
                             </div>
+                    </div>
+                    
+                    <div id="admin-tab-logs" class="admin-tab-content" style="display: none;">
+                        <div class="glass-panel" style="padding: 1.25rem; background: var(--bg-glass-solid);">
+                            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1rem; padding-bottom: 0.5rem; border-bottom: 1px solid var(--border-glass);">
+                                <h3 style="font-size: 1rem; color: var(--text-main); margin: 0;">System Verification Logs</h3>
+                                <button type="button" id="refreshVerificationLogsBtn" class="btn btn-secondary" style="padding: 0.4rem 0.75rem; font-size: 0.85rem; display: flex; align-items: center; gap: 0.25rem;">
+                                    <i data-lucide="refresh-cw" style="width: 14px; height: 14px;"></i> Refresh
+                                </button>
+                            </div>
+                            
+                            <div class="table-container" style="max-height: 500px; overflow-y: auto;">
+                                <table class="excel-table">
+                                    <thead>
+                                        <tr>
+                                            <th>Timestamp</th>
+                                            <th>Staff Name</th>
+                                            <th>Order ID</th>
+                                            <th>Item Tracking ID</th>
+                                            <th>Board Status</th>
+                                            <th>Action</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody id="verificationLogsTableBody">
+                                        <tr><td colspan="6" style="text-align: center; color: var(--text-muted); padding: 1.5rem;">Click Refresh to load logs.</td></tr>
+                                    </tbody>
+                                </table>
+                            </div>
                         </div>
                     </div>
                 </div>
@@ -460,13 +489,24 @@
                 </div>
                 
                 <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 0.5rem; margin-top: 1.5rem;">
-                    <h3 class="modal-subtitle" data-i18n="items_list" style="margin: 0;">Items List</h3>
-                    <div id="modalVerifyProgress" style="font-size: 0.85rem; font-weight: 600; color: var(--primary); background: rgba(34, 41, 69, 0.05); padding: 0.25rem 0.6rem; border-radius: 20px; display: none;">
-                        Checked 0/0 items
+                    <h3 class="modal-subtitle" data-i18n="items_list" style="margin: 0; border: none;">Items List</h3>
+                    <div style="display: flex; gap: 0.75rem; align-items: center;">
+                        <div style="display: flex; gap: 0.35rem; align-items: center; font-size: 0.8rem;">
+                            <span style="color: var(--text-muted);">Staff:</span>
+                            <input type="text" id="verifyOperator" placeholder="Name" style="width: 80px; padding: 0.2rem 0.4rem; font-size: 0.8rem; border-radius: 6px; border: 1px solid var(--border-glass); outline: none; background: #fff;">
+                        </div>
+                        <div id="modalVerifyProgress" style="font-size: 0.85rem; font-weight: 600; color: var(--primary); background: rgba(34, 41, 69, 0.05); padding: 0.25rem 0.6rem; border-radius: 20px; display: none;">
+                            Checked 0/0 items
+                        </div>
                     </div>
                 </div>
-                <div class="modal-items-list" id="modalItemsList">
+                <div class="modal-items-list" id="modalItemsList" style="margin-bottom: 1.5rem;">
                     <!-- Items populated by JS -->
+                </div>
+                
+                <h3 class="modal-subtitle" style="margin-top: 1rem; margin-bottom: 0.5rem; padding-bottom: 0.25rem; border-bottom: 1px solid var(--border-glass);">Verification History Logs</h3>
+                <div id="modalVerifyHistory" style="font-size: 0.8rem; max-height: 120px; overflow-y: auto; background: rgba(34, 41, 69, 0.02); padding: 0.5rem 0.75rem; border-radius: 8px; border: 1px solid var(--border-glass); display: flex; flex-direction: column; gap: 0.35rem; margin-bottom: 1rem;">
+                    <!-- Verification history logs populated by JS -->
                 </div>
             </div>
             <div class="modal-footer">
