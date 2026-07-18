@@ -10,6 +10,21 @@ const PORT = process.env.PORT || 3000;
 app.use(cors());
 app.use(express.json({ limit: '50mb' })); // Support base64 photos
 
+// Serve static frontend files (used by Vercel Node.js deployments)
+const path = require('path');
+app.use(express.static(__dirname, {
+    index: false, // Handle root explicitly
+    setHeaders: (res, reqPath, stat) => {
+        // Prevent access to sensitive backend files
+        if (reqPath.endsWith('.env') || reqPath.endsWith('server.js') || reqPath.includes('node_modules')) {
+            res.status(403).end();
+        }
+    }
+}));
+
+// Route root to index.html
+app.get('/', (req, res) => res.sendFile(path.join(__dirname, 'index.html')));
+
 // Configure PostgreSQL pool
 const pool = new Pool({
     host: process.env.DB_HOST,
