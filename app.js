@@ -948,16 +948,57 @@ const renderActiveColorCheckmark = () => {
     }
 };
 
+let isMixMode = false;
+let mixColorSelections = [];
+
 const bindSwatchClick = (swatch) => {
     swatch.addEventListener('click', (e) => {
-        document.querySelectorAll('.color-swatch').forEach(s => s.classList.remove('active'));
-        if (customColorWrapper) {
-            customColorWrapper.classList.remove('active');
+        const swatchColorName = swatch.dataset.color;
+        const swatchColorHex = swatch.style.backgroundColor || swatch.style.background;
+        
+        if (isMixMode) {
+            // Toggle active state
+            if (swatch.classList.contains('active')) {
+                swatch.classList.remove('active');
+                swatch.innerHTML = '';
+                mixColorSelections = mixColorSelections.filter(c => c.name !== swatchColorName);
+            } else {
+                swatch.classList.add('active');
+                mixColorSelections.push({ name: swatchColorName, hex: swatchColorHex });
+            }
+            
+            renderActiveColorCheckmark();
+            
+            // Recalculate mixed color
+            if (mixColorSelections.length === 0) {
+                selectedColor = { name: 'Black', hex: '#000000' };
+            } else if (mixColorSelections.length === 1) {
+                selectedColor = mixColorSelections[0];
+            } else {
+                // Combine names: e.g. "Red/Blue/Yellow"
+                const combinedName = mixColorSelections.map(c => c.name).join('/');
+                // Build CSS gradient string:
+                // linear-gradient(135deg, col1 0% 50%, col2 50% 100%) etc.
+                const segments = mixColorSelections.length;
+                const gradientParts = mixColorSelections.map((c, idx) => {
+                    const startPercent = ((idx * 100) / segments).toFixed(1);
+                    const endPercent = (((idx + 1) * 100) / segments).toFixed(1);
+                    return `${c.hex} ${startPercent}% ${endPercent}%`;
+                });
+                const combinedGradient = `linear-gradient(135deg, ${gradientParts.join(', ')})`;
+                
+                selectedColor = { name: combinedName, hex: combinedGradient };
+            }
+            
+            updateActiveItemIconColor();
+        } else {
+            // Normal Single Color Selection
+            document.querySelectorAll('.color-swatch').forEach(s => s.classList.remove('active'));
+            swatch.classList.add('active');
+            renderActiveColorCheckmark();
+            selectedColor = { name: swatchColorName, hex: swatchColorHex };
+            updateActiveItemIconColor();
         }
-        swatch.classList.add('active');
-        renderActiveColorCheckmark();
-        selectedColor = { name: swatch.dataset.color, hex: swatch.style.background || swatch.style.backgroundColor };
-        updateActiveItemIconColor();
     });
 };
 
@@ -1522,6 +1563,12 @@ if (addItemBtn) {
                 btn.classList.remove('active');
             }
         });
+        // Reset Mix Mode if ON
+        isMixMode = false;
+        const mixColorsBtn = document.getElementById('mixColorsBtn');
+        if (mixColorsBtn) mixColorsBtn.classList.remove('active');
+        mixColorSelections = [];
+
         document.querySelectorAll('.brand-pill-btn').forEach(b => b.classList.remove('active'));
         selectedImagesArray = [];
         selectedDefectImagesArray = [];
@@ -1591,6 +1638,12 @@ if (form) {
                 currentDraftItems = []; // reset draft
                 renderAddedItems();
                 
+                // Reset Mix Mode if ON
+                isMixMode = false;
+                const mixColorsBtn = document.getElementById('mixColorsBtn');
+                if (mixColorsBtn) mixColorsBtn.classList.remove('active');
+                mixColorSelections = [];
+
                 // Color builder icon back to default selected color (Black)
                 selectedColor = { name: 'Black', hex: '#000000' };
                 document.querySelectorAll('.color-swatch').forEach(s => {
@@ -1788,6 +1841,57 @@ const loadAllData = async () => {
 // Initialize
 document.addEventListener('DOMContentLoaded', () => {
     renderActiveColorCheckmark();
+    
+    // Set up Mix Colors button click handler
+    const mixColorsBtn = document.getElementById('mixColorsBtn');
+    if (mixColorsBtn) {
+        mixColorsBtn.addEventListener('click', () => {
+            isMixMode = !isMixMode;
+            
+            if (isMixMode) {
+                mixColorsBtn.classList.add('active');
+                mixColorSelections = [];
+                document.querySelectorAll('.color-swatch').forEach(s => {
+                    if (s.classList.contains('active')) {
+                        mixColorSelections.push({
+                            name: s.dataset.color,
+                            hex: s.style.backgroundColor || s.style.background
+                        });
+                    }
+                });
+                showToast(currentLanguage === 'th' ? 'เปิดโหมดผสมสี: แตะเลือกสีได้หลายสีพร้อมกัน' : 'Mix mode ON: Tap multiple colors to combine them', 'info');
+            } else {
+                mixColorsBtn.classList.remove('active');
+                const activeSwatches = document.querySelectorAll('.color-swatch.active');
+                let keepSwatch = null;
+                if (activeSwatches.length > 0) {
+                    keepSwatch = activeSwatches[0];
+                    activeSwatches.forEach((s, idx) => {
+                        if (idx > 0) s.classList.remove('active');
+                    });
+                }
+                
+                if (keepSwatch) {
+                    selectedColor = {
+                        name: keepSwatch.dataset.color,
+                        hex: keepSwatch.style.backgroundColor || keepSwatch.style.background
+                    };
+                } else {
+                    const blackSwatch = Array.from(document.querySelectorAll('.color-swatch')).find(s => s.dataset.color === 'Black');
+                    if (blackSwatch) {
+                        blackSwatch.classList.add('active');
+                        selectedColor = { name: 'Black', hex: '#000000' };
+                    }
+                }
+                
+                mixColorSelections = [];
+                renderActiveColorCheckmark();
+                updateActiveItemIconColor();
+                showToast(currentLanguage === 'th' ? 'ปิดโหมดผสมสีแล้ว' : 'Mix mode OFF', 'info');
+            }
+        });
+    }
+    
     if (typeof lucide !== 'undefined') {
         lucide.createIcons();
     }

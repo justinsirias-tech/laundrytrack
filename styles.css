@@ -1753,3 +1753,20 @@ img[src*="logo.clearbit.com"],
     color: #fff !important; /* White text for great contrast */
     box-shadow: 0 4px 10px rgba(34, 41, 69, 0.15) !important;
 }
+
+/* Mix Colors Button Touchscreen Styles */
+.mix-colors-btn:hover {
+    border-color: var(--primary) !important;
+    transform: scale(1.15);
+}
+
+.mix-colors-btn.active {
+    border-color: var(--primary) !important;
+    border-style: solid !important;
+    background: rgba(34, 41, 69, 0.08) !important;
+    box-shadow: 0 0 0 3px #ffffff, 0 0 0 6px var(--primary) !important;
+}
+
+.mix-colors-btn.active i {
+    color: var(--primary) !important;
+}
