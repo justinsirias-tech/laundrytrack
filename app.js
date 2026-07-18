@@ -1618,7 +1618,7 @@ const loadAllData = async () => {
         applyTranslations();
     } catch (err) {
         console.error("Error loading data from database backend:", err);
-        showToast("Could not connect to database backend.", "error");
+        showToast("Error: " + err.message, "error");
     }
 };
 
