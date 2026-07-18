@@ -374,8 +374,15 @@ app.post('/api/clothing-brands', async (req, res) => {
     }
 });
 
-// Start server after connecting to database
-app.listen(PORT, async () => {
-    console.log(`Server is running on port ${PORT}`);
-    await initDatabase();
-});
+// Initialize Database on boot
+initDatabase().catch(console.error);
+
+// Start server locally if not in a serverless environment
+if (process.env.NODE_ENV !== 'production') {
+    app.listen(PORT, () => {
+        console.log(`Server is running on port ${PORT}`);
+    });
+}
+
+// Export the Express API for Vercel Serverless
+module.exports = app;
