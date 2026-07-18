@@ -20,6 +20,26 @@ const pool = new Pool({
     ssl: { rejectUnauthorized: false }
 });
 
+let dbInitialized = false;
+let dbInitPromise = null;
+const ensureDb = async () => {
+    if (dbInitialized) return;
+    if (!dbInitPromise) {
+        // initDatabase is defined further down, but hoisting works if we call it at runtime
+        dbInitPromise = initDatabase().then(() => { dbInitialized = true; });
+    }
+    await dbInitPromise;
+};
+
+app.use('/api', async (req, res, next) => {
+    try {
+        await ensureDb();
+    } catch (e) {
+        console.error('Failed to initialize DB', e);
+    }
+    next();
+});
+
 // Default clothing categories and standard types
 const DEFAULT_CLOTHING_TYPES = [
     'Shirt', 'Formal', 'Blouse', 'Pants', 'Shorts', 

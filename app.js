@@ -117,6 +117,10 @@ const i18n = {
         items_defects: "Defects",
         items_qr: "QR Tag",
         items_action: "Action",
+        item_service: "Item Service",
+        same_as_order: "Same as Order",
+        defect_optional: "Defect (Optional)",
+        mixed_services: "Mixed Services",
         
         Received: "Received",
         Washing: "Washing",
@@ -194,6 +198,10 @@ const i18n = {
         items_defects: "ตำหนิ",
         items_qr: "คิวอาร์แท็ก",
         items_action: "การกระทำ",
+        item_service: "บริการเฉพาะชิ้น",
+        same_as_order: "ตามออเดอร์หลัก",
+        defect_optional: "ตำหนิ (ไม่บังคับ)",
+        mixed_services: "บริการผสม",
         
         Received: "ได้รับผ้าแล้ว",
         Washing: "กำลังซัก",
