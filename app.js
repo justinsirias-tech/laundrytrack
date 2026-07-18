@@ -1471,6 +1471,16 @@ if (addItemBtn) {
         
         brandInput.value = ''; // reset brand input
         if (itemServiceTypeSelect) itemServiceTypeSelect.value = 'Same as Order';
+        
+        // Reset touchscreen service buttons active states
+        const serviceBtns = document.querySelectorAll('#serviceButtonGroup .service-btn');
+        serviceBtns.forEach(btn => {
+            if (btn.dataset.value === 'Same as Order') {
+                btn.classList.add('active');
+            } else {
+                btn.classList.remove('active');
+            }
+        });
         document.querySelectorAll('.brand-pill-btn').forEach(b => b.classList.remove('active'));
         selectedImagesArray = [];
         selectedDefectImagesArray = [];
@@ -1742,6 +1752,19 @@ document.addEventListener('DOMContentLoaded', () => {
     // Load all data from PostgreSQL via Express API on start
     loadAllData();
     initAdminTabs();
+
+    // Set up item service type touchscreen buttons
+    const serviceBtns = document.querySelectorAll('#serviceButtonGroup .service-btn');
+    const serviceInput = document.getElementById('itemServiceType');
+    if (serviceBtns.length > 0 && serviceInput) {
+        serviceBtns.forEach(btn => {
+            btn.addEventListener('click', () => {
+                serviceBtns.forEach(b => b.classList.remove('active'));
+                btn.classList.add('active');
+                serviceInput.value = btn.dataset.value;
+            });
+        });
+    }
     
     // Check for search parameter in URL (used when scanning QR code)
     const urlParams = new URLSearchParams(window.location.search);

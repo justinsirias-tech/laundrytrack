@@ -212,15 +212,16 @@
                                         
                                         <!-- Item Service Type -->
                                         <div class="form-group-compact" style="margin: 0; margin-bottom: 0.5rem;">
-                                            <label for="itemServiceType" data-i18n="item_service" style="font-size: 0.9rem; font-weight: 600;">Item Service</label>
-                                            <select id="itemServiceType" style="width: 100%; padding: 0.75rem; font-size: 1rem; border-radius: 8px; border: 1px solid var(--border-glass); background: var(--bg-glass-solid); color: var(--text-main);">
-                                                <option value="Same as Order" data-i18n="same_as_order">Same as Order</option>
-                                                <option value="Wash & Fold" data-i18n="wash_fold">Wash & Fold</option>
-                                                <option value="Dry Cleaning" data-i18n="dry_cleaning">Dry Cleaning</option>
-                                                <option value="Ironing Only" data-i18n="ironing_only">Ironing Only</option>
-                                                <option value="Wash & Iron" data-i18n="wash_iron">Wash & Iron</option>
-                                                <option value="Premium Care" data-i18n="premium_care">Premium Care</option>
-                                            </select>
+                                            <label data-i18n="item_service" style="font-size: 0.9rem; font-weight: 600;">Item Service</label>
+                                            <input type="hidden" id="itemServiceType" value="Same as Order" />
+                                            <div class="service-btn-group" id="serviceButtonGroup">
+                                                <button type="button" class="service-btn active" data-value="Same as Order" data-i18n="same_as_order">Same as Order</button>
+                                                <button type="button" class="service-btn" data-value="Wash & Fold" data-i18n="wash_fold">Wash & Fold</button>
+                                                <button type="button" class="service-btn" data-value="Dry Cleaning" data-i18n="dry_cleaning">Dry Cleaning</button>
+                                                <button type="button" class="service-btn" data-value="Ironing Only" data-i18n="ironing_only">Ironing Only</button>
+                                                <button type="button" class="service-btn" data-value="Wash & Iron" data-i18n="wash_iron">Wash & Iron</button>
+                                                <button type="button" class="service-btn" data-value="Premium Care" data-i18n="premium_care">Premium Care</button>
+                                            </div>
                                         </div>
 
                                         <!-- Brand (Optional) Text Input -->

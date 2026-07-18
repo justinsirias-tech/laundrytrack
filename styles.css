@@ -1700,3 +1700,39 @@ img[src*="logo.clearbit.com"],
     border-radius: 8px;
     box-shadow: 0 0 10px rgba(0, 229, 255, 0.2);
 }
+
+/* Service Button Group for Touchscreens */
+.service-btn-group {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 0.4rem;
+    margin-top: 0.25rem;
+}
+
+.service-btn {
+    padding: 0.55rem 0.25rem;
+    font-size: 0.78rem;
+    font-weight: 600;
+    border-radius: 8px;
+    border: 1px solid var(--border-glass);
+    background: #fff;
+    color: var(--text-main);
+    cursor: pointer;
+    text-align: center;
+    transition: var(--transition);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    min-height: 42px; /* touchscreen target size */
+}
+
+.service-btn:hover {
+    border-color: var(--primary);
+    background: rgba(34, 41, 69, 0.02);
+}
+
+.service-btn.active {
+    border-color: var(--primary) !important;
+    background: rgba(34, 41, 69, 0.08) !important;
+    color: var(--primary) !important;
+}
