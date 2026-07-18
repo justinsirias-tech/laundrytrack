@@ -683,52 +683,58 @@ body {
 
 .color-swatches {
     display: flex;
-    gap: 0.5rem;
+    gap: 0.6rem;
     flex-wrap: wrap;
     align-items: center;
-    height: 42px;
+    height: auto; /* allow wrapping to multiple lines if needed */
 }
 
 .color-swatch {
-    width: 24px;
-    height: 24px;
+    width: 44px !important; /* Force overrides */
+    height: 44px !important;
     border-radius: 50%;
-    border: 1px solid rgba(0, 0, 0, 0.08);
+    border: 2px solid rgba(34, 41, 69, 0.12) !important;
     cursor: pointer;
-    transition: var(--transition);
+    transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
 }
 
 .color-swatch:hover {
-    transform: scale(1.2);
+    transform: scale(1.15);
+    border-color: var(--primary) !important;
 }
 
 .color-swatch.active {
-    box-shadow: 0 0 0 2px #ffffff, 0 0 0 4px var(--primary);
+    border-color: var(--primary) !important;
+    box-shadow: 0 0 0 3px #ffffff, 0 0 0 6px var(--primary) !important;
 }
 
 .custom-color-wrapper {
     position: relative;
-    width: 28px;
-    height: 28px;
+    width: 44px !important;
+    height: 44px !important;
     border-radius: 50%;
     overflow: hidden;
     cursor: pointer;
-    border: 2px solid var(--border-glass);
-    transition: var(--transition);
+    border: 2px dashed rgba(34, 41, 69, 0.25) !important;
+    transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
     display: flex;
     align-items: center;
     justify-content: center;
-    background: var(--bg-glass);
+    background: #fff !important;
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
 }
 
 .custom-color-wrapper:hover {
-    transform: scale(1.1);
-    border-color: var(--primary);
+    transform: scale(1.15);
+    border-color: var(--primary) !important;
+    border-style: solid !important;
 }
 
 .custom-color-wrapper.active {
-    border-color: var(--primary);
-    box-shadow: 0 0 0 2px var(--bg-dark), 0 0 0 4px var(--primary);
+    border-color: var(--primary) !important;
+    border-style: solid !important;
+    box-shadow: 0 0 0 3px #ffffff, 0 0 0 6px var(--primary) !important;
 }
 
 .custom-color-input {
@@ -742,8 +748,8 @@ body {
 }
 
 .palette-icon {
-    width: 14px;
-    height: 14px;
+    width: 18px;
+    height: 18px;
     color: var(--text-muted);
     pointer-events: none;
     z-index: 1;
@@ -1304,17 +1310,17 @@ body {
     }
     
     .color-swatches {
-        gap: 0.25rem;
+        gap: 0.35rem;
     }
     
     .color-swatch {
-        width: 20px;
-        height: 20px;
+        width: 36px !important;
+        height: 36px !important;
     }
     
     .custom-color-wrapper {
-        width: 24px;
-        height: 24px;
+        width: 36px !important;
+        height: 36px !important;
     }
     
     .admin-category-board {
