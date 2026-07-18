@@ -1334,7 +1334,7 @@ body {
     font-weight: 600;
     width: 100%;
     height: auto;
-    min-height: 48px;
+    min-height: 68px;
     border-radius: 10px;
     background: var(--bg-glass-solid);
     border: 1px solid var(--border-glass);

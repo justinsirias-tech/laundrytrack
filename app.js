@@ -863,8 +863,8 @@ const initBrandButtons = () => {
         const logoUrl = brandObj.logo_url || `https://www.google.com/s2/favicons?domain=${brand.toLowerCase().replace(/[^a-z0-9]/g, '')}.com&sz=128`;
         
         return `
-        <button type="button" class="brand-pill-btn ${isActive}" data-brand="${brand}" title="${brand}" style="display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 0.2rem; min-height: 48px; height: auto; padding: 0.35rem 0.25rem;">
-            <img class="brand-logo-img" src="${logoUrl}" alt="${brand}" style="max-height: 20px; max-width: 85%; object-fit: contain; filter: grayscale(100%); opacity: 0.8; transition: var(--transition);" onerror="this.style.display='none';">
+        <button type="button" class="brand-pill-btn ${isActive}" data-brand="${brand}" title="${brand}" style="display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 0.2rem; min-height: 68px; height: auto; padding: 0.35rem 0.25rem;">
+            <img class="brand-logo-img" src="${logoUrl}" alt="${brand}" style="max-height: 32px; max-width: 85%; object-fit: contain; filter: grayscale(100%); opacity: 0.8; transition: var(--transition);" onerror="this.style.display='none';">
             <span class="brand-btn-text" style="font-size: 0.72rem; font-weight: 600; line-height: 1.1; color: var(--text-main); margin-top: 0.1rem; text-align: center;">${brand}</span>
         </button>
         `;
