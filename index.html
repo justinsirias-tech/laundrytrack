@@ -1,0 +1,539 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>TLS TRACKING - Laundry Management</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link rel="preconnect" href="https://unpkg.com">
+    <link rel="stylesheet" href="styles.min.css">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <!-- Lucide Icons -->
+    <script src="https://unpkg.com/lucide@latest" defer></script>
+</head>
+<body>
+    <!-- App Container -->
+    <div class="app-container">
+        <!-- Sidebar -->
+        <aside class="sidebar glass-panel">
+            <div class="brand">
+                <i data-lucide="waves" class="brand-icon"></i>
+                <h1>TLS Tracking</h1>
+            </div>
+            <nav class="nav-menu">
+                <button class="nav-item active" data-view="dashboard">
+                    <i data-lucide="layout-dashboard"></i>
+                    <span data-i18n="dashboard">Dashboard</span>
+                </button>
+                <button class="nav-item" data-view="register">
+                    <i data-lucide="plus-circle"></i>
+                    <span data-i18n="new_order">New Order</span>
+                </button>
+                <button class="nav-item" data-view="kanban">
+                    <i data-lucide="kanban-square"></i>
+                    <span data-i18n="tracking_board">Tracking Board</span>
+                </button>
+                <button class="nav-item" data-view="admin">
+                    <i data-lucide="settings"></i>
+                    <span data-i18n="admin_panel">Admin Panel</span>
+                </button>
+            </nav>
+            <div class="sidebar-footer">
+                <div class="user-profile">
+                    <img src="https://ui-avatars.com/api/?name=Admin+User&background=6366f1&color=fff" alt="Admin" class="avatar">
+                    <div class="user-info">
+                        <span class="user-name">Admin User</span>
+                        <span class="user-role" data-i18n="manager">Manager</span>
+                    </div>
+                </div>
+            </div>
+        </aside>
+
+        <!-- Main Content -->
+        <main class="main-content">
+            <!-- Header -->
+            <header class="top-header glass-panel">
+                <div class="search-bar">
+                    <i data-lucide="search"></i>
+                    <input type="text" placeholder="Search orders, customers, or IDs..." id="searchInput" data-i18n-placeholder="search_placeholder">
+                </div>
+                <div class="header-actions">
+                    <button id="langToggleBtn" class="btn btn-secondary" style="padding: 0.4rem 0.6rem; font-size: 0.85rem; font-weight: 600; min-width: 65px; border-radius: 6px; display: flex; align-items: center; justify-content: center; gap: 0.25rem;">
+                        <i data-lucide="languages" style="width: 14px; height: 14px;"></i>
+                        <span id="currentLangText">EN</span>
+                    </button>
+                    <button class="icon-btn"><i data-lucide="bell"></i></button>
+                    <button class="icon-btn" onclick="document.querySelector('[data-view=admin]').click()"><i data-lucide="settings"></i></button>
+                </div>
+            </header>
+
+            <!-- Views Container -->
+            <div class="views-container">
+                <!-- Dashboard View -->
+                <div id="dashboard-view" class="view active">
+                    <h2 class="view-title" data-i18n="dashboard">Dashboard Overview</h2>
+                    <div class="stats-grid">
+                        <!-- Stats cards will be populated by JS -->
+                    </div>
+                    <div class="recent-orders-section glass-panel">
+                        <div class="section-header">
+                            <h3 data-i18n="recent_orders">Recent Orders</h3>
+                            <button class="text-btn" data-i18n="view_all">View All</button>
+                        </div>
+                        <div class="table-container">
+                            <table class="data-table">
+                                <thead>
+                                    <tr>
+                                        <th data-i18n="order_id">Order ID</th>
+                                        <th data-i18n="customer">Customer</th>
+                                        <th data-i18n="service_type">Service Type</th>
+                                        <th data-i18n="status">Status</th>
+                                        <th data-i18n="date">Date</th>
+                                        <th data-i18n="action">Action</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="recent-orders-body">
+                                    <!-- Rows populated by JS -->
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+
+                    <div class="recent-orders-section glass-panel" style="margin-top: 1.5rem;">
+                        <div class="section-header">
+                            <h3>Completed Orders</h3>
+                        </div>
+                        <div class="table-container">
+                            <table class="data-table">
+                                <thead>
+                                    <tr>
+                                        <th>Order ID</th>
+                                        <th>Customer</th>
+                                        <th>Service Type</th>
+                                        <th>Status</th>
+                                        <th>Date</th>
+                                        <th>Action</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="completed-orders-body">
+                                    <!-- Rows populated by JS -->
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Register View -->
+                <div id="register-view" class="view">
+                    <h2 class="view-title" data-i18n="register_title">Register New Order</h2>
+                    <form id="newOrderForm">
+                        <div class="pos-container">
+                            
+                            <!-- Left Side: Order cart & details -->
+                            <div class="pos-cart-panel glass-panel">
+                                <div class="cart-section">
+                                    <h3 class="pos-section-title" data-i18n="order_info">1. Order Info</h3>
+                                    <div class="form-group-compact">
+                                        <label for="orderId" data-i18n="order_number">Order Number</label>
+                                        <input type="text" id="orderId" required placeholder="e.g. ORD-1005">
+                                    </div>
+                                    <div class="form-group-compact">
+                                        <label for="customerName" data-i18n="customer_name">Customer Name</label>
+                                        <input type="text" id="customerName" required placeholder="John Doe">
+                                    </div>
+                                    <div class="form-group-compact">
+                                        <label for="customerPhone" data-i18n="phone_number">Phone Number</label>
+                                        <input type="tel" id="customerPhone" required placeholder="+1 234 567 8900">
+                                    </div>
+                                    <div class="form-group-compact">
+                                        <label for="serviceType" data-i18n="service_type">Service Type</label>
+                                        <select id="serviceType">
+                                            <option value="Wash & Fold" data-i18n="wash_fold">Wash & Fold</option>
+                                            <option value="Dry Cleaning" data-i18n="dry_cleaning">Dry Cleaning</option>
+                                            <option value="Ironing Only" data-i18n="ironing_only">Ironing Only</option>
+                                            <option value="Premium Care" data-i18n="premium_care">Premium Care</option>
+                                            <option value="Mixed Services" data-i18n="mixed_services">Mixed Services</option>
+                                        </select>
+                                    </div>
+                                </div>
+                                
+                                <div class="cart-items-section">
+                                    <h3 class="pos-section-title"><span data-i18n="current_items">Current Items</span> (<span id="itemCount">0</span>)</h3>
+                                    <div class="pos-cart-items-list" id="addedItemsList">
+                                        <!-- Populated dynamically as cards -->
+                                        <div class="empty-cart-placeholder" data-i18n="no_items">No items added yet.</div>
+                                    </div>
+                                </div>
+                                
+                                <div class="cart-actions">
+                                    <button type="reset" id="clearOrderBtn" class="btn btn-secondary w-100" data-i18n="clear_btn">Clear</button>
+                                    <button type="submit" id="submitOrderBtn" class="btn btn-primary w-100" data-i18n="submit_order">Submit Order</button>
+                                </div>
+                            </div>
+                            
+                            <!-- Right Side: Item Builder -->
+                            <div class="pos-builder-panel glass-panel">
+                                <h3 class="pos-section-title" data-i18n="add_item">2. Add Item</h3>
+                                
+                                <div class="pos-row-two-cols" style="gap: 1.5rem; align-items: start;">
+                                    
+                                    <!-- Left Column of Builder (Garments & Brands) -->
+                                    <div class="builder-left-col">
+                                        
+                                        <!-- Category Tabs -->
+                                        <div class="builder-tabs-container" style="margin-bottom: 0.25rem;">
+                                            <div class="builder-tabs" id="categoryTabs">
+                                                <!-- Category tabs populated dynamically -->
+                                            </div>
+                                        </div>
+                                        
+                                        <!-- Garments Selection Grid (Squeezed Upwards) -->
+                                        <div class="builder-garments-container" style="min-height: 120px; max-height: 220px; overflow-y: auto; background: var(--bg-glass-solid); border: 1px solid var(--border-glass); border-radius: 8px; padding: 0.5rem;">
+                                            <div class="item-types" id="builderGarmentsGrid" style="display: grid; grid-template-columns: repeat(5, 1fr); gap: 0.4rem;">
+                                                <!-- Clothing types for active category populated dynamically -->
+                                            </div>
+                                        </div>
+                                        
+                                        <!-- Brand Selector Box (Below garments box) -->
+                                        <div class="form-group-compact" style="margin: 0; display: flex; flex-direction: column; flex-grow: 1;">
+                                            <div class="builder-brands-container" style="min-height: 580px; max-height: 650px; overflow-y: auto; background: var(--bg-glass-solid); border: 1px solid var(--border-glass); border-radius: 8px; padding: 0.5rem; flex-grow: 1;">
+                                                <div class="brand-quick-select" style="display: grid; grid-template-columns: repeat(5, 1fr); gap: 0.4rem;">
+                                                    <!-- Populated dynamically -->
+                                                </div>
+                                            </div>
+                                        </div>
+                                        
+                                    </div>
+                                    
+                                    <!-- Right Column of Builder (Photo, Brand Input, Color, Add Item) -->
+                                    <div class="builder-right-col">
+                                        
+                                        <!-- Item Service Type -->
+                                        <div class="form-group-compact" style="margin: 0; margin-bottom: 0.5rem;">
+                                            <label for="itemServiceType" data-i18n="item_service" style="font-size: 0.9rem; font-weight: 600;">Item Service</label>
+                                            <select id="itemServiceType" style="width: 100%; padding: 0.75rem; font-size: 1rem; border-radius: 8px; border: 1px solid var(--border-glass); background: var(--bg-glass-solid); color: var(--text-main);">
+                                                <option value="Same as Order" data-i18n="same_as_order">Same as Order</option>
+                                                <option value="Wash & Fold" data-i18n="wash_fold">Wash & Fold</option>
+                                                <option value="Dry Cleaning" data-i18n="dry_cleaning">Dry Cleaning</option>
+                                                <option value="Ironing Only" data-i18n="ironing_only">Ironing Only</option>
+                                                <option value="Wash & Iron" data-i18n="wash_iron">Wash & Iron</option>
+                                                <option value="Premium Care" data-i18n="premium_care">Premium Care</option>
+                                            </select>
+                                        </div>
+
+                                        <!-- Brand (Optional) Text Input -->
+                                        <div class="form-group-compact" style="margin: 0; margin-bottom: 0.5rem;">
+                                            <label for="itemBrand" data-i18n="brand_optional" style="font-size: 0.9rem; font-weight: 600;">Brand (Optional)</label>
+                                            <input type="text" id="itemBrand" placeholder="e.g. Nike, Zara" style="width: 100%; padding: 0.75rem; font-size: 1rem; border-radius: 8px; border: 1px solid #cbd5e1; box-shadow: inset 0 1px 2px rgba(0,0,0,0.05); background: var(--bg-glass-solid); color: var(--text-main);">
+                                        </div>
+                                        
+                                        <!-- Color Picker -->
+                                        <div class="form-group-compact" style="margin: 0; margin-bottom: 0.5rem;">
+                                            <label data-i18n="color" style="font-size: 0.9rem; font-weight: 600;">Color</label>
+                                            <div class="color-swatches" style="height: auto; gap: 0.45rem; display: flex; flex-wrap: wrap; align-items: center;">
+                                                <button type="button" class="color-swatch" style="background: var(--bg-glass-solid); border: 1px solid var(--border-glass); width: 32px; height: 32px;" data-color="White" title="White"></button>
+                                                <button type="button" class="color-swatch active" style="background: #000000; width: 32px; height: 32px;" data-color="Black" title="Black"></button>
+                                                <button type="button" class="color-swatch" style="background: #3b82f6; width: 32px; height: 32px;" data-color="Blue" title="Blue"></button>
+                                                <button type="button" class="color-swatch" style="background: #1e3a8a; width: 32px; height: 32px;" data-color="Navy" title="Navy"></button>
+                                                <button type="button" class="color-swatch" style="background: #ef4444; width: 32px; height: 32px;" data-color="Red" title="Red"></button>
+                                                <button type="button" class="color-swatch" style="background: #22c55e; width: 32px; height: 32px;" data-color="Green" title="Green"></button>
+                                                <button type="button" class="color-swatch" style="background: #f59e0b; width: 32px; height: 32px;" data-color="Yellow" title="Yellow"></button>
+                                                <button type="button" class="color-swatch" style="background: #f97316; width: 32px; height: 32px;" data-color="Orange" title="Orange"></button>
+                                                <button type="button" class="color-swatch" style="background: #8b5cf6; width: 32px; height: 32px;" data-color="Purple" title="Purple"></button>
+                                                <button type="button" class="color-swatch" style="background: #ec4899; width: 32px; height: 32px;" data-color="Pink" title="Pink"></button>
+                                                <button type="button" class="color-swatch" style="background: #9ca3af; width: 32px; height: 32px;" data-color="Grey" title="Grey"></button>
+                                                <button type="button" class="color-swatch" style="background: #78350f; width: 32px; height: 32px;" data-color="Brown" title="Brown"></button>
+                                                <button type="button" class="color-swatch" style="background: #14b8a6; width: 32px; height: 32px;" data-color="Teal" title="Teal"></button>
+                                                <button type="button" class="color-swatch" style="background: linear-gradient(135deg, #000 50%, #fff 50%); border: 1px solid var(--border-glass); width: 32px; height: 32px;" data-color="Black/White" title="Black/White"></button>
+                                                <button type="button" class="color-swatch" style="background: linear-gradient(135deg, #3b82f6 50%, #fff 50%); border: 1px solid var(--border-glass); width: 32px; height: 32px;" data-color="Blue/White" title="Blue/White"></button>
+                                                <button type="button" class="color-swatch" style="background: linear-gradient(135deg, #ef4444 50%, #fff 50%); border: 1px solid var(--border-glass); width: 32px; height: 32px;" data-color="Red/White" title="Red/White"></button>
+                                                
+                                                <div class="custom-color-wrapper" title="Pick Custom Color" style="width: 32px; height: 32px;">
+                                                    <input type="color" id="customColorInput" class="custom-color-input" value="#ff5733" style="width: 32px; height: 32px;">
+                                                    <i data-lucide="palette" class="palette-icon" style="width: 16px; height: 16px;"></i>
+                                                </div>
+                                            </div>
+                                        </div>
+
+                                        <!-- Photo & Defect (Optional) -->
+                                        <div style="display: flex; gap: 0.75rem; width: 100%; flex-grow: 1;">
+                                            <!-- Photo -->
+                                            <div class="form-group-compact" style="margin: 0; flex: 1; display: flex; flex-direction: column;">
+                                                <label data-i18n="photo_optional" style="font-size: 0.9rem; font-weight: 600;">Photo</label>
+                                                <div style="display: flex; flex-direction: column; gap: 0.5rem; width: 100%; flex-grow: 1;">
+                                                    <div id="imageDropZone" style="width: 100%; min-height: 100px; border: 2px dashed rgba(99, 102, 241, 0.4); border-radius: 12px; background: var(--bg-glass-solid); display: flex; flex-direction: column; align-items: center; justify-content: center; cursor: pointer; position: relative; transition: var(--transition); gap: 0.25rem; flex-grow: 1; padding: 0.5rem;">
+                                                        <div style="display: flex; gap: 1rem; align-items: center; justify-content: center;">
+                                                            <div style="display: flex; flex-direction: column; align-items: center; gap: 0.15rem;">
+                                                                <i data-lucide="upload-cloud" style="width: 24px; height: 24px; color: var(--primary);"></i>
+                                                                <span style="font-size: 0.75rem; font-weight: 600; color: var(--primary);">Upload</span>
+                                                            </div>
+                                                            <div id="cameraBtn" style="display: flex; flex-direction: column; align-items: center; gap: 0.15rem; z-index: 10;" onclick="event.stopPropagation(); startCamera('photo');">
+                                                                <i data-lucide="camera" style="width: 24px; height: 24px; color: var(--status-orange);"></i>
+                                                                <span style="font-size: 0.75rem; font-weight: 600; color: var(--status-orange);">Camera</span>
+                                                            </div>
+                                                        </div>
+                                                        <span style="font-size: 0.7rem; color: var(--text-muted); text-align: center;">or paste image (Ctrl+V)</span>
+                                                        <input type="file" id="itemImage" accept="image/*" multiple style="display: none;">
+                                                    </div>
+                                                    <div id="imageThumbnailsContainer" style="display: flex; gap: 0.5rem; overflow-x: auto; min-height: 60px; padding-bottom: 0.25rem; align-items: center; border: 1px solid var(--border-glass); border-radius: 8px; padding: 0.5rem; background: #fff;">
+                                                        <span id="noPhotosText" style="font-size: 0.75rem; color: #94a3b8; font-style: italic; width: 100%; text-align: center;">No photos</span>
+                                                    </div>
+                                                </div>
+                                            </div>
+
+                                            <!-- Defect -->
+                                            <div class="form-group-compact" style="margin: 0; flex: 1; display: flex; flex-direction: column;">
+                                                <label data-i18n="defect_optional" style="font-size: 0.9rem; font-weight: 600;">Defect</label>
+                                                <div style="display: flex; flex-direction: column; gap: 0.5rem; width: 100%; flex-grow: 1;">
+                                                    <div id="defectDropZone" style="width: 100%; min-height: 100px; border: 2px dashed rgba(239, 68, 68, 0.4); border-radius: 12px; background: #fef2f2; display: flex; flex-direction: column; align-items: center; justify-content: center; cursor: pointer; position: relative; transition: var(--transition); gap: 0.25rem; flex-grow: 1; padding: 0.5rem;">
+                                                        <div style="display: flex; gap: 1rem; align-items: center; justify-content: center;">
+                                                            <div style="display: flex; flex-direction: column; align-items: center; gap: 0.15rem;">
+                                                                <i data-lucide="upload-cloud" style="width: 24px; height: 24px; color: var(--status-red);"></i>
+                                                                <span style="font-size: 0.75rem; font-weight: 600; color: var(--status-red);">Upload</span>
+                                                            </div>
+                                                            <div id="defectCameraBtn" style="display: flex; flex-direction: column; align-items: center; gap: 0.15rem; z-index: 10;" onclick="event.stopPropagation(); startCamera('defect');">
+                                                                <i data-lucide="camera" style="width: 24px; height: 24px; color: var(--status-orange);"></i>
+                                                                <span style="font-size: 0.75rem; font-weight: 600; color: var(--status-orange);">Camera</span>
+                                                            </div>
+                                                        </div>
+                                                        <span style="font-size: 0.7rem; color: var(--text-muted); text-align: center;">click/drag to upload</span>
+                                                        <input type="file" id="defectImage" accept="image/*" multiple style="display: none;">
+                                                    </div>
+                                                    <div id="defectThumbnailsContainer" style="display: flex; gap: 0.5rem; overflow-x: auto; min-height: 60px; padding-bottom: 0.25rem; align-items: center; border: 1px solid var(--border-glass); border-radius: 8px; padding: 0.5rem; background: #fff;">
+                                                        <span id="noDefectText" style="font-size: 0.75rem; color: #94a3b8; font-style: italic; width: 100%; text-align: center;">No defects</span>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        </div>
+                                        
+                                        <!-- Add Item Button -->
+                                        <button type="button" class="btn btn-primary" id="addItemBtn" style="display: flex; align-items: center; justify-content: center; gap: 0.5rem; height: 44px; font-size: 0.95rem; width: 100%; margin-top: 1rem; border-radius: 8px;">
+                                            <i data-lucide="plus"></i> <span data-i18n="add_item_btn">Add Item</span>
+                                        </button>
+                                        
+                                    </div>
+                                    
+                                </div>
+                            </div>
+                            
+                        </div>
+                    </form>
+                </div>
+
+                <!-- Kanban View -->
+                <div id="kanban-view" class="view">
+                    <h2 class="view-title">Tracking Board</h2>
+                    <div class="kanban-board">
+                        <div class="kanban-column" data-status="Received">
+                            <div class="column-header"><span class="dot bg-blue"></span> Received</div>
+                            <div class="kanban-cards"></div>
+                        </div>
+                        <div class="kanban-column" data-status="Wash & Dry">
+                            <div class="column-header"><span class="dot bg-purple"></span> Wash & Dry</div>
+                            <div class="kanban-cards"></div>
+                        </div>
+                        <div class="kanban-column" data-status="Ironing">
+                            <div class="column-header"><span class="dot bg-orange"></span> Ironing</div>
+                            <div class="kanban-cards"></div>
+                        </div>
+                        <div class="kanban-column" data-status="Packing">
+                            <div class="column-header"><span class="dot" style="background: #f59e0b;"></span> Packing</div>
+                            <div class="kanban-cards"></div>
+                        </div>
+                        <div class="kanban-column" data-status="Ready">
+                            <div class="column-header"><span class="dot bg-green"></span> Ready for Delivery</div>
+                            <div class="kanban-cards"></div>
+                        </div>
+                        <div class="kanban-column" data-status="Delivered">
+                            <div class="column-header"><span class="dot bg-gray"></span> Delivered</div>
+                            <div class="kanban-cards"></div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Admin View -->
+                <div id="admin-view" class="view">
+                    <h2 class="view-title" data-i18n="admin_settings">Admin Settings</h2>
+                    
+                    <!-- Admin Inner Tabs -->
+                    <div class="admin-tabs" style="display: flex; gap: 1rem; margin-bottom: 1.5rem; border-bottom: 1px solid var(--border-glass); padding-bottom: 0.5rem;">
+                        <button class="admin-tab active" data-tab="categories" style="background: none; border: none; font-size: 1rem; font-weight: 600; color: var(--primary); cursor: pointer; padding: 0.5rem 1rem; border-bottom: 2px solid var(--primary);">Items & Categories</button>
+                        <button class="admin-tab" data-tab="brands" style="background: none; border: none; font-size: 1rem; font-weight: 600; color: var(--text-muted); cursor: pointer; padding: 0.5rem 1rem; border-bottom: 2px solid transparent;">Brand Database</button>
+                    </div>
+
+                    <div id="admin-tab-categories" class="admin-tab-content">
+                        <div class="admin-grid">
+                        
+                        <!-- Left Panel: Standard Items Library -->
+                        <div class="glass-panel" style="padding: 1.25rem; background: var(--bg-glass-solid);">
+                            <h3 style="font-size: 1rem; margin-bottom: 1rem; padding-bottom: 0.5rem; border-bottom: 1px solid var(--border-glass); color: var(--text-main);" data-i18n="items_library">1. Items Library</h3>
+                            <form id="adminAddItemForm" style="display: flex; gap: 0.5rem; margin-bottom: 1rem;">
+                                <input type="text" id="adminNewItemInput" required placeholder="e.g. Scarf, Blanket" style="flex: 1; padding: 0.5rem 0.75rem; font-size: 0.9rem;">
+                                <button type="submit" class="btn btn-primary" style="padding: 0.5rem; font-size: 0.9rem; display: flex; align-items: center; justify-content: center; width: 40px; height: 40px;"><i data-lucide="plus" style="width: 18px; height: 18px;"></i></button>
+                            </form>
+                            
+                            <label style="font-size: 0.8rem; color: var(--text-muted); display: block; margin-bottom: 0.5rem;" data-i18n="drag_assign">Library Items (Drag to assign):</label>
+                            <div id="adminLibraryDropzone" class="admin-library-dropzone" style="min-height: 250px; background: var(--bg-glass-solid); border: 2px dashed var(--border-glass); border-radius: 8px; padding: 0.75rem; display: flex; flex-direction: column; gap: 0.5rem; max-height: 450px; overflow-y: auto;">
+                                <!-- Draggable item chips populated by JS -->
+                            </div>
+                        </div>
+                        
+                        <!-- Right Panel: Categories Board -->
+                        <div class="glass-panel" style="padding: 1.25rem; background: var(--bg-glass-solid);">
+                            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1rem; padding-bottom: 0.5rem; border-bottom: 1px solid var(--border-glass);">
+                                <h3 style="font-size: 1rem; color: var(--text-main); margin: 0;" data-i18n="category_board">2. Category Board</h3>
+                                <form id="adminCreateCategoryForm" style="display: flex; gap: 0.5rem;">
+                                    <input type="text" id="adminNewCategoryInput" required placeholder="e.g. Tops, Bedding" style="padding: 0.4rem 0.75rem; font-size: 0.85rem; width: 180px;">
+                                    <button type="submit" class="btn btn-primary" style="padding: 0.4rem 0.75rem; font-size: 0.85rem; display: flex; align-items: center; gap: 0.25rem;"><i data-lucide="plus" style="width: 14px; height: 14px;"></i> <span data-i18n="create_category">Create Category</span></button>
+                                </form>
+                            </div>
+                            
+                            <div id="adminCategoryBoard" class="admin-category-board" style="display: grid; grid-template-columns: repeat(auto-fill, minmax(220px, 1fr)); gap: 1rem; min-height: 350px;">
+                                <!-- Category cards populated by JS -->
+                            </div>
+                        </div>
+                        
+                        </div>
+                    </div>
+                    
+                    <div id="admin-tab-brands" class="admin-tab-content" style="display: none;">
+                        <!-- Bottom Panel: Brand Database -->
+                        <div class="glass-panel" style="padding: 1.25rem; background: var(--bg-glass-solid);">
+                            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1rem; padding-bottom: 0.5rem; border-bottom: 1px solid var(--border-glass);">
+                                <h3 style="font-size: 1rem; color: var(--text-main); margin: 0;" data-i18n="brand_database">3. Brand Database</h3>
+                                <form id="adminAddBrandForm" style="display: flex; gap: 0.5rem;">
+                                    <input type="text" id="adminNewBrandInput" required placeholder="e.g. Gucci, Zara" style="padding: 0.4rem 0.75rem; font-size: 0.85rem; width: 180px;">
+                                    <button type="submit" class="btn btn-primary" style="padding: 0.4rem 0.75rem; font-size: 0.85rem; display: flex; align-items: center; gap: 0.25rem;"><i data-lucide="plus" style="width: 14px; height: 14px;"></i> <span data-i18n="add_brand">Add Brand</span></button>
+                                </form>
+                            </div>
+                            
+                            <div id="adminBrandsBoard" style="display: grid; grid-template-columns: repeat(auto-fill, minmax(140px, 1fr)); gap: 1rem; min-height: 150px; max-height: 350px; overflow-y: auto; padding-right: 0.5rem;">
+                                <!-- Brand cards populated by JS -->
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+            </div>
+        </main>
+    </div>
+
+    <!-- Order Details Modal -->
+    <div id="orderDetailsModal" class="modal-overlay">
+        <div class="modal-content glass-panel">
+            <div class="modal-header">
+                <h2 id="modalOrderId">Order Details</h2>
+                <button class="icon-btn close-modal" style="width:32px; height:32px;"><i data-lucide="x"></i></button>
+            </div>
+            <div class="modal-body">
+                <div class="order-info-grid">
+                    <div class="info-group">
+                        <label data-i18n="customer_name">Customer Name</label>
+                        <p id="modalCustomerName">-</p>
+                    </div>
+                    <div class="info-group">
+                        <label data-i18n="phone_number">Phone Number</label>
+                        <p id="modalPhone">-</p>
+                    </div>
+                    <div class="info-group">
+                        <label data-i18n="service_type">Service Type</label>
+                        <p id="modalServiceType">-</p>
+                    </div>
+                    <div class="info-group">
+                        <label data-i18n="status">Status</label>
+                        <div id="modalStatus">-</div>
+                    </div>
+                    <div class="info-group">
+                        <label data-i18n="date_submitted">Date Submitted</label>
+                        <p id="modalDate">-</p>
+                    </div>
+                </div>
+                
+                <h3 class="modal-subtitle" data-i18n="items_list">Items List</h3>
+                <div class="modal-items-list" id="modalItemsList">
+                    <!-- Items populated by JS -->
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button class="btn btn-secondary close-modal" data-i18n="close">Close</button>
+                <button class="btn btn-primary" id="printModalBtn" style="display: flex; gap: 0.5rem; align-items: center;"><i data-lucide="printer" style="width: 18px; height: 18px;"></i> <span data-i18n="print_tag">Print Tag</span></button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Image Enlarge Modal -->
+    <div id="imageEnlargeModal" class="modal-overlay" style="z-index: 3000;">
+        <div class="modal-content image-modal-content">
+            <button class="icon-btn close-image-modal"><i data-lucide="x"></i></button>
+            <img id="enlargedImage" src="" style="max-width: 100%; max-height: 80vh; border-radius: 8px; box-shadow: 0 10px 40px rgba(0,0,0,0.5);" />
+        </div>
+    </div>
+
+    <!-- Verification Modal -->
+    <div class="modal-overlay" id="verificationModal">
+        <div class="modal-content" style="max-width: 500px;">
+            <div class="modal-header">
+                <h2 id="verificationTitle">Verify Transfer</h2>
+                <button type="button" class="btn btn-secondary" id="closeVerificationBtn" style="padding: 0.5rem;"><i data-lucide="x"></i></button>
+            </div>
+            <div class="modal-body" style="padding: 1rem; max-height: 60vh; overflow-y: auto;">
+                <p style="margin-bottom: 1rem; font-size: 0.9rem; color: var(--text-muted);">Please scan or verify each item before the transfer is completed.</p>
+                <input type="text" id="verificationScannerInput" placeholder="Scan ITM-XXX tag here..." style="width: 100%; margin-bottom: 1rem; padding: 0.75rem; font-family: monospace; font-size: 1.1rem; text-transform: uppercase;">
+                <div id="verificationItemsList" style="display: flex; flex-direction: column; gap: 0.5rem;">
+                    <!-- Verification rows here -->
+                </div>
+            </div>
+            <div class="modal-header" style="justify-content: space-between; border-top: 1px solid var(--border-glass); border-bottom: none;">
+                <div style="font-weight: 600;">Verified: <span id="verificationCount" style="color: var(--primary);">0 / 0</span></div>
+                <div style="display: flex; gap: 0.5rem;">
+                    <button type="button" class="btn btn-secondary" id="cancelVerificationBtn">Cancel Transfer</button>
+                    <button type="button" class="btn btn-primary" id="confirmVerificationBtn" disabled style="opacity: 0.5; cursor: not-allowed;">Confirm Transfer</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Camera Modal -->
+    <div class="modal-overlay" id="cameraModal">
+        <div class="modal-content" style="max-width: 500px; text-align: center;">
+            <div class="modal-header">
+                <h2>Take Photo</h2>
+                <button type="button" class="btn btn-secondary" id="closeCameraBtn" style="padding: 0.5rem;"><i data-lucide="x"></i></button>
+            </div>
+            <div class="modal-body" style="display: flex; flex-direction: column; align-items: center; gap: 1rem; background: #000; position: relative;">
+                <video id="cameraVideo" autoplay playsinline style="width: 100%; max-height: 400px; border-radius: 8px;"></video>
+                <canvas id="cameraCanvas" style="display: none;"></canvas>
+            </div>
+            <div class="modal-header" style="justify-content: center; background: #000;">
+                <button type="button" class="btn btn-primary" id="capturePhotoBtn" style="border-radius: 50px; width: 64px; height: 64px; display: flex; align-items: center; justify-content: center; box-shadow: 0 4px 10px rgba(0,0,0,0.3); border: 4px solid #fff;"><i data-lucide="camera" style="width: 24px; height: 24px;"></i></button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Toast Container for Notifications -->
+    <div id="toast-container"></div>
+
+    <!-- Mobile Bottom Navigation Bar (Shown only on small screens) -->
+    <nav class="mobile-nav glass-panel">
+        <button class="nav-item active" data-view="dashboard">
+            <i data-lucide="layout-dashboard"></i>
+            <span data-i18n="dashboard">Dashboard</span>
+        </button>
+        <button class="nav-item" data-view="register">
+            <i data-lucide="plus-circle"></i>
+            <span data-i18n="new_order">New Order</span>
+        </button>
+        <button class="nav-item" data-view="kanban">
+            <i data-lucide="kanban-square"></i>
+            <span data-i18n="tracking_board">Board</span>
+        </button>
+        <button class="nav-item" data-view="admin">
+            <i data-lucide="settings"></i>
+            <span data-i18n="admin_panel">Admin</span>
+        </button>
+    </nav>
+
+    <script src="app.min.js?v=1783788006332"></script>
+</body>
+</html>
