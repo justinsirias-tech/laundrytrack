@@ -593,18 +593,18 @@ body {
     border-radius: 8px;
     color: var(--text-main);
     box-shadow: 0 10px 25px rgba(0,0,0,0.08);
-    animation: slideIn 0.3s ease forwards;
+    animation: toastSlideIn 0.3s ease forwards;
     display: flex;
     align-items: center;
     gap: 0.75rem;
 }
 
-@keyframes slideIn {
+@keyframes toastSlideIn {
     from { transform: translateX(100%); opacity: 0; }
     to { transform: translateX(0); opacity: 1; }
 }
 
-@keyframes slideOut {
+@keyframes toastSlideOut {
     from { transform: translateX(0); opacity: 1; }
     to { transform: translateX(100%); opacity: 0; }
 }
@@ -1536,6 +1536,7 @@ body {
     overflow: hidden;
     transition: var(--transition);
     animation: slideIn 0.25s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+    flex-shrink: 0;
 }
 
 .pos-cart-item-card:hover {
