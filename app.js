@@ -64,11 +64,52 @@ const getApiBase = () => {
 };
 const API_BASE = getApiBase();
 
-// Current active data model fetched dynamically from PostgreSQL
-let orders = [];
-let clothingTypes = [];
-let categories = [];
-let clothingBrands = [];
+const defaultCategories = [
+    { id: 'cat-1', name: 'Tops', items: ['Shirt', 'Blouse', 'Jacket', 'Overcoat', 'Tshirt', 'Polo Tee', 'Suit', 'Sweater', 'Vest'] },
+    { id: 'cat-2', name: 'Bottoms', items: ['Pants', 'Shorts', 'Dress', 'Jeans', 'Skirt', 'Trousers'] },
+    { id: 'cat-3', name: 'Accessories', items: ['Socks', 'Shoes', 'Hat', 'Scarf', 'Gloves', 'Neck Tie', 'Bag', 'Cap'] },
+    { id: 'cat-4', name: 'Bedding', items: ['Duvet 3.5FT', 'Duvet 5FT', 'Duvet 6FT', 'Comforter 3.5FT', 'Comforter 5FT', 'Comforter 6FT', 'Topper 6FT', 'Topper 5FT', 'Topper 3FT', 'Bedsheet 6FT', 'Bedsheet 3.5FT', 'Bedsheet 5FT', 'Pillowcase', 'Pillow', 'Boster Pillow', 'Boster Pillowcase'] },
+    { id: 'cat-5', name: 'Under Garments', items: ['Bra', 'Sports Bra', 'Boxers', 'Underwear', 'Swimming Suit', 'Jump Suit'] }
+];
+
+const defaultClothingTypes = [
+    { name: 'Shirt', name_th: 'เสื้อเชิ้ต' }, { name: 'Blouse', name_th: 'เสื้อสตรี' }, { name: 'Pants', name_th: 'กางเกงขายาว' },
+    { name: 'Shorts', name_th: 'กางเกงขาสั้น' }, { name: 'Underwear', name_th: 'กางเกงใน' }, { name: 'Dress', name_th: 'ชุดเดรส' },
+    { name: 'Jacket', name_th: 'เสื้อแจ็คเก็ต' }, { name: 'Socks', name_th: 'ถุงเท้า' }, { name: 'Shoes', name_th: 'รองเท้า' },
+    { name: 'Hat', name_th: 'หมวก' }, { name: 'Scarf', name_th: 'ผ้าพันคอ' }, { name: 'Gloves', name_th: 'ถุงมือ' },
+    { name: 'Bedding', name_th: 'เครื่องนอน' }, { name: 'Bag', name_th: 'กระเป๋า' }, { name: 'Neck Tie', name_th: 'เนกไท' },
+    { name: 'Overcoat', name_th: 'เสื้อโค้ท' }, { name: 'Suit', name_th: 'ชุดสูท' }, { name: 'Tshirt', name_th: 'เสื้อยืด' },
+    { name: 'Polo Tee', name_th: 'เสื้อโปโล' }, { name: 'Sweater', name_th: 'เสื้อกันหนาว' }, { name: 'Vest', name_th: 'เสื้อกั๊ก' },
+    { name: 'Jeans', name_th: 'กางเกงยีนส์' }, { name: 'Skirt', name_th: 'กระโปรง' }, { name: 'Trousers', name_th: 'กางเกงสแล็ค' },
+    { name: 'Cap', name_th: 'หมวกแก๊ป' }, { name: 'Bra', name_th: 'ยกทรง' }, { name: 'Sports Bra', name_th: 'สปอร์ตบรา' },
+    { name: 'Boxers', name_th: 'กางเกงบ็อกเซอร์' }, { name: 'Swimming Suit', name_th: 'ชุดว่ายน้ำ' }, { name: 'Jump Suit', name_th: 'ชุดจั๊มสูท' },
+    { name: 'Duvet 3.5FT', name_th: 'ผ้านวม 3.5 ฟุต' }, { name: 'Duvet 5FT', name_th: 'ผ้านวม 5 ฟุต' }, { name: 'Duvet 6FT', name_th: 'ผ้านวม 6 ฟุต' },
+    { name: 'Comforter 3.5FT', name_th: 'ผ้านวมหนา 3.5 ฟุต' }, { name: 'Comforter 5FT', name_th: 'ผ้านวมหนา 5 ฟุต' }, { name: 'Comforter 6FT', name_th: 'ผ้านวมหนา 6 ฟุต' },
+    { name: 'Topper 6FT', name_th: 'ท็อปเปอร์ 6 ฟุต' }, { name: 'Topper 5FT', name_th: 'ท็อปเปอร์ 5 ฟุต' }, { name: 'Topper 3FT', name_th: 'ท็อปเปอร์ 3 ฟุต' },
+    { name: 'Bedsheet 6FT', name_th: 'ผ้าปูที่นอน 6 ฟุต' }, { name: 'Bedsheet 3.5FT', name_th: 'ผ้าปูที่นอน 3.5 ฟุต' }, { name: 'Bedsheet 5FT', name_th: 'ผ้าปูที่นอน 5 ฟุต' },
+    { name: 'Pillowcase', name_th: 'ปลอกหมอน' }, { name: 'Pillow', name_th: 'หมอน' }, { name: 'Boster Pillow', name_th: 'หมอนข้าง' }, { name: 'Boster Pillowcase', name_th: 'ปลอกหมอนข้าง' }
+];
+
+const defaultBrands = [
+    { name: 'Adidas' }, { name: 'AIIZ' }, { name: 'Armani' }, { name: 'Armani Exchange' }, { name: 'Asics' },
+    { name: 'Balenciaga' }, { name: 'Baleno' }, { name: 'Bape' }, { name: 'Bossini' }, { name: 'Bottega Veneta' },
+    { name: 'Burberry' }, { name: 'Calvin Klein' }, { name: 'Champion' }, { name: 'Chanel' }, { name: 'Converse' },
+    { name: 'Diesel' }, { name: 'Dior' }, { name: 'Dolce & Gabbana' }, { name: 'Fendi' }, { name: 'Fila' },
+    { name: 'Forever 21' }, { name: 'G2000' }, { name: 'GAP' }, { name: 'Gentle Woman' }, { name: 'Giordano' },
+    { name: 'Givenchy' }, { name: 'GOYARD' }, { name: 'Gucci' }, { name: 'Guess' }, { name: 'Hermès' },
+    { name: 'H&M' }, { name: 'Hugo Boss' }, { name: 'Jimmy Choo' }, { name: 'Kenzo' }, { name: 'Lacoste' },
+    { name: 'Levi\'s' }, { name: 'Louis Vuitton' }, { name: 'Mango' }, { name: 'Massimo Dutti' }, { name: 'Moncler' },
+    { name: 'New Balance' }, { name: 'Nike' }, { name: 'Off-White' }, { name: 'Patagonia' }, { name: 'Prada' },
+    { name: 'Puma' }, { name: 'Ralph Lauren' }, { name: 'Reebok' }, { name: 'Saint Laurent' }, { name: 'Stussy' },
+    { name: 'Superdry' }, { name: 'Supreme' }, { name: 'The North Face' }, { name: 'Tommy Hilfiger' }, { name: 'Under Armour' },
+    { name: 'Uniqlo' }, { name: 'Valentino' }, { name: 'Vanity' }, { name: 'Vans' }, { name: 'Versace' }, { name: 'Zara' }
+];
+
+// Current active data model initialized with defaults then updated from PostgreSQL backend
+let orders = [...defaultMockOrders];
+let clothingTypes = [...defaultClothingTypes];
+let categories = [...defaultCategories];
+let clothingBrands = [...defaultBrands];
 let currentDraftItems = [];
 
 
@@ -3986,4 +4027,29 @@ const initAdminTabs = () => {
         refreshBtn.onclick = loadVerificationLogs;
     }
 };
+
+// --- APPLICATION BOOTSTRAP INITIALIZATION ---
+const initApp = () => {
+    try {
+        initAdminTabs();
+    } catch(e) { console.warn("initAdminTabs warning:", e); }
+    
+    try {
+        initItemTypeButtons();
+        initBrandButtons();
+        renderAdminItems();
+        renderAdminBrands();
+        refreshAllViews();
+        applyTranslations();
+    } catch(e) { console.warn("UI Init error:", e); }
+    
+    // Asynchronously fetch live data from database backend
+    loadAllData();
+};
+
+if (document.readyState === 'loading') {
+    document.addEventListener('DOMContentLoaded', initApp);
+} else {
+    initApp();
+}
 
