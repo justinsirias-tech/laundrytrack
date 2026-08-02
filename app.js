@@ -54,7 +54,9 @@ const defaultMockOrders = [
     }
 ];
 
-const API_BASE = window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1' ? 'http://localhost:3001/api' : '/api';
+const API_BASE = (window.location.port === '5000' || window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1')
+    ? `http://${window.location.hostname}:3001/api`
+    : '/api';
 
 // Current active data model fetched dynamically from PostgreSQL
 let orders = [];
@@ -3422,15 +3424,29 @@ const updateActiveStaffUI = () => {
     }
 };
 
+const defaultUsersList = [
+    { id: 1, username: 'admin', name: 'Manager / Admin', role: 'Manager', pin: '1234' },
+    { id: 2, username: 'checker1', name: 'Sarah (Checker)', role: 'Checker/Cashier', pin: '1111' },
+    { id: 3, username: 'washer1', name: 'John (Washer)', role: 'Washer', pin: '2222' },
+    { id: 4, username: 'ironing1', name: 'Nok (Ironing)', role: 'Ironing', pin: '3333' },
+    { id: 5, username: 'packing1', name: 'Somchai (Packing)', role: 'Packing', pin: '4444' }
+];
+
 const loadUsers = async () => {
     const tbody = document.getElementById('usersDirectoryTableBody');
     try {
         const res = await fetch(`${API_BASE}/users`);
-        appUsers = await res.json();
+        const contentType = res.headers.get('content-type') || '';
+        if (res.ok && contentType.includes('application/json')) {
+            appUsers = await res.json();
+        } else {
+            appUsers = defaultUsersList;
+        }
         renderUsersDirectory();
     } catch (err) {
-        console.error('Error loading users:', err);
-        if (tbody) tbody.innerHTML = `<tr><td colspan="6" style="text-align:center; color: var(--text-muted);">Error loading users.</td></tr>`;
+        console.warn('Error loading users API, using default list:', err);
+        appUsers = defaultUsersList;
+        renderUsersDirectory();
     }
 };
 
@@ -3577,6 +3593,43 @@ if (createUserForm) {
 let activeChecklistDeptFilter = 'ALL';
 let pendingChecklistsData = [];
 
+const computeClientPendingChecklists = () => {
+    return orders.filter(o => o.status !== 'Delivered' && o.status !== 'Completed' && o.status !== 'Cancelled').map(o => {
+        const service = o.serviceType || 'Wash/Fold';
+        let mandatoryDepts = ['Checker/Cashier', 'Washer', 'Packing'];
+        if (service.includes('Iron') || service.includes('Dry') || service === 'Wash/Iron' || service === 'Wash/Iron/Hang' || service === 'Dry Clean' || service === 'Dry Cleaning') {
+            mandatoryDepts = ['Checker/Cashier', 'Washer', 'Ironing', 'Packing'];
+        } else if (service === 'Ironing Only' || service === 'Ironing') {
+            mandatoryDepts = ['Checker/Cashier', 'Ironing', 'Packing'];
+        }
+
+        const completedDepts = ['Checker/Cashier'];
+        if (o.status === 'Washing' || o.status === 'Drying') {
+            completedDepts.push('Washer');
+        } else if (o.status === 'Ironing') {
+            completedDepts.push('Washer', 'Ironing');
+        } else if (o.status === 'Ready' || o.status === 'Packing') {
+            completedDepts.push('Washer', 'Ironing', 'Packing');
+        }
+
+        const pendingDepts = mandatoryDepts.filter(d => !completedDepts.includes(d));
+
+        return {
+            orderId: o.id,
+            customerName: o.customerName || 'Customer',
+            serviceType: o.serviceType,
+            status: o.status,
+            orderDate: o.date,
+            itemCount: o.items ? o.items.length : 0,
+            mandatoryDepts,
+            completedDepts,
+            pendingDepts,
+            hasPendingDiscrepancy: false,
+            discrepancyDetails: null
+        };
+    });
+};
+
 const loadPendingChecklistsTracker = async () => {
     const tbody = document.getElementById('pendingChecklistsTableBody');
     if (!tbody) return;
@@ -3584,11 +3637,19 @@ const loadPendingChecklistsTracker = async () => {
     try {
         tbody.innerHTML = `<tr><td colspan="8" style="text-align: center; color: var(--text-muted); padding: 1.5rem;">Loading pending department checklists...</td></tr>`;
         const res = await fetch(`${API_BASE}/pending-checklists`);
-        pendingChecklistsData = await res.json();
+        const contentType = res.headers.get('content-type') || '';
+        
+        if (res.ok && contentType.includes('application/json')) {
+            pendingChecklistsData = await res.json();
+        } else {
+            console.warn('API returned non-JSON response, using client-side order memory fallback.');
+            pendingChecklistsData = computeClientPendingChecklists();
+        }
         renderPendingChecklistsTable();
     } catch (err) {
-        console.error(err);
-        tbody.innerHTML = `<tr><td colspan="8" style="text-align: center; color: var(--text-muted); padding: 1.5rem;">Error loading pending checklists: ${err.message}</td></tr>`;
+        console.warn('Error fetching pending checklists API, falling back to local memory:', err);
+        pendingChecklistsData = computeClientPendingChecklists();
+        renderPendingChecklistsTable();
     }
 };
 
