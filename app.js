@@ -1346,88 +1346,126 @@ const renderAddedItems = () => {
         { name: 'Brown', hex: '#78350f' },
         { name: 'Teal', hex: '#14b8a6' }
     ];
+
+    const mainOrderService = document.getElementById('serviceType')?.value || 'Wash/Fold';
     
-    listContainer.innerHTML = currentDraftItems.map((item, index) => {
-        let levelBadge = `<span class="issue-badge issue-badge-normal">${t('normal')}</span>`;
-        if (item.issueLevel === 'issue') {
-            levelBadge = `<span class="issue-badge issue-badge-warning">${t('issue')}</span>`;
-        } else if (item.issueLevel === 'extreme') {
-            levelBadge = `<span class="issue-badge issue-badge-extreme">${t('extreme')}</span>`;
+    // Group draft items by effective service type
+    const groupedItems = {};
+    currentDraftItems.forEach((item, index) => {
+        let effectiveService = item.serviceType;
+        if (!effectiveService || effectiveService === 'Same as Order') {
+            effectiveService = mainOrderService;
         }
-        
-        // Handle single image string vs JSON array string gracefully
-        let photoThumbnail = '';
-        if (item.issueImage) {
-            if (item.issueImage.startsWith('[')) {
-                try {
-                    const imgs = JSON.parse(item.issueImage);
-                    photoThumbnail += imgs.map(img => `<img src="${img}" class="issue-image" style="width: 28px; height: 28px; border-radius: 4px; border: 1px solid var(--border-glass); cursor: zoom-in; margin-left: 2px;" title="Click to enlarge"/>`).join('');
-                } catch (e) {
+        if (!groupedItems[effectiveService]) {
+            groupedItems[effectiveService] = [];
+        }
+        groupedItems[effectiveService].push({ item, index });
+    });
+
+    const activeServiceKeys = Object.keys(groupedItems);
+
+    listContainer.innerHTML = activeServiceKeys.map(serviceKey => {
+        const itemsInGroup = groupedItems[serviceKey];
+        const sectionHeaderTitle = t(serviceKey);
+
+        const cardsHtml = itemsInGroup.map(({ item, index }) => {
+            let levelBadge = `<span class="issue-badge issue-badge-normal">${t('normal')}</span>`;
+            if (item.issueLevel === 'issue') {
+                levelBadge = `<span class="issue-badge issue-badge-warning">${t('issue')}</span>`;
+            } else if (item.issueLevel === 'extreme') {
+                levelBadge = `<span class="issue-badge issue-badge-extreme">${t('extreme')}</span>`;
+            }
+            
+            // Handle single image string vs JSON array string gracefully
+            let photoThumbnail = '';
+            if (item.issueImage) {
+                if (item.issueImage.startsWith('[')) {
+                    try {
+                        const imgs = JSON.parse(item.issueImage);
+                        photoThumbnail += imgs.map(img => `<img src="${img}" class="issue-image" style="width: 28px; height: 28px; border-radius: 4px; border: 1px solid var(--border-glass); cursor: zoom-in; margin-left: 2px;" title="Click to enlarge"/>`).join('');
+                    } catch (e) {
+                        photoThumbnail += `<img src="${item.issueImage}" class="issue-image" style="width: 28px; height: 28px; border-radius: 4px; border: 1px solid var(--border-glass); cursor: zoom-in;" title="Click to enlarge"/>`;
+                    }
+                } else {
                     photoThumbnail += `<img src="${item.issueImage}" class="issue-image" style="width: 28px; height: 28px; border-radius: 4px; border: 1px solid var(--border-glass); cursor: zoom-in;" title="Click to enlarge"/>`;
                 }
-            } else {
-                photoThumbnail += `<img src="${item.issueImage}" class="issue-image" style="width: 28px; height: 28px; border-radius: 4px; border: 1px solid var(--border-glass); cursor: zoom-in;" title="Click to enlarge"/>`;
             }
-        }
-        
-        if (item.defectImage) {
-            if (item.defectImage.startsWith('[')) {
-                try {
-                    const defectImgs = JSON.parse(item.defectImage);
-                    photoThumbnail += defectImgs.map(img => `<img src="${img}" class="issue-image defect-image" style="width: 28px; height: 28px; border-radius: 4px; border: 1px solid var(--status-red); cursor: zoom-in; margin-left: 2px;" title="Defect (Click to enlarge)"/>`).join('');
-                } catch (e) {
+            
+            if (item.defectImage) {
+                if (item.defectImage.startsWith('[')) {
+                    try {
+                        const defectImgs = JSON.parse(item.defectImage);
+                        photoThumbnail += defectImgs.map(img => `<img src="${img}" class="issue-image defect-image" style="width: 28px; height: 28px; border-radius: 4px; border: 1px solid var(--status-red); cursor: zoom-in; margin-left: 2px;" title="Defect (Click to enlarge)"/>`).join('');
+                    } catch (e) {
+                        photoThumbnail += `<img src="${item.defectImage}" class="issue-image defect-image" style="width: 28px; height: 28px; border-radius: 4px; border: 1px solid var(--status-red); cursor: zoom-in;" title="Defect (Click to enlarge)"/>`;
+                    }
+                } else {
                     photoThumbnail += `<img src="${item.defectImage}" class="issue-image defect-image" style="width: 28px; height: 28px; border-radius: 4px; border: 1px solid var(--status-red); cursor: zoom-in;" title="Defect (Click to enlarge)"/>`;
                 }
-            } else {
-                photoThumbnail += `<img src="${item.defectImage}" class="issue-image defect-image" style="width: 28px; height: 28px; border-radius: 4px; border: 1px solid var(--status-red); cursor: zoom-in;" title="Defect (Click to enlarge)"/>`;
             }
-        }
-            
-        const itemQrUrl = `https://api.qrserver.com/v1/create-qr-code/?size=100x100&data=${encodeURIComponent(item.trackingId)}`;
+                
+            const itemQrUrl = `https://api.qrserver.com/v1/create-qr-code/?size=100x100&data=${encodeURIComponent(item.trackingId)}`;
 
-        return `
-        <div class="pos-cart-item-card">
-            <div class="pos-cart-item-color-strip" style="background: ${item.colorHex}; cursor: pointer;" title="${currentLanguage === 'th' ? 'คลิกเพื่อเปลี่ยนสี' : 'Click to change color'}" data-index="${index}"></div>
-            <div class="pos-cart-item-body">
-                <div class="pos-cart-item-title-row">
-                    <span class="pos-cart-item-title">
-                        ${translateItemName(item.type)} 
-                        ${item.serviceType && item.serviceType !== 'Same as Order' ? `<span style="font-size: 0.7rem; color: #fff; background: var(--primary); padding: 0.15rem 0.4rem; border-radius: 4px; margin-left: 0.4rem;">${t(item.serviceType)}</span>` : ''}
-                        <span style="font-size: 0.75rem; color: var(--primary); background: rgba(99, 102, 241, 0.1); padding: 0.15rem 0.4rem; border-radius: 4px; margin-left: 0.4rem; font-family: monospace;">${item.trackingId}</span>
-                    </span>
-                    <div style="display: flex; align-items: center; gap: 0.4rem;">
-                        <button type="button" class="pos-cart-item-duplicate-btn" data-index="${index}" title="${currentLanguage === 'th' ? 'คัดลอกรายการ' : 'Duplicate Item'}" style="background: none; border: none; padding: 4px; color: var(--text-muted); cursor: pointer; border-radius: 4px; transition: var(--transition); display: flex; align-items: center; justify-content: center;">
-                            <i data-lucide="copy" style="width: 14px; height: 14px;"></i>
-                        </button>
-                        <button type="button" class="pos-cart-item-remove-btn" data-index="${index}">
-                            <i data-lucide="trash-2" style="width: 14px; height: 14px;"></i>
+            return `
+            <div class="pos-cart-item-card">
+                <div class="pos-cart-item-color-strip" style="background: ${item.colorHex}; cursor: pointer;" title="${currentLanguage === 'th' ? 'คลิกเพื่อเปลี่ยนสี' : 'Click to change color'}" data-index="${index}"></div>
+                <div class="pos-cart-item-body">
+                    <div class="pos-cart-item-title-row">
+                        <span class="pos-cart-item-title">
+                            ${translateItemName(item.type)} 
+                            <span style="font-size: 0.75rem; color: var(--primary); background: rgba(99, 102, 241, 0.1); padding: 0.15rem 0.4rem; border-radius: 4px; margin-left: 0.4rem; font-family: monospace;">${item.trackingId}</span>
+                        </span>
+                        <div style="display: flex; align-items: center; gap: 0.4rem;">
+                            <button type="button" class="pos-cart-item-duplicate-btn" data-index="${index}" title="${currentLanguage === 'th' ? 'คัดลอกรายการ' : 'Duplicate Item'}" style="background: none; border: none; padding: 4px; color: var(--text-muted); cursor: pointer; border-radius: 4px; transition: var(--transition); display: flex; align-items: center; justify-content: center;">
+                                <i data-lucide="copy" style="width: 14px; height: 14px;"></i>
+                            </button>
+                            <button type="button" class="pos-cart-item-remove-btn" data-index="${index}">
+                                <i data-lucide="trash-2" style="width: 14px; height: 14px;"></i>
+                            </button>
+                        </div>
+                    </div>
+                    <div class="pos-cart-item-meta" style="align-items: center;">
+                        <span>${translateColorName ? translateColorName(item.color) : item.color}</span>
+                        ${item.brand ? `• <span>${item.brand}</span>` : ''}
+                        • ${levelBadge}
+                        ${photoThumbnail}
+                        <div style="flex-grow: 1;"></div>
+                        <img src="${itemQrUrl}" style="width: 32px; height: 32px; border-radius: 4px; border: 1px solid var(--border-glass);" title="Item QR Code" />
+                        <button type="button" class="btn btn-secondary" onclick="printItemQrCode('${item.trackingId}', '${item.type}')" style="padding: 0.25rem 0.5rem; font-size: 0.75rem; border-radius: 6px; display: flex; align-items: center; gap: 0.25rem; margin-left: 0.5rem;">
+                            <i data-lucide="printer" style="width: 12px; height: 12px;"></i> Print Tag
                         </button>
                     </div>
+                    
+                    <!-- Inline Color Picker (initially hidden) -->
+                    <div class="inline-color-picker" id="inlineColorPicker-${index}" style="display: none; margin-top: 0.6rem; padding-top: 0.5rem; border-top: 1px dashed var(--border-glass); align-items: center; gap: 0.35rem; flex-wrap: wrap;">
+                        <span style="font-size: 0.7rem; color: var(--text-muted); margin-right: 0.25rem;">${currentLanguage === 'th' ? 'เปลี่ยนสี:' : 'Change Color:'}</span>
+                        ${standardColors.map(c => `
+                            <button type="button" class="inline-color-option" data-color-name="${c.name}" data-color-hex="${c.hex}" data-item-index="${index}" style="background: ${c.hex}; width: 18px; height: 18px; border-radius: 50%; border: 1px solid ${c.name === 'White' ? '#ccc' : 'transparent'}; cursor: pointer; transition: transform 0.1s;" title="${c.name}"></button>
+                        `).join('')}
+                        <!-- Custom color picker -->
+                        <label style="display: flex; align-items: center; justify-content: center; width: 18px; height: 18px; border-radius: 50%; border: 1px dashed var(--text-muted); cursor: pointer; background: #fff; position: relative;" title="Custom Color">
+                            <i data-lucide="plus" style="width: 10px; height: 10px; color: var(--text-muted);"></i>
+                            <input type="color" class="inline-custom-color-input" data-item-index="${index}" style="position: absolute; top: 0; left: 0; width: 100%; height: 100%; opacity: 0; cursor: pointer;" />
+                        </label>
+                    </div>
                 </div>
-                <div class="pos-cart-item-meta" style="align-items: center;">
-                    <span>${translateColorName ? translateColorName(item.color) : item.color}</span>
-                    ${item.brand ? `• <span>${item.brand}</span>` : ''}
-                    • ${levelBadge}
-                    ${photoThumbnail}
-                    <div style="flex-grow: 1;"></div>
-                    <img src="${itemQrUrl}" style="width: 32px; height: 32px; border-radius: 4px; border: 1px solid var(--border-glass);" title="Item QR Code" />
-                    <button type="button" class="btn btn-secondary" onclick="printItemQrCode('${item.trackingId}', '${item.type}')" style="padding: 0.25rem 0.5rem; font-size: 0.75rem; border-radius: 6px; display: flex; align-items: center; gap: 0.25rem; margin-left: 0.5rem;">
-                        <i data-lucide="printer" style="width: 12px; height: 12px;"></i> Print Tag
-                    </button>
-                </div>
-                
-                <!-- Inline Color Picker (initially hidden) -->
-                <div class="inline-color-picker" id="inlineColorPicker-${index}" style="display: none; margin-top: 0.6rem; padding-top: 0.5rem; border-top: 1px dashed var(--border-glass); align-items: center; gap: 0.35rem; flex-wrap: wrap;">
-                    <span style="font-size: 0.7rem; color: var(--text-muted); margin-right: 0.25rem;">${currentLanguage === 'th' ? 'เปลี่ยนสี:' : 'Change Color:'}</span>
-                    ${standardColors.map(c => `
-                        <button type="button" class="inline-color-option" data-color-name="${c.name}" data-color-hex="${c.hex}" data-item-index="${index}" style="background: ${c.hex}; width: 18px; height: 18px; border-radius: 50%; border: 1px solid ${c.name === 'White' ? '#ccc' : 'transparent'}; cursor: pointer; transition: transform 0.1s;" title="${c.name}"></button>
-                    `).join('')}
-                    <!-- Custom color picker -->
-                    <label style="display: flex; align-items: center; justify-content: center; width: 18px; height: 18px; border-radius: 50%; border: 1px dashed var(--text-muted); cursor: pointer; background: #fff; position: relative;" title="Custom Color">
-                        <i data-lucide="plus" style="width: 10px; height: 10px; color: var(--text-muted);"></i>
-                        <input type="color" class="inline-custom-color-input" data-item-index="${index}" style="position: absolute; top: 0; left: 0; width: 100%; height: 100%; opacity: 0; cursor: pointer;" />
-                    </label>
-                </div>
+            </div>
+            `;
+        }).join('');
+
+        return `
+        <div class="cart-service-group" style="margin-bottom: 0.85rem;">
+            <div class="cart-service-header" style="display: flex; align-items: center; justify-content: space-between; padding: 0.4rem 0.75rem; background: var(--primary); color: #fff; border-radius: 8px; font-weight: 700; font-size: 0.82rem; margin-bottom: 0.4rem; letter-spacing: 0.4px; box-shadow: 0 2px 4px rgba(34, 41, 69, 0.1);">
+                <span style="display: flex; align-items: center; gap: 0.4rem;">
+                    <i data-lucide="layers" style="width: 14px; height: 14px;"></i>
+                    ${sectionHeaderTitle}
+                </span>
+                <span style="font-size: 0.72rem; opacity: 0.95; background: rgba(255,255,255,0.2); padding: 0.1rem 0.45rem; border-radius: 12px;">
+                    ${itemsInGroup.length} ${itemsInGroup.length === 1 ? 'item' : 'items'}
+                </span>
+            </div>
+            <div class="cart-service-items" style="display: flex; flex-direction: column; gap: 0.4rem;">
+                ${cardsHtml}
             </div>
         </div>
         `;
@@ -1769,6 +1807,14 @@ const brandSearchInput = document.getElementById('brandSearchInput');
 if (brandSearchInput) {
     brandSearchInput.addEventListener('input', () => {
         initBrandButtons();
+    });
+}
+
+// Service Type Change Listener (re-render cart item groups)
+const mainServiceTypeSelect = document.getElementById('serviceType');
+if (mainServiceTypeSelect) {
+    mainServiceTypeSelect.addEventListener('change', () => {
+        renderAddedItems();
     });
 }
 
