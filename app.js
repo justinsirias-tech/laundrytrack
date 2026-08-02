@@ -2175,6 +2175,52 @@ if (searchInput) {
 
 const loadAllData = async () => {
     try {
+        const ordersRes = await fetch(`${API_BASE}/orders`);
+        orders = await ordersRes.json();
+        
+        const typesRes = await fetch(`${API_BASE}/clothing-types`);
+        const typesData = await typesRes.json();
+        clothingTypes = typesData.map(t => typeof t === 'string' ? { name: t, name_th: itemTranslations[t] || '' } : { name: t.name, name_th: t.name_th || itemTranslations[t.name] || '' });
+        
+        const catsRes = await fetch(`${API_BASE}/categories`);
+        categories = await catsRes.json();
+        
+        try {
+            const brandsRes = await fetch(`${API_BASE}/clothing-brands`);
+            clothingBrands = await brandsRes.json();
+        } catch (err) {
+            console.error("Error fetching clothing brands:", err);
+        }
+        
+        refreshAllViews();
+        initItemTypeButtons();
+        renderAdminItems();
+        renderAdminBrands();
+        initBrandButtons();
+        applyTranslations();
+    } catch (err) {
+        console.error("Error loading data from database backend:", err);
+        showToast("Error: " + err.message, "error");
+    }
+};
+
+const refreshModalActivityLogs = async (targetOrderId) => {
+    const historyContainer = document.getElementById('modalOrderActivityLog');
+    if (!historyContainer || !targetOrderId) return;
+    
+    try {
+        const res = await fetch(`${API_BASE}/activity-logs/${targetOrderId}`);
+        const contentType = res.headers.get('content-type') || '';
+        let logs = [];
+        if (res.ok && contentType.includes('application/json')) {
+            logs = await res.json();
+        }
+        
+        if (logs.length === 0) {
+            historyContainer.innerHTML = `<div style="text-align: center; color: var(--text-muted); padding: 0.5rem;">No activity log recorded yet for Order #${targetOrderId}.</div>`;
+            return;
+        }
+        
         const isManager = activeStaffUser && activeStaffUser.role === 'Manager';
 
         historyContainer.innerHTML = logs.map(log => {
