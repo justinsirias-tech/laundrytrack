@@ -174,7 +174,7 @@ const initDatabase = async () => {
         await client.query(`
             CREATE TABLE IF NOT EXISTS department_verifications (
                 id SERIAL PRIMARY KEY,
-                order_id VARCHAR(50) NOT NULL REFERENCES orders(id) ON DELETE CASCADE,
+                order_id VARCHAR(50) NOT NULL,
                 department VARCHAR(50) NOT NULL,
                 tracking_id VARCHAR(100) NOT NULL,
                 checked BOOLEAN NOT NULL DEFAULT TRUE,
@@ -183,12 +183,13 @@ const initDatabase = async () => {
                 verified_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
             )
         `);
+        await client.query('ALTER TABLE department_verifications DROP CONSTRAINT IF EXISTS department_verifications_order_id_fkey');
 
         // Create table for discrepancy audit logs
         await client.query(`
             CREATE TABLE IF NOT EXISTS discrepancy_logs (
                 id SERIAL PRIMARY KEY,
-                order_id VARCHAR(50) NOT NULL REFERENCES orders(id) ON DELETE CASCADE,
+                order_id VARCHAR(50) NOT NULL,
                 department VARCHAR(50) NOT NULL,
                 previous_department VARCHAR(50) NOT NULL,
                 discrepancy_details TEXT NOT NULL,
@@ -197,6 +198,7 @@ const initDatabase = async () => {
                 approved_at TIMESTAMP
             )
         `);
+        await client.query('ALTER TABLE discrepancy_logs DROP CONSTRAINT IF EXISTS discrepancy_logs_order_id_fkey');
 
         await client.query('CREATE INDEX IF NOT EXISTS idx_dept_verifications ON department_verifications (order_id, department)');
         await client.query('CREATE INDEX IF NOT EXISTS idx_discrepancies_order_id ON discrepancy_logs (order_id)');
