@@ -1,0 +1,18 @@
+{
+  "short_name": "TLS Tracking",
+  "name": "That Laundry Shop - Tracking System",
+  "description": "Premium Laundry Order Management and Garment Tracking System",
+  "icons": [
+    {
+      "src": "https://img.icons8.com/isometric-folders/512/washing-machine.png",
+      "sizes": "192x192 512x512",
+      "type": "image/png",
+      "purpose": "any maskable"
+    }
+  ],
+  "start_url": "./index.html",
+  "background_color": "#ffffff",
+  "theme_color": "#222945",
+  "display": "standalone",
+  "orientation": "any"
+}

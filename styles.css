@@ -1819,3 +1819,74 @@ img[src*="logo.clearbit.com"],
 .item-check-container input:checked ~ .checkmark-circle .check-icon-svg {
     display: block !important;
 }
+
+/* Responsive Layout Enhancements for Mobile, Tablet & Desktop (APK Ready) */
+@media (max-width: 1024px) {
+    .app-container {
+        flex-direction: column !important;
+    }
+    .sidebar {
+        width: 100% !important;
+        height: auto !important;
+        padding: 0.75rem 1rem !important;
+        flex-direction: row !important;
+        align-items: center !important;
+        justify-content: space-between !important;
+        position: sticky !important;
+        top: 0 !important;
+        z-index: 100 !important;
+        box-shadow: 0 4px 15px rgba(0, 0, 0, 0.05) !important;
+    }
+    .brand {
+        margin-bottom: 0 !important;
+    }
+    .brand h1 {
+        font-size: 1.1rem !important;
+    }
+    .nav-menu {
+        flex-direction: row !important;
+        overflow-x: auto !important;
+        gap: 0.5rem !important;
+        width: auto !important;
+    }
+    .nav-item {
+        white-space: nowrap !important;
+        padding: 0.5rem 0.85rem !important;
+        font-size: 0.85rem !important;
+        border-radius: 20px !important;
+    }
+    .pos-layout {
+        grid-template-columns: 1fr !important;
+        gap: 1rem !important;
+    }
+    .builder-right-col {
+        min-height: auto !important;
+    }
+}
+
+@media (max-width: 640px) {
+    .main-content {
+        padding: 0.75rem !important;
+    }
+    .service-btn-group {
+        grid-template-columns: repeat(2, 1fr) !important;
+    }
+    .builder-garment-grid {
+        grid-template-columns: repeat(auto-fill, minmax(85px, 1fr)) !important;
+        gap: 0.5rem !important;
+    }
+    .garment-btn {
+        padding: 0.5rem !important;
+    }
+    .garment-btn span {
+        font-size: 0.75rem !important;
+    }
+    .kanban-board {
+        height: auto !important;
+        min-height: calc(100vh - 160px) !important;
+    }
+    .kanban-column {
+        min-width: 85vw !important;
+        max-width: 85vw !important;
+    }
+}
