@@ -802,13 +802,14 @@ const initItemTypeButtons = () => {
     }).join('');
     
     // Check if we have unassigned library items to display a "Library" tab
+    const allTypeNames = clothingTypes.map(t => typeof t === 'object' ? t.name : t);
     const assignedItems = new Set();
     categories.forEach(cat => {
         if (cat.items) {
-            cat.items.forEach(item => assignedItems.add(item));
+            cat.items.forEach(item => assignedItems.add(typeof item === 'object' ? item.name : item));
         }
     });
-    const unassignedItems = clothingTypes.filter(item => !assignedItems.has(item));
+    const unassignedItems = allTypeNames.filter(item => !assignedItems.has(item));
     
     if (unassignedItems.length > 0) {
         const isUnassignedActive = activeCategoryName === 'Unassigned' ? 'active' : '';
@@ -834,7 +835,7 @@ const initItemTypeButtons = () => {
     } else {
         const activeCat = sortedCategories.find(c => c.name === activeCategoryName);
         if (activeCat) {
-            activeGarments = (activeCat.items || []).filter(item => clothingTypes.includes(item));
+            activeGarments = (activeCat.items || []).map(item => typeof item === 'object' ? item.name : item).filter(item => allTypeNames.includes(item));
         }
     }
     
@@ -1625,13 +1626,13 @@ if (addItemBtn) {
             typeVal = formattedTypeName;
             
             // Check if it already exists in standard types (case-insensitive)
-            const exists = clothingTypes.some(t => t.toLowerCase() === formattedTypeName.toLowerCase());
+            const exists = clothingTypes.some(t => (typeof t === 'object' ? t.name : t).toLowerCase() === formattedTypeName.toLowerCase());
             if (!exists) {
-                clothingTypes.push(formattedTypeName);
+                clothingTypes.push({ name: formattedTypeName, name_th: '' });
                 fetch(`${API_BASE}/clothing-types`, {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ name: formattedTypeName })
+                    body: JSON.stringify({ name: formattedTypeName, name_th: '' })
                 })
                 .then(() => {
                     initItemTypeButtons();
