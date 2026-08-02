@@ -2244,15 +2244,15 @@ const loadAllData = async () => {
             const fetchedOrders = await ordersRes.json();
             if (Array.isArray(fetchedOrders) && fetchedOrders.length > 0) {
                 orders = fetchedOrders;
-            } else if (!orders || orders.length === 0) {
-                orders = defaultMockOrders;
+            } else {
+                orders = [...defaultMockOrders];
             }
         } else {
-            if (!orders || orders.length === 0) orders = defaultMockOrders;
+            orders = [...defaultMockOrders];
         }
     } catch (err) {
         console.warn("Could not fetch orders from backend API, using local orders fallback:", err);
-        if (!orders || orders.length === 0) orders = defaultMockOrders;
+        orders = [...defaultMockOrders];
     }
 
     try {
@@ -2261,10 +2261,15 @@ const loadAllData = async () => {
             const typesData = await typesRes.json();
             if (Array.isArray(typesData) && typesData.length > 0) {
                 clothingTypes = typesData.map(t => typeof t === 'string' ? { name: t, name_th: itemTranslations[t] || '' } : { name: t.name, name_th: t.name_th || itemTranslations[t.name] || '' });
+            } else {
+                clothingTypes = [...defaultClothingTypes];
             }
+        } else {
+            clothingTypes = [...defaultClothingTypes];
         }
     } catch (err) {
         console.warn("Error fetching clothing types:", err);
+        clothingTypes = [...defaultClothingTypes];
     }
     
     try {
@@ -2273,19 +2278,32 @@ const loadAllData = async () => {
             const catsData = await catsRes.json();
             if (Array.isArray(catsData) && catsData.length > 0) {
                 categories = catsData;
+            } else {
+                categories = [...defaultCategories];
             }
+        } else {
+            categories = [...defaultCategories];
         }
     } catch (err) {
         console.warn("Error fetching categories:", err);
+        categories = [...defaultCategories];
     }
     
     try {
         const brandsRes = await fetch(`${API_BASE}/clothing-brands`);
         if (brandsRes.ok) {
-            clothingBrands = await brandsRes.json();
+            const brandsData = await brandsRes.json();
+            if (Array.isArray(brandsData) && brandsData.length > 0) {
+                clothingBrands = brandsData.map(b => typeof b === 'string' ? { name: b } : b);
+            } else {
+                clothingBrands = [...defaultBrands];
+            }
+        } else {
+            clothingBrands = [...defaultBrands];
         }
     } catch (err) {
         console.warn("Error fetching clothing brands:", err);
+        clothingBrands = [...defaultBrands];
     }
     
     // Always refresh views and render UI elements
