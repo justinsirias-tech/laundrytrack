@@ -882,17 +882,34 @@ const updateCompletedOrdersTable = () => {
     });
 };
 
+const isStatusInColumn = (orderStatus, columnStatus) => {
+    if (!orderStatus) return false;
+    const s = String(orderStatus).trim().toLowerCase();
+    const c = String(columnStatus).trim().toLowerCase();
+    if (s === c) return true;
+    if (c === 'received' && (s === 'received' || s === 'new' || s === 'pending')) return true;
+    if (c === 'wash & dry' && (s === 'wash & dry' || s === 'washing' || s === 'drying' || s === 'wash & fold' || s === 'wash/fold' || s === 'wash/iron/hang' || s === 'dry clean' || s === 'dry cleaning')) return true;
+    if (c === 'ironing' && (s === 'ironing' || s === 'iron' || s === 'wash/iron' || s === 'ironing only')) return true;
+    if (c === 'packing' && (s === 'packing' || s === 'pack')) return true;
+    if (c === 'ready' && (s === 'ready' || s === 'ready for delivery')) return true;
+    if (c === 'delivered' && (s === 'delivered' || s === 'completed')) return true;
+    return false;
+};
+
 const updateKanbanBoard = () => {
+    if (!Array.isArray(orders)) return;
+    
     statuses.forEach(status => {
         const column = document.querySelector(`.kanban-column[data-status="${status}"] .kanban-cards`);
         if(!column) return;
         
-        const columnOrders = orders.filter(o => o.status === status);
+        const columnOrders = orders.filter(o => isStatusInColumn(o.status, status));
         
         column.innerHTML = columnOrders.map(order => {
+            const itemsArr = Array.isArray(order.items) ? order.items : [];
             const totalItemsText = currentLanguage === 'th'
-                ? `${order.items.length} รายการ`
-                : `${order.items.length} ${order.items.length === 1 ? 'item' : 'items'}`;
+                ? `${itemsArr.length} รายการ`
+                : `${itemsArr.length} ${itemsArr.length === 1 ? 'item' : 'items'}`;
             
             // Generate a scannable URL for phone cameras
             let appUrl;
