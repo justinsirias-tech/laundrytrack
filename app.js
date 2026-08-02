@@ -2597,9 +2597,12 @@ window.openOrderModal = async (orderId) => {
     }
 };
 
-if (closeBtns) {
+const modalOverlay = document.getElementById('orderModal');
+const closeBtns = document.querySelectorAll('.close-modal');
+
+if (closeBtns && closeBtns.length) {
     closeBtns.forEach(btn => btn.addEventListener('click', () => {
-        modalOverlay.classList.remove('active');
+        if (modalOverlay) modalOverlay.classList.remove('active');
     }));
 }
 
