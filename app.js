@@ -262,6 +262,105 @@ const i18n = {
         pcs: "รายชิ้น",
         linens: "เครื่องนอน/ผ้าปู",
         premium_care: "ดูแลพิเศษพรีเมียม"
+    },
+    my: {
+        dashboard: "ဒက်ရှ်ဘုတ် ပင်မစာမျက်နှာ",
+        new_order: "အော်ဒါအသစ် မှတ်ပုံတင်ရန်",
+        tracking_board: "အဆင့်များ စောင့်ကြည့်စုတ်ကွက်",
+        checklists_tracker: "စစ်ဆေးရန်ကျန် စာရင်းများ",
+        admin_panel: "စနစ် ဆက်တင်များ",
+        manager: "မန်နေဂျာ",
+        
+        search_placeholder: "အော်ဒါ၊ ဝယ်ယူသူ သို့မဟုတ် ID ရှာရန်...",
+        
+        total_orders: "စုစုပေါင်း အော်ဒါများ",
+        in_progress: "ဆောင်ရွက်ဆဲ",
+        ready_pickup: "ထုတ်ယူရန် အသင့်ဖြစ်ပြီ",
+        delivered_today: "ယနေ့ လွှဲပြောင်းပေးအပ်ပြီး",
+        recent_orders: "နောက်ဆုံး ရရှိသော အော်ဒါများ",
+        view_all: "အားလုံးကြည့်ရှုမည်",
+        order_id: "အော်ဒါ နံပါတ်",
+        customer: "ဝယ်ယူသူ",
+        service_type: "ဝန်ဆောင်မှု အမျိုးအစား",
+        status: "အခြေအနေ",
+        date: "ရက်စွဲ",
+        action: "လုပ်ဆောင်ချက်",
+        
+        register_title: "အော်ဒါအသစ် မှတ်ပုံတင်ရန်",
+        order_info: "၁။ အော်ဒါ အချက်အလက်",
+        order_number: "အော်ဒါ နံပါတ်",
+        customer_name: "ဝယ်ယူသူ အမည်",
+        phone_number: "ဖုန်းနံပါတ်",
+        clear_btn: "ရှင်းလင်းမည်",
+        submit_order: "အော်ဒါ ပေးပို့မည်",
+        add_item: "၂။ အဝတ်အထည် ထည့်သွင်းရန်",
+        select_clothing: "အဝတ်အထည် အမျိုးအစား ရွေးချယ်ပါ",
+        or_custom_item: "သို့မဟုတ် စိတ်ကြိုက်အမည် ရိုက်ထည့်ပါ",
+        custom_item_placeholder: "ဥပမာ- ပိုးပဝါ၊ စောင်",
+        brand_optional: "တံဆိပ် (မဖြစ်မနေ မဟုတ်ပါ)",
+        color: "အရောင်",
+        photo_optional: "ဓာတ်ပုံ (မဖြစ်မနေ မဟုတ်ပါ)",
+        add_photo: "ဓာတ်ပုံထည့်မည်",
+        no_image: "ဓာတ်ပုံမရှိပါ",
+        issue_level: "ပျက်စီးမှု အဆင့်",
+        normal: "ပုံမှန်",
+        issue: "အနည်းငယ် ပျက်စီး",
+        extreme: "အလွန် ပျက်စီး",
+        add_item_btn: "အထည် ထည့်သွင်းမည်",
+        current_items: "၃။ ထည့်သွင်းထားသော အထည်များ",
+        item: "အထည် အမျိုးအစား",
+        items_brand: "တံဆိပ်",
+        items_color: "အရောင်",
+        items_defects: "အပြစ်အဆာ",
+        items_qr: "QR တံဆိပ်",
+        items_action: "လုပ်ဆောင်ချက်",
+        item_service: "သီးသန့် ဝန်ဆောင်မှု",
+        same_as_order: "အဓိက အော်ဒါအတိုင်း",
+        defect_optional: "အပြစ်အဆာ (မဖြစ်မနေ မဟုတ်ပါ)",
+        mixed_services: "ရောနှော ဝန်ဆောင်မှု",
+        
+        Received: "လက်ခံရရှိပြီး",
+        "Wash & Dry": "လျှော်ဖွပ်ပြီး အခြောက်ခံ",
+        Ironing: "မီးပူတိုက်ဆဲ",
+        Packing: "ထုပ်ပိုးဆဲ",
+        Ready: "ထုတ်ယူရန် အသင့်ဖြစ်ပြီ",
+        Delivered: "လွှဲပြောင်းပေးအပ်ပြီး",
+        
+        admin_settings: "စနစ် ဆက်တင်များ",
+        items_library: "၁။ စံအဝတ်အထည် စာရင်း",
+        category_board: "၂။ အမျိုးအစား စုတ်ကွက်",
+        create_category: "အမျိုးအစား အသစ်ဖန်တီးမည်",
+        drag_assign: "စံအထည်များ (အမျိုးအစားဆီသို့ ဆွဲထည့်ပါ):",
+        all_assigned: "အထည်များ အားလုံး အမျိုးအစား ခွဲခြားပြီးပါပြီ",
+        drag_here: "ဒီနေရာသို့ ဆွဲထည့်ပါ",
+        no_categories: "အမျိုးအစား မရှိသေးပါ",
+        
+        order_details: "အော်ဒါ အသေးစိတ်",
+        date_submitted: "ရက်စွဲ",
+        items_list: "အထည်များ စာရင်း",
+        close: "ပိတ်မည်",
+        print_tag: "တံဆိပ် ရိုက်နှိပ်မည်",
+        
+        "Wash & Fold": "လျှော်/ခေါက်",
+        "Wash/Fold": "လျှော်/ခေါက်",
+        "Wash/Iron": "လျှော်/မီးပူတိုက်",
+        "Wash/Iron/Hang": "လျှော်/မီးပူ/ချိတ်",
+        "Dry Clean": "အခြောက်လျှော်",
+        "Dry Cleaning": "အခြောက်လျှော်",
+        "Ironing Only": "မီးပူတိုက် သက်သက်",
+        "Pcs": "တစ်ထည်ချင်း",
+        "Linens": "အိပ်ရာခင်း/အထည်",
+        "Premium Care": "အထူးဂရုစိုက် စောင့်ရှောက်မှု",
+        
+        wash_fold: "လျှော်/ခေါက်",
+        wash_iron: "လျှော်/မီးပူတိုက်",
+        wash_iron_hang: "လျှော်/မီးပူ/ချိတ်",
+        dry_clean: "အခြောက်လျှော်",
+        dry_cleaning: "အခြောက်လျှော်",
+        ironing_only: "မီးပူတိုက် သက်သက်",
+        pcs: "တစ်ထည်ချင်း",
+        linens: "အိပ်ရာခင်း/အထည်",
+        premium_care: "အထူးဂရုစိုက် စောင့်ရှောက်မှု"
     }
 };
 
@@ -287,11 +386,40 @@ const itemTranslations = {
     'Other': 'อื่นๆ'
 };
 
+const itemTranslationsMy = {
+    'Shirt': 'တီရှပ် အင်္ကျီ',
+    'Formal': 'ရှပ်အင်္ကျီ',
+    'Blouse': 'အမျိုးသမီး အင်္ကျီ',
+    'Pants': 'ဘောင်းဘီရှည်',
+    'Shorts': 'ဘောင်းဘီတို',
+    'Underwear': 'အတွင်းခံ',
+    'Dress': 'ဂါဝန်',
+    'Jacket': 'ဂျာကင် အင်္ကျီ',
+    'Socks': 'ခြေအိတ်',
+    'Shoes': 'ရှူးဖိနပ်',
+    'Hat': 'ဦးထုပ်',
+    'Scarf': 'ပဝါ',
+    'Gloves': 'လက်အိတ်',
+    'Bedding': 'အိပ်ရာခင်း အထည်',
+    'Bag': 'အိတ်',
+    'Neck Tie': 'နက်ကတိုင်',
+    'Overcoat': 'ကုတ်အင်္ကျီရှည်',
+    'Suit': 'ဝတ်စုံကုတ်',
+    'Other': 'အခြား'
+};
+
 const categoryTranslations = {
     'Tops': 'ท่อนบน',
     'Bottoms': 'ท่อนล่าง',
     'Accessories': 'เครื่องประดับ',
     'Bedding': 'เครื่องนอน'
+};
+
+const categoryTranslationsMy = {
+    'Tops': 'အထက်ပိုင်း အင်္ကျီ',
+    'Bottoms': 'အောက်ပိုင်း ဘောင်းဘီ',
+    'Accessories': 'အသုံးအဆောင်များ',
+    'Bedding': 'အိပ်ရာခင်း အထည်'
 };
 
 const colorTranslations = {
@@ -320,9 +448,38 @@ const colorTranslations = {
     'Red/White': 'แดง/ขาว'
 };
 
+const colorTranslationsMy = {
+    'White': 'အဖြူရောင်',
+    'Black': 'အနက်ရောင်',
+    'Blue': 'အပြာရောင်',
+    'Navy': 'ရဲပြာရောင်',
+    'Red': 'အနီရောင်',
+    'Green': 'အစိမ်းရောင်',
+    'Yellow': 'အဝါရောင်',
+    'Orange': 'လိမ္မော်ရောင်',
+    'Purple': 'ခရမ်းရောင်',
+    'Pink': 'ပန်းရောင်',
+    'Grey': 'မီးခိုးရောင်',
+    'Brown': 'အညိုရောင်',
+    'Teal': 'ရေပြာစိမ်း',
+    'Cream': 'နို့ဆီရောင်',
+    'Beige': 'မလိုင်ရောင်',
+    'Peach': 'မက်မွန်ရောင်',
+    'Khaki': 'ကာကီရောင်',
+    'Olive': 'သလွတ်စိမ်းရောင်',
+    'Sky Blue': 'မိုးပြာရောင်',
+    'Burgundy': 'ဝိုင်နီရောင်',
+    'Black/White': 'အနက်/အဖြူ',
+    'Blue/White': 'အပြာ/အဖြူ',
+    'Red/White': 'အနီ/အဖြူ'
+};
+
 const translateColorName = (name) => {
     if (currentLanguage === 'th') {
         return colorTranslations[name] || name;
+    }
+    if (currentLanguage === 'my') {
+        return colorTranslationsMy[name] || name;
     }
     return name;
 };
@@ -352,6 +509,10 @@ const translateItemName = (name) => {
         if (itemTranslations[name]) {
             return itemTranslations[name];
         }
+    } else if (currentLanguage === 'my') {
+        if (itemTranslationsMy[name]) {
+            return itemTranslationsMy[name];
+        }
     }
     return itemObj && typeof itemObj === 'object' ? itemObj.name : name;
 };
@@ -369,6 +530,8 @@ const translateCategoryName = (name) => {
     if (currentLanguage === 'th') {
         if (catObj && catObj.name_th) return catObj.name_th;
         if (categoryTranslations[name]) return categoryTranslations[name];
+    } else if (currentLanguage === 'my') {
+        if (categoryTranslationsMy[name]) return categoryTranslationsMy[name];
     }
     return name;
 };
@@ -2110,8 +2273,14 @@ document.addEventListener('DOMContentLoaded', () => {
     const langBtn = document.getElementById('langToggleBtn');
     if (langBtn) {
         langBtn.addEventListener('click', () => {
-            currentLanguage = currentLanguage === 'en' ? 'th' : 'en';
+            if (currentLanguage === 'en') currentLanguage = 'th';
+            else if (currentLanguage === 'th') currentLanguage = 'my';
+            else currentLanguage = 'en';
+            
             localStorage.setItem('tls_language', currentLanguage);
+            const langText = document.getElementById('currentLangText');
+            if (langText) langText.innerText = currentLanguage.toUpperCase();
+            
             applyTranslations();
             refreshAllViews();
             initItemTypeButtons();
