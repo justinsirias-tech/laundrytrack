@@ -499,6 +499,15 @@ const getItemThName = (name) => {
     return itemTranslations[name] || '';
 };
 
+const getItemMyName = (name) => {
+    if (!name) return '';
+    const itemObj = clothingTypes.find(t => (typeof t === 'object' ? t.name : t).toLowerCase() === name.toLowerCase());
+    if (itemObj && typeof itemObj === 'object' && itemObj.name_my) {
+        return itemObj.name_my;
+    }
+    return itemTranslationsMy[name] || '';
+};
+
 const translateItemName = (name) => {
     if (!name) return '';
     const itemObj = clothingTypes.find(t => (typeof t === 'object' ? t.name : t).toLowerCase() === name.toLowerCase());
@@ -510,6 +519,9 @@ const translateItemName = (name) => {
             return itemTranslations[name];
         }
     } else if (currentLanguage === 'my') {
+        if (itemObj && typeof itemObj === 'object' && itemObj.name_my) {
+            return itemObj.name_my;
+        }
         if (itemTranslationsMy[name]) {
             return itemTranslationsMy[name];
         }
@@ -524,6 +536,13 @@ const getCategoryThName = (name) => {
     return categoryTranslations[name] || '';
 };
 
+const getCategoryMyName = (name) => {
+    if (!name) return '';
+    const catObj = categories.find(c => c.name.toLowerCase() === name.toLowerCase());
+    if (catObj && catObj.name_my) return catObj.name_my;
+    return categoryTranslationsMy[name] || '';
+};
+
 const translateCategoryName = (name) => {
     if (!name) return '';
     const catObj = categories.find(c => c.name.toLowerCase() === name.toLowerCase());
@@ -531,6 +550,7 @@ const translateCategoryName = (name) => {
         if (catObj && catObj.name_th) return catObj.name_th;
         if (categoryTranslations[name]) return categoryTranslations[name];
     } else if (currentLanguage === 'my') {
+        if (catObj && catObj.name_my) return catObj.name_my;
         if (categoryTranslationsMy[name]) return categoryTranslationsMy[name];
     }
     return name;
@@ -2792,10 +2812,12 @@ const renderAdminItems = () => {
         libraryDropzone.innerHTML = unassignedItems.map(itemObj => {
             const typeName = typeof itemObj === 'object' ? itemObj.name : itemObj;
             const typeTh = getItemThName(typeName);
+            const typeMy = getItemMyName(typeName);
             return `
-            <div class="admin-item-chip" draggable="true" data-type="${typeName}" style="display: flex; align-items: center; justify-content: space-between; gap: 0.5rem; width: 100%; padding: 0.4rem 0.6rem;">
-                <span style="font-weight: 600; min-width: 90px; color: var(--text-main); font-size: 0.85rem;">${typeName}</span>
-                <input type="text" class="admin-item-th-input" data-name="${typeName}" value="${typeTh}" placeholder="ภาษาไทย..." style="padding: 0.25rem 0.5rem; font-size: 0.8rem; border-radius: 6px; border: 1px solid var(--border-glass); flex: 1; outline: none; background: #fff;" title="${currentLanguage === 'th' ? 'คลิกเพื่อแก้ไขคำภาษาไทย' : 'Click to edit Thai wording'}" />
+            <div class="admin-item-chip" draggable="true" data-type="${typeName}" style="display: flex; align-items: center; justify-content: space-between; gap: 0.4rem; width: 100%; padding: 0.4rem 0.6rem;">
+                <span style="font-weight: 600; min-width: 80px; color: var(--text-main); font-size: 0.85rem;">${typeName}</span>
+                <input type="text" class="admin-item-th-input" data-name="${typeName}" value="${typeTh}" placeholder="ไทย..." style="padding: 0.25rem 0.4rem; font-size: 0.78rem; border-radius: 6px; border: 1px solid var(--border-glass); flex: 1; min-width: 70px; outline: none; background: #fff;" title="Click to edit Thai wording" />
+                <input type="text" class="admin-item-my-input" data-name="${typeName}" value="${typeMy}" placeholder="မြန်မာ..." style="padding: 0.25rem 0.4rem; font-size: 0.78rem; border-radius: 6px; border: 1px solid var(--border-glass); flex: 1; min-width: 70px; outline: none; background: #fff;" title="Click to edit Myanmar wording" />
                 <button type="button" class="admin-delete-library-item" data-type="${typeName}" style="background: none; border: none; cursor: pointer; color: #ef4444; padding: 0.15rem; display: flex; align-items: center; justify-content: center;" title="Delete Item">
                     <i data-lucide="trash-2" style="width: 14px; height: 14px;"></i>
                 </button>
@@ -2822,10 +2844,12 @@ const renderAdminItems = () => {
             const itemsHtml = validCatItems.map(item => {
                 const typeName = typeof item === 'object' ? item.name : item;
                 const typeTh = getItemThName(typeName);
+                const typeMy = getItemMyName(typeName);
                 return `
-                <div class="admin-item-chip" draggable="true" data-type="${typeName}" style="display: flex; align-items: center; justify-content: space-between; gap: 0.4rem; width: 100%; padding: 0.35rem 0.5rem;">
-                    <span style="font-weight: 600; font-size: 0.82rem; min-width: 70px;">${typeName}</span>
-                    <input type="text" class="admin-item-th-input" data-name="${typeName}" value="${typeTh}" placeholder="ภาษาไทย..." style="padding: 0.2rem 0.4rem; font-size: 0.78rem; border-radius: 6px; border: 1px solid var(--border-glass); flex: 1; outline: none; background: #fff;" title="${currentLanguage === 'th' ? 'คลิกเพื่อแก้ไขคำภาษาไทย' : 'Click to edit Thai wording'}" />
+                <div class="admin-item-chip" draggable="true" data-type="${typeName}" style="display: flex; align-items: center; justify-content: space-between; gap: 0.3rem; width: 100%; padding: 0.35rem 0.4rem;">
+                    <span style="font-weight: 600; font-size: 0.8rem; min-width: 65px;">${typeName}</span>
+                    <input type="text" class="admin-item-th-input" data-name="${typeName}" value="${typeTh}" placeholder="ไทย..." style="padding: 0.18rem 0.3rem; font-size: 0.75rem; border-radius: 6px; border: 1px solid var(--border-glass); flex: 1; min-width: 60px; outline: none; background: #fff;" title="Edit Thai wording" />
+                    <input type="text" class="admin-item-my-input" data-name="${typeName}" value="${typeMy}" placeholder="မြန်မာ..." style="padding: 0.18rem 0.3rem; font-size: 0.75rem; border-radius: 6px; border: 1px solid var(--border-glass); flex: 1; min-width: 60px; outline: none; background: #fff;" title="Edit Myanmar wording" />
                 </div>
                 `;
             }).join('');
@@ -2834,10 +2858,11 @@ const renderAdminItems = () => {
             
             return `
             <div class="admin-category-card" data-cat-id="${cat.id}">
-                <div class="admin-category-header" style="display: flex; align-items: center; justify-content: space-between; gap: 0.4rem; padding-bottom: 0.5rem; border-bottom: 1px solid var(--border-glass); margin-bottom: 0.5rem;">
-                    <div style="display: flex; align-items: center; gap: 0.4rem; flex: 1;">
-                        <span class="admin-category-title" style="font-weight: 700; font-size: 0.9rem;">${cat.name}</span>
-                        <input type="text" class="admin-cat-th-input" data-cat-id="${cat.id}" value="${cat.name_th || getCategoryThName(cat.name)}" placeholder="ภาษาไทย..." style="padding: 0.2rem 0.4rem; font-size: 0.78rem; border-radius: 6px; border: 1px solid var(--border-glass); width: 100px; outline: none; background: #fff;" title="${currentLanguage === 'th' ? 'คลิกเพื่อแก้ไขหมวดหมู่ภาษาไทย' : 'Click to edit Thai category wording'}" />
+                <div class="admin-category-header" style="display: flex; align-items: center; justify-content: space-between; gap: 0.3rem; padding-bottom: 0.5rem; border-bottom: 1px solid var(--border-glass); margin-bottom: 0.5rem;">
+                    <div style="display: flex; align-items: center; gap: 0.3rem; flex: 1; flex-wrap: wrap;">
+                        <span class="admin-category-title" style="font-weight: 700; font-size: 0.88rem;">${cat.name}</span>
+                        <input type="text" class="admin-cat-th-input" data-cat-id="${cat.id}" value="${cat.name_th || getCategoryThName(cat.name)}" placeholder="ไทย..." style="padding: 0.18rem 0.3rem; font-size: 0.75rem; border-radius: 6px; border: 1px solid var(--border-glass); width: 75px; outline: none; background: #fff;" title="Edit Thai category wording" />
+                        <input type="text" class="admin-cat-my-input" data-cat-id="${cat.id}" value="${cat.name_my || getCategoryMyName(cat.name)}" placeholder="မြန်မာ..." style="padding: 0.18rem 0.3rem; font-size: 0.75rem; border-radius: 6px; border: 1px solid var(--border-glass); width: 75px; outline: none; background: #fff;" title="Edit Myanmar category wording" />
                     </div>
                     <button type="button" class="admin-delete-cat-btn" data-cat-id="${cat.id}" style="background: none; border: none; cursor: pointer; color: #ef4444; padding: 0.15rem; display: flex; align-items: center;">
                         <i data-lucide="x" style="width: 14px; height: 14px;"></i>
@@ -2879,7 +2904,33 @@ const renderAdminItems = () => {
             })
             .then(() => {
                 initItemTypeButtons();
-                showToast(currentLanguage === 'th' ? `อัปเดตคำภาษาไทยสำหรับ "${itemName}" เป็น "${newTh}"` : `Saved Thai wording for "${itemName}"`, 'success');
+                showToast(`Saved Thai wording for "${itemName}"`, 'success');
+            })
+            .catch(err => console.error(err));
+        });
+    });
+
+    // Bind Myanmar wording input change events for Items
+    document.querySelectorAll('.admin-item-my-input').forEach(input => {
+        input.addEventListener('change', (e) => {
+            const itemName = input.dataset.name;
+            const newMy = e.target.value.trim();
+            
+            const targetObj = clothingTypes.find(t => (typeof t === 'object' ? t.name : t).toLowerCase() === itemName.toLowerCase());
+            if (targetObj && typeof targetObj === 'object') {
+                targetObj.name_my = newMy;
+            } else {
+                clothingTypes.push({ name: itemName, name_my: newMy });
+            }
+            
+            fetch(`${API_BASE}/clothing-types/${encodeURIComponent(itemName)}`, {
+                method: 'PUT',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ name_my: newMy })
+            })
+            .then(() => {
+                initItemTypeButtons();
+                showToast(`Saved Myanmar wording for "${itemName}"`, 'success');
             })
             .catch(err => console.error(err));
         });
@@ -2903,7 +2954,31 @@ const renderAdminItems = () => {
             })
             .then(() => {
                 initItemTypeButtons();
-                showToast(currentLanguage === 'th' ? `อัปเดตชื่อหมวดหมู่ภาษาไทยเป็น "${newTh}"` : `Saved Thai category wording to "${newTh}"`, 'success');
+                showToast(`Saved Thai category wording`, 'success');
+            })
+            .catch(err => console.error(err));
+        });
+    });
+
+    // Bind Myanmar wording input change events for Categories
+    document.querySelectorAll('.admin-cat-my-input').forEach(input => {
+        input.addEventListener('change', (e) => {
+            const catId = input.dataset.catId;
+            const newMy = e.target.value.trim();
+            
+            const targetCat = categories.find(c => c.id === catId);
+            if (targetCat) {
+                targetCat.name_my = newMy;
+            }
+            
+            fetch(`${API_BASE}/categories/${catId}`, {
+                method: 'PUT',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ name_my: newMy })
+            })
+            .then(() => {
+                initItemTypeButtons();
+                showToast(`Saved Myanmar category wording`, 'success');
             })
             .catch(err => console.error(err));
         });
@@ -2969,8 +3044,10 @@ if (adminForm) {
         e.preventDefault();
         const inputEn = document.getElementById('adminNewItemInput');
         const inputTh = document.getElementById('adminNewItemInputTh');
+        const inputMy = document.getElementById('adminNewItemInputMy');
         const newType = inputEn ? inputEn.value.trim() : '';
         const thVal = inputTh ? inputTh.value.trim() : '';
+        const myVal = inputMy ? inputMy.value.trim() : '';
         if (!newType) return;
         
         // Capitalize first letter of each word
@@ -2978,22 +3055,23 @@ if (adminForm) {
         
         const existingIdx = clothingTypes.findIndex(t => (typeof t === 'object' ? t.name : t).toLowerCase() === formattedType.toLowerCase());
         if (existingIdx > -1) {
-            clothingTypes[existingIdx] = { name: formattedType, name_th: thVal };
+            clothingTypes[existingIdx] = { name: formattedType, name_th: thVal, name_my: myVal };
         } else {
-            clothingTypes.push({ name: formattedType, name_th: thVal });
+            clothingTypes.push({ name: formattedType, name_th: thVal, name_my: myVal });
         }
         
         fetch(`${API_BASE}/clothing-types`, {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ name: formattedType, name_th: thVal })
+            body: JSON.stringify({ name: formattedType, name_th: thVal, name_my: myVal })
         })
         .then(() => {
             if (inputEn) inputEn.value = '';
             if (inputTh) inputTh.value = '';
+            if (inputMy) inputMy.value = '';
             initItemTypeButtons();
             renderAdminItems();
-            showToast(currentLanguage === 'th' ? `บันทึกรายการผ้า "${formattedType}" (${thVal || 'ไม่ระบุชื่อไทย'}) สำเร็จ` : `Saved item "${formattedType}"`, 'success');
+            showToast(`Saved item "${formattedType}"`, 'success');
         })
         .catch(err => console.error(err));
     });
@@ -3005,8 +3083,10 @@ if (createCategoryForm) {
         e.preventDefault();
         const inputEn = document.getElementById('adminNewCategoryInput');
         const inputTh = document.getElementById('adminNewCategoryInputTh');
+        const inputMy = document.getElementById('adminNewCategoryInputMy');
         const catName = inputEn ? inputEn.value.trim() : '';
         const thVal = inputTh ? inputTh.value.trim() : '';
+        const myVal = inputMy ? inputMy.value.trim() : '';
         if (!catName) return;
         
         const formattedCatName = catName.split(' ').map(w => w.charAt(0).toUpperCase() + w.slice(1)).join(' ');
@@ -3015,6 +3095,7 @@ if (createCategoryForm) {
             id: newCatId,
             name: formattedCatName,
             name_th: thVal,
+            name_my: myVal,
             items: []
         };
         
@@ -3022,14 +3103,15 @@ if (createCategoryForm) {
         fetch(`${API_BASE}/categories`, {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ id: newCatId, name: formattedCatName, name_th: thVal })
+            body: JSON.stringify({ id: newCatId, name: formattedCatName, name_th: thVal, name_my: myVal })
         })
         .then(() => {
             if (inputEn) inputEn.value = '';
             if (inputTh) inputTh.value = '';
+            if (inputMy) inputMy.value = '';
             initItemTypeButtons();
             renderAdminItems();
-            showToast(currentLanguage === 'th' ? `สร้างหมวดหมู่ "${formattedCatName}" (${thVal || 'ไม่ระบุชื่อไทย'}) สำเร็จ` : `Created category "${formattedCatName}"`, 'success');
+            showToast(`Created category "${formattedCatName}"`, 'success');
         })
         .catch(err => console.error(err));
     });

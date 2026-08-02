@@ -142,7 +142,9 @@ const initDatabase = async () => {
         await client.query('ALTER TABLE order_items ADD COLUMN IF NOT EXISTS defect_image TEXT');
         await client.query('ALTER TABLE order_items ADD COLUMN IF NOT EXISTS tracking_id VARCHAR(100)');
         await client.query('ALTER TABLE clothing_types ADD COLUMN IF NOT EXISTS name_th VARCHAR(255)');
+        await client.query('ALTER TABLE clothing_types ADD COLUMN IF NOT EXISTS name_my VARCHAR(255)');
         await client.query('ALTER TABLE item_categories ADD COLUMN IF NOT EXISTS name_th VARCHAR(255)');
+        await client.query('ALTER TABLE item_categories ADD COLUMN IF NOT EXISTS name_my VARCHAR(255)');
 
         // Create table for status checklist verifications and audit logs
         await client.query(`
@@ -358,8 +360,8 @@ app.put('/api/orders/:id/status', async (req, res) => {
 // 4. Get standard clothing types (Items library)
 app.get('/api/clothing-types', async (req, res) => {
     try {
-        const result = await pool.query('SELECT name, name_th FROM clothing_types ORDER BY name ASC');
-        res.json(result.rows.map(r => ({ name: r.name, name_th: r.name_th || '' })));
+        const result = await pool.query('SELECT name, name_th, name_my FROM clothing_types ORDER BY name ASC');
+        res.json(result.rows.map(r => ({ name: r.name, name_th: r.name_th || '', name_my: r.name_my || '' })));
     } catch (err) {
         console.error(err);
         res.status(500).json({ error: err.message });
@@ -368,11 +370,14 @@ app.get('/api/clothing-types', async (req, res) => {
 
 // 5. Add or update item in library
 app.post('/api/clothing-types', async (req, res) => {
-    const { name, name_th } = req.body;
+    const { name, name_th, name_my } = req.body;
     try {
         await pool.query(
-            'INSERT INTO clothing_types (name, name_th) VALUES ($1, $2) ON CONFLICT (name) DO UPDATE SET name_th = EXCLUDED.name_th',
-            [name, name_th || '']
+            `INSERT INTO clothing_types (name, name_th, name_my) VALUES ($1, $2, $3) 
+             ON CONFLICT (name) DO UPDATE SET 
+                name_th = COALESCE(EXCLUDED.name_th, clothing_types.name_th),
+                name_my = COALESCE(EXCLUDED.name_my, clothing_types.name_my)`,
+            [name, name_th || '', name_my || '']
         );
         res.status(201).json({ success: true });
     } catch (err) {
@@ -381,12 +386,17 @@ app.post('/api/clothing-types', async (req, res) => {
     }
 });
 
-// Update item Thai name specifically
+// Update item Thai / Myanmar name specifically
 app.put('/api/clothing-types/:name', async (req, res) => {
     const { name } = req.params;
-    const { name_th } = req.body;
+    const { name_th, name_my } = req.body;
     try {
-        await pool.query('UPDATE clothing_types SET name_th = $1 WHERE name = $2', [name_th || '', name]);
+        if (name_th !== undefined) {
+            await pool.query('UPDATE clothing_types SET name_th = $1 WHERE name = $2', [name_th, name]);
+        }
+        if (name_my !== undefined) {
+            await pool.query('UPDATE clothing_types SET name_my = $1 WHERE name = $2', [name_my, name]);
+        }
         res.json({ success: true });
     } catch (err) {
         console.error(err);
@@ -424,6 +434,7 @@ app.get('/api/categories', async (req, res) => {
             id: cat.id,
             name: cat.name,
             name_th: cat.name_th || '',
+            name_my: cat.name_my || '',
             items: itemsMap[cat.id] || []
         }));
         
@@ -436,11 +447,12 @@ app.get('/api/categories', async (req, res) => {
 
 // 8. Create or update category
 app.post('/api/categories', async (req, res) => {
-    const { id, name, name_th } = req.body;
+    const { id, name, name_th, name_my } = req.body;
     try {
         await pool.query(
-            'INSERT INTO item_categories (id, name, name_th) VALUES ($1, $2, $3) ON CONFLICT (id) DO UPDATE SET name = EXCLUDED.name, name_th = EXCLUDED.name_th',
-            [id, name, name_th || '']
+            `INSERT INTO item_categories (id, name, name_th, name_my) VALUES ($1, $2, $3, $4) 
+             ON CONFLICT (id) DO UPDATE SET name = EXCLUDED.name, name_th = EXCLUDED.name_th, name_my = EXCLUDED.name_my`,
+            [id, name, name_th || '', name_my || '']
         );
         res.status(201).json({ success: true });
     } catch (err) {
@@ -449,10 +461,9 @@ app.post('/api/categories', async (req, res) => {
     }
 });
 
-// Update category Thai name specifically
+// Update category specifically
 app.put('/api/categories/:id', async (req, res) => {
     const { id } = req.params;
-    const { name, name_th } = req.body;
     try {
         if (name_th !== undefined && name !== undefined) {
             await pool.query('UPDATE item_categories SET name = $1, name_th = $2 WHERE id = $3', [name, name_th, id]);
