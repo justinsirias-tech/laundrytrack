@@ -2468,6 +2468,7 @@ window.openOrderModal = async (orderId) => {
     const printBtn = document.getElementById('printModalBtn');
     if (printBtn) {
         printBtn.onclick = () => printQrCode(order.id);
+    }
 };
 
 if (closeBtns) {
