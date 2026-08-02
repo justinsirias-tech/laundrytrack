@@ -3409,6 +3409,34 @@ let activeStaffUser = {
     pin: '1234'
 };
 
+const syncDepartmentFilterUI = () => {
+    const deptFilterGroup = document.getElementById('deptFilterGroup');
+    if (!deptFilterGroup) return;
+
+    deptFilterGroup.querySelectorAll('button').forEach(btn => {
+        const btnDept = btn.dataset.dept;
+        if (activeStaffUser.role !== 'Manager') {
+            if (btnDept === activeStaffUser.role) {
+                btn.classList.add('active-dept-filter');
+                btn.style.opacity = '1';
+                btn.style.cursor = 'pointer';
+            } else {
+                btn.classList.remove('active-dept-filter');
+                btn.style.opacity = '0.4';
+                btn.style.cursor = 'not-allowed';
+            }
+        } else {
+            btn.style.opacity = '1';
+            btn.style.cursor = 'pointer';
+            if (btnDept === activeChecklistDeptFilter) {
+                btn.classList.add('active-dept-filter');
+            } else {
+                btn.classList.remove('active-dept-filter');
+            }
+        }
+    });
+};
+
 const updateActiveStaffUI = () => {
     const nameEl = document.getElementById('activeStaffNameDisplay');
     const roleEl = document.getElementById('activeStaffRoleDisplay');
@@ -3421,6 +3449,17 @@ const updateActiveStaffUI = () => {
         else if (activeStaffUser.role === 'Washer') roleEl.style.background = '#06b6d4';
         else if (activeStaffUser.role === 'Ironing') roleEl.style.background = '#f59e0b';
         else if (activeStaffUser.role === 'Packing') roleEl.style.background = '#10b981';
+    }
+    
+    // Automatically restrict filter context to staff member's department
+    if (activeStaffUser.role !== 'Manager') {
+        activeChecklistDeptFilter = activeStaffUser.role;
+    } else {
+        activeChecklistDeptFilter = 'ALL';
+    }
+    syncDepartmentFilterUI();
+    if (document.getElementById('checklists-view')?.classList.contains('active')) {
+        renderPendingChecklistsTable();
     }
 };
 
@@ -3657,13 +3696,18 @@ const renderPendingChecklistsTable = () => {
     const tbody = document.getElementById('pendingChecklistsTableBody');
     if (!tbody) return;
     
+    syncDepartmentFilterUI();
+
     let filtered = pendingChecklistsData;
-    if (activeChecklistDeptFilter !== 'ALL') {
+    if (activeStaffUser.role !== 'Manager') {
+        activeChecklistDeptFilter = activeStaffUser.role;
+        filtered = pendingChecklistsData.filter(item => item.pendingDepts.includes(activeStaffUser.role));
+    } else if (activeChecklistDeptFilter !== 'ALL') {
         filtered = pendingChecklistsData.filter(item => item.pendingDepts.includes(activeChecklistDeptFilter));
     }
     
     if (filtered.length === 0) {
-        tbody.innerHTML = `<tr><td colspan="8" style="text-align: center; color: var(--text-muted); padding: 1.5rem;">No active orders with pending checklists found for this filter.</td></tr>`;
+        tbody.innerHTML = `<tr><td colspan="8" style="text-align: center; color: var(--text-muted); padding: 1.5rem;">${activeStaffUser.role !== 'Manager' ? `No pending checklist tasks assigned for <strong>${activeStaffUser.role}</strong> department.` : 'No active orders with pending checklists found for this filter.'}</td></tr>`;
         return;
     }
     
@@ -3681,7 +3725,7 @@ const renderPendingChecklistsTable = () => {
             ? `<button type="button" onclick="triggerManagerApprovalModal('${o.orderId}', '${(o.discrepancyDetails || '').replace(/'/g, "\\'")}')" class="btn btn-secondary" style="padding:0.2rem 0.5rem; font-size:0.75rem; background:rgba(239,68,68,0.1); border:1px solid #ef4444; color:#dc2626; font-weight:600; border-radius:4px;">⚠️ Discrepancy Locked (Approve)</button>`
             : `<span style="color:var(--text-muted); font-size:0.8rem;">Clean</span>`;
             
-        const targetDeptToPerform = o.pendingDepts[0] || activeStaffUser.role;
+        const targetDeptToPerform = activeStaffUser.role !== 'Manager' ? activeStaffUser.role : (o.pendingDepts[0] || 'Checker/Cashier');
         
         return `
         <tr>
@@ -3715,6 +3759,10 @@ const deptFilterGroup = document.getElementById('deptFilterGroup');
 if (deptFilterGroup) {
     deptFilterGroup.querySelectorAll('button').forEach(btn => {
         btn.onclick = () => {
+            if (activeStaffUser.role !== 'Manager' && btn.dataset.dept !== activeStaffUser.role) {
+                showToast(`Logged in as ${activeStaffUser.role}. Only Managers can switch department task views.`, 'warning');
+                return;
+            }
             deptFilterGroup.querySelectorAll('button').forEach(b => b.classList.remove('active-dept-filter'));
             btn.classList.add('active-dept-filter');
             activeChecklistDeptFilter = btn.dataset.dept;
@@ -3734,8 +3782,16 @@ window.openDeptChecklistModal = async (orderId, dept) => {
         return;
     }
     
+    const targetDept = dept || activeStaffUser.role;
+
+    // Access Control: Non-managers can only perform checklists for their assigned role
+    if (activeStaffUser.role !== 'Manager' && targetDept !== activeStaffUser.role) {
+        showToast(`🔒 Access Restricted: You are logged in as ${activeStaffUser.role}. You cannot perform ${targetDept} checklists.`, 'error');
+        return;
+    }
+    
     currentDeptChecklistOrder = order;
-    currentDeptChecklistDept = dept || activeStaffUser.role;
+    currentDeptChecklistDept = targetDept;
     
     const titleEl = document.getElementById('deptModalTitle');
     const subTitleEl = document.getElementById('deptModalSubtitle');
