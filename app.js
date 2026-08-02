@@ -874,6 +874,12 @@ const updateCompletedOrdersTable = () => {
     
     tbody.innerHTML = html;
     lucide.createIcons();
+    tbody.querySelectorAll('tr[data-id]').forEach(row => {
+        row.onclick = () => {
+            const orderId = row.dataset.id;
+            if (orderId) window.openOrderModal(orderId);
+        };
+    });
 };
 
 const updateKanbanBoard = () => {
@@ -899,7 +905,7 @@ const updateKanbanBoard = () => {
             const qrData = encodeURIComponent(appUrl);
             const qrUrl = `https://api.qrserver.com/v1/create-qr-code/?size=80x80&data=${qrData}`;
             return `
-            <div class="kanban-card" draggable="true" data-id="${order.id}">
+            <div class="kanban-card" draggable="true" data-id="${order.id}" style="cursor: pointer;">
                 <div class="card-header" style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 0.6rem; border-bottom: 1px solid rgba(34, 41, 69, 0.05); padding-bottom: 0.4rem;">
                     <span class="card-id" style="font-size: 0.85rem; font-weight: 700; color: var(--primary);">#${order.id}</span>
                     <div style="display: flex; align-items: center; gap: 0.4rem;">
@@ -932,6 +938,15 @@ const updateKanbanBoard = () => {
     
     lucide.createIcons();
     setupDragAndDrop();
+
+    // Bind click listeners on Kanban cards to expand order details modal
+    document.querySelectorAll('.kanban-card').forEach(card => {
+        card.onclick = (e) => {
+            if (e.target.tagName === 'IMG' || e.target.closest('button')) return;
+            const orderId = card.dataset.id;
+            if (orderId) window.openOrderModal(orderId);
+        };
+    });
 };
 
 const refreshAllViews = () => {
@@ -2352,8 +2367,9 @@ document.addEventListener('DOMContentLoaded', () => {
 const modalOverlay = document.getElementById('orderDetailsModal');
 const closeBtns = document.querySelectorAll('.close-modal');
 
-const openOrderModal = async (orderId) => {
-    const order = orders.find(o => o.id === orderId);
+window.openOrderModal = async (orderId) => {
+    if (!orderId) return;
+    const order = orders.find(o => String(o.id).toLowerCase() === String(orderId).toLowerCase());
     if (!order) return;
     
     document.getElementById('modalOrderId').innerText = `${t('order_details')}: ${order.id}`;
@@ -2606,7 +2622,7 @@ const openOrderModal = async (orderId) => {
                     });
                     
                     // Refresh modal audit log timeline
-                    refreshModalVerifyHistory();
+                    refreshModalActivityLogs();
                 } catch (err) {
                     console.error("Error auto-saving item check:", err);
                     showToast("Error saving check: " + err.message, "error");
