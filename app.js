@@ -2175,466 +2175,245 @@ if (searchInput) {
 
 const loadAllData = async () => {
     try {
-        const ordersRes = await fetch(`${API_BASE}/orders`);
-        orders = await ordersRes.json();
-        
-        const typesRes = await fetch(`${API_BASE}/clothing-types`);
-        const typesData = await typesRes.json();
-        clothingTypes = typesData.map(t => typeof t === 'string' ? { name: t, name_th: itemTranslations[t] || '' } : { name: t.name, name_th: t.name_th || itemTranslations[t.name] || '' });
-        
-        const catsRes = await fetch(`${API_BASE}/categories`);
-        categories = await catsRes.json();
-        
-        try {
-            const brandsRes = await fetch(`${API_BASE}/clothing-brands`);
-            clothingBrands = await brandsRes.json();
-        } catch (err) {
-            console.error("Error fetching clothing brands:", err);
+        const isManager = activeStaffUser && activeStaffUser.role === 'Manager';
+
+        historyContainer.innerHTML = logs.map(log => {
+            const dateObj = new Date(log.created_at || Date.now());
+            const timeStr = dateObj.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+            const dateStr = dateObj.toLocaleDateString([], { month: 'short', day: 'numeric' });
+            
+            const deleteBtnHtml = isManager ? `
+                <button type="button" class="delete-log-btn" data-log-id="${log.id}" style="background:none; border:none; color:#ef4444; cursor:pointer; padding:0 0.2rem;" title="Delete Log Entry (Admin Only)">
+                    <i data-lucide="trash-2" style="width:12px; height:12px;"></i>
+                </button>
+            ` : '';
+            
+            return `
+                <div style="display: flex; align-items: center; justify-content: space-between; border-bottom: 1px dashed var(--border-glass); padding: 0.3rem 0; font-size: 0.8rem; gap: 0.5rem;">
+                    <div style="display: flex; align-items: center; gap: 0.4rem; flex: 1; flex-wrap: wrap;">
+                        <span style="font-weight: 700; color: var(--primary);">${log.actor_name}</span>
+                        <span class="badge" style="font-size: 0.65rem; padding: 0.1rem 0.35rem; background: rgba(99, 102, 241, 0.1); color: var(--primary);">${log.actor_role}</span>
+                        <span style="color: var(--text-main); font-weight: 500;">${log.details}</span>
+                    </div>
+                    <div style="display: flex; align-items: center; gap: 0.4rem; flex-shrink: 0;">
+                        <span style="color: var(--text-muted); font-size: 0.72rem;">${dateStr} ${timeStr}</span>
+                        ${deleteBtnHtml}
+                    </div>
+                </div>
+            `;
+        }).join('');
+
+        if (typeof lucide !== 'undefined') lucide.createIcons();
+
+        // Bind delete listeners for Managers
+        if (isManager) {
+            historyContainer.querySelectorAll('.delete-log-btn').forEach(btn => {
+                btn.onclick = async (e) => {
+                    e.stopPropagation();
+                    const logId = btn.dataset.logId;
+                    try {
+                        const delRes = await fetch(`${API_BASE}/activity-logs/${logId}`, {
+                            method: 'DELETE',
+                            headers: { 'Content-Type': 'application/json' },
+                            body: JSON.stringify({ userRole: activeStaffUser.role })
+                        });
+                        const delData = await delRes.json();
+                        if (delData.success) {
+                            showToast('Activity log deleted by Admin', 'success');
+                            refreshModalActivityLogs(targetOrderId);
+                        } else {
+                            showToast(delData.error || 'Failed to delete log', 'error');
+                        }
+                    } catch (err) {
+                        showToast('Error deleting activity log', 'error');
+                    }
+                };
+            });
         }
-        
-        refreshAllViews();
-        initItemTypeButtons();
-        renderAdminItems();
-        renderAdminBrands();
-        initBrandButtons();
-        applyTranslations();
     } catch (err) {
-        console.error("Error loading data from database backend:", err);
-        showToast("Error: " + err.message, "error");
+        console.error("Error loading activity history:", err);
     }
 };
-
-// Initialize
-document.addEventListener('DOMContentLoaded', () => {
-    renderActiveColorCheckmark();
-    
-    // Set up Mix Colors button click handler
-    const mixColorsBtn = document.getElementById('mixColorsBtn');
-    if (mixColorsBtn) {
-        mixColorsBtn.addEventListener('click', () => {
-            isMixMode = !isMixMode;
-            
-            if (isMixMode) {
-                mixColorsBtn.classList.add('active');
-                mixColorSelections = [];
-                document.querySelectorAll('.color-swatch').forEach(s => {
-                    if (s.classList.contains('active')) {
-                        mixColorSelections.push({
-                            name: s.dataset.color,
-                            hex: s.style.backgroundColor || s.style.background
-                        });
-                    }
-                });
-                showToast(currentLanguage === 'th' ? 'เปิดโหมดผสมสี: แตะเลือกสีได้หลายสีพร้อมกัน' : 'Mix mode ON: Tap multiple colors to combine them', 'info');
-            } else {
-                mixColorsBtn.classList.remove('active');
-                const activeSwatches = document.querySelectorAll('.color-swatch.active');
-                let keepSwatch = null;
-                if (activeSwatches.length > 0) {
-                    keepSwatch = activeSwatches[0];
-                    activeSwatches.forEach((s, idx) => {
-                        if (idx > 0) s.classList.remove('active');
-                    });
-                }
-                
-                if (keepSwatch) {
-                    selectedColor = {
-                        name: keepSwatch.dataset.color,
-                        hex: keepSwatch.style.backgroundColor || keepSwatch.style.background
-                    };
-                } else {
-                    const blackSwatch = Array.from(document.querySelectorAll('.color-swatch')).find(s => s.dataset.color === 'Black');
-                    if (blackSwatch) {
-                        blackSwatch.classList.add('active');
-                        selectedColor = { name: 'Black', hex: '#000000' };
-                    }
-                }
-                
-                mixColorSelections = [];
-                renderActiveColorCheckmark();
-                updateActiveItemIconColor();
-                showToast(currentLanguage === 'th' ? 'ปิดโหมดผสมสีแล้ว' : 'Mix mode OFF', 'info');
-            }
-        });
-    }
-    
-    if (typeof lucide !== 'undefined') {
-        lucide.createIcons();
-    }
-    
-    // Load all data from PostgreSQL via Express API on start
-    loadAllData();
-    initAdminTabs();
-
-    // Set up item service type touchscreen buttons
-    const serviceBtns = document.querySelectorAll('#serviceButtonGroup .service-btn');
-    const serviceInput = document.getElementById('itemServiceType');
-    if (serviceBtns.length > 0 && serviceInput) {
-        serviceBtns.forEach(btn => {
-            btn.addEventListener('click', () => {
-                serviceBtns.forEach(b => b.classList.remove('active'));
-                btn.classList.add('active');
-                serviceInput.value = btn.dataset.value;
-            });
-        });
-    }
-    
-    // Check for search parameter in URL (used when scanning QR code)
-    const urlParams = new URLSearchParams(window.location.search);
-    const searchQuery = urlParams.get('search');
-    
-    if (searchQuery) {
-        const searchQueryVal = searchQuery;
-        setTimeout(() => {
-            const searchInput = document.getElementById('searchInput');
-            if (searchInput) {
-                searchInput.value = searchQueryVal;
-                // Trigger the search input event to filter the orders
-                searchInput.dispatchEvent(new Event('input'));
-            }
-        }, 500);
-    }
-    
-    // Initialize active item icon color in the builder
-    setTimeout(updateActiveItemIconColor, 100);
-
-    // Watch manual Order Number typing to update QR codes reactively
-    const orderIdInput = document.getElementById('orderId');
-    if (orderIdInput) {
-        orderIdInput.addEventListener('input', () => {
-            updateDraftQRIds();
-        });
-    }
-
-    // Set up language switcher button handler
-    const langBtn = document.getElementById('langToggleBtn');
-    if (langBtn) {
-        langBtn.addEventListener('click', () => {
-            if (currentLanguage === 'en') currentLanguage = 'th';
-            else if (currentLanguage === 'th') currentLanguage = 'my';
-            else currentLanguage = 'en';
-            
-            localStorage.setItem('tls_language', currentLanguage);
-            const langText = document.getElementById('currentLangText');
-            if (langText) langText.innerText = currentLanguage.toUpperCase();
-            
-            applyTranslations();
-            refreshAllViews();
-            initItemTypeButtons();
-            renderAdminItems();
-            renderAddedItems();
-        });
-    }
-
-    // Brand quick select buttons logic
-    const brandInput = document.getElementById('itemBrand');
-    if (brandInput) {
-        document.querySelectorAll('.brand-pill-btn').forEach(btn => {
-            btn.addEventListener('click', () => {
-                const brand = btn.dataset.brand;
-                if (btn.classList.contains('active')) {
-                    // Toggle off if clicking the active one
-                    btn.classList.remove('active');
-                    brandInput.value = '';
-                } else {
-                    document.querySelectorAll('.brand-pill-btn').forEach(b => b.classList.remove('active'));
-                    btn.classList.add('active');
-                    brandInput.value = brand;
-                }
-            });
-        });
-        
-        // Clear active brand button highlight if user types manually
-        if (typeof brandInput.addEventListener === 'function') {
-            brandInput.addEventListener('input', () => {
-                const currentVal = brandInput.value.trim().toLowerCase();
-                document.querySelectorAll('.brand-pill-btn').forEach(btn => {
-                    if (btn.dataset.brand.toLowerCase() === currentVal) {
-                        btn.classList.add('active');
-                    } else {
-                        btn.classList.remove('active');
-                    }
-                });
-            });
-        }
-    }
-
-    // Apply translations on load
-    applyTranslations();
-});
-
-// Modal Logic
-const modalOverlay = document.getElementById('orderDetailsModal');
-const closeBtns = document.querySelectorAll('.close-modal');
 
 window.openOrderModal = async (orderId) => {
     if (!orderId) return;
     const order = orders.find(o => String(o.id).toLowerCase() === String(orderId).toLowerCase());
-    if (!order) return;
-    
-    document.getElementById('modalOrderId').innerText = `${t('order_details')}: ${order.id}`;
-    document.getElementById('modalCustomerName').innerText = order.customerName;
-    document.getElementById('modalPhone').innerText = order.phone;
-    document.getElementById('modalServiceType').innerText = t(order.serviceType);
-    
-    const statusEl = document.getElementById('modalStatus');
-    statusEl.innerHTML = `<span class="status-badge ${getStatusColorClass(order.status)}">${t(order.status)}</span>`;
-    
-    document.getElementById('modalDate').innerText = order.date;
-    
-    const modalItemsCount = document.getElementById('modalItemsCount');
-    if (modalItemsCount) {
-        modalItemsCount.innerText = `(${order.items.length} ${order.items.length === 1 ? 'item' : 'items'})`;
+    if (!order) {
+        showToast(`Order #${orderId} not found in system.`, 'error');
+        return;
     }
+    
+    const modal = document.getElementById('orderDetailsModal');
+    
+    try {
+        const modalTitleEl = document.getElementById('modalOrderId');
+        if (modalTitleEl) modalTitleEl.innerText = `${t('order_details')}: ${order.id}`;
+        
+        const custNameEl = document.getElementById('modalCustomerName');
+        if (custNameEl) custNameEl.innerText = order.customerName || '-';
+        
+        const phoneEl = document.getElementById('modalPhone');
+        if (phoneEl) phoneEl.innerText = order.phone || '-';
+        
+        const serviceTypeEl = document.getElementById('modalServiceType');
+        if (serviceTypeEl) serviceTypeEl.innerText = t(order.serviceType || '');
+        
+        const statusEl = document.getElementById('modalStatus');
+        if (statusEl) statusEl.innerHTML = `<span class="status-badge ${getStatusColorClass(order.status)}">${t(order.status)}</span>`;
+        
+        const dateEl = document.getElementById('modalDate');
+        if (dateEl) dateEl.innerText = order.date || '';
 
-    // Set up staff operator name input
-    const verifyOperator = document.getElementById('verifyOperator');
-    if (verifyOperator) {
-        verifyOperator.value = localStorage.getItem('tls_verify_operator') || 'Staff';
-        verifyOperator.oninput = (e) => {
-            localStorage.setItem('tls_verify_operator', e.target.value);
-        };
-    }
-    
-    const itemsList = document.getElementById('modalItemsList');
-    const itemsHtml = order.items.map((item, index) => {
-        let levelBadge = `<span class="issue-badge issue-badge-normal">${t('normal')}</span>`;
-        if (item.issueLevel === 'issue') {
-            levelBadge = `<span class="issue-badge issue-badge-warning"><i data-lucide="alert-triangle" style="width: 10px; height: 10px;"></i> ${t('issue')}</span>`;
-        } else if (item.issueLevel === 'extreme') {
-            levelBadge = `<span class="issue-badge issue-badge-extreme"><i data-lucide="octagon-alert" style="width: 10px; height: 10px;"></i> ${t('extreme')}</span>`;
+        const modalItemsCount = document.getElementById('modalItemsCount');
+        if (modalItemsCount) {
+            modalItemsCount.innerText = `(${order.items.length} ${order.items.length === 1 ? 'item' : 'items'})`;
+        }
+
+        const verifyOperator = document.getElementById('verifyOperator');
+        if (verifyOperator) {
+            verifyOperator.value = localStorage.getItem('tls_verify_operator') || 'Staff';
+            verifyOperator.oninput = (e) => {
+                localStorage.setItem('tls_verify_operator', e.target.value);
+            };
         }
         
-        // Handle single image string vs JSON array string gracefully in modal details
-        let photoThumbnail = '';
-        if (item.issueImage || item.defectImage) {
-            photoThumbnail = `<div style="margin-top: 0.5rem; display: flex; gap: 0.25rem; flex-wrap: wrap;">`;
-            
-            if (item.issueImage) {
-                if (item.issueImage.startsWith('[')) {
-                    try {
-                        const imgs = JSON.parse(item.issueImage);
-                        photoThumbnail += imgs.map(img => `<img src="${img}" class="issue-image" style="cursor: zoom-in; max-width: 80px; max-height: 80px; border-radius: 4px; border: 1px solid var(--border-glass);" title="Click to enlarge"/>`).join('');
-                    } catch (e) {
+        const itemsList = document.getElementById('modalItemsList');
+        if (itemsList && order.items) {
+            const itemsHtml = order.items.map((item, index) => {
+                let levelBadge = `<span class="issue-badge issue-badge-normal">${t('normal')}</span>`;
+                if (item.issueLevel === 'issue') {
+                    levelBadge = `<span class="issue-badge issue-badge-warning"><i data-lucide="alert-triangle" style="width: 10px; height: 10px;"></i> ${t('issue')}</span>`;
+                } else if (item.issueLevel === 'extreme') {
+                    levelBadge = `<span class="issue-badge issue-badge-extreme"><i data-lucide="octagon-alert" style="width: 10px; height: 10px;"></i> ${t('extreme')}</span>`;
+                }
+                
+                let photoThumbnail = '';
+                if (item.issueImage || item.defectImage) {
+                    photoThumbnail = `<div style="margin-top: 0.5rem; display: flex; gap: 0.25rem; flex-wrap: wrap;">`;
+                    if (item.issueImage) {
                         photoThumbnail += `<img src="${item.issueImage}" class="issue-image" style="cursor: zoom-in; max-width: 80px; max-height: 80px; border-radius: 4px; border: 1px solid var(--border-glass);" title="Click to enlarge"/>`;
                     }
-                } else {
-                    photoThumbnail += `<img src="${item.issueImage}" class="issue-image" style="cursor: zoom-in; max-width: 80px; max-height: 80px; border-radius: 4px; border: 1px solid var(--border-glass);" title="Click to enlarge"/>`;
-                }
-            }
-            
-            if (item.defectImage) {
-                if (item.defectImage.startsWith('[')) {
-                    try {
-                        const defectImgs = JSON.parse(item.defectImage);
-                        photoThumbnail += defectImgs.map(img => `<img src="${img}" class="issue-image defect-image" style="cursor: zoom-in; max-width: 80px; max-height: 80px; border-radius: 4px; border: 2px solid var(--status-red);" title="Defect (Click to enlarge)"/>`).join('');
-                    } catch (e) {
+                    if (item.defectImage) {
                         photoThumbnail += `<img src="${item.defectImage}" class="issue-image defect-image" style="cursor: zoom-in; max-width: 80px; max-height: 80px; border-radius: 4px; border: 2px solid var(--status-red);" title="Defect (Click to enlarge)"/>`;
                     }
-                } else {
-                    photoThumbnail += `<img src="${item.defectImage}" class="issue-image defect-image" style="cursor: zoom-in; max-width: 80px; max-height: 80px; border-radius: 4px; border: 2px solid var(--status-red);" title="Defect (Click to enlarge)"/>`;
+                    photoThumbnail += `</div>`;
                 }
-            }
-            
-            photoThumbnail += `</div>`;
-        }
-            
-        const itemQrUrl = `https://api.qrserver.com/v1/create-qr-code/?size=100x100&data=${encodeURIComponent(item.trackingId)}`;
+                    
+                const itemQrUrl = `https://api.qrserver.com/v1/create-qr-code/?size=100x100&data=${encodeURIComponent(item.trackingId)}`;
 
-        return `
-        <div class="added-item-row" style="background: var(--bg-glass-solid); border: 1px solid var(--border-glass); color: var(--text-main); display: flex; align-items: center; gap: 1rem; padding: 0.75rem 1rem;">
-            <!-- Touchscreen checklist verification checkbox -->
-            <div style="display: flex; align-items: center; justify-content: center; flex-shrink: 0;">
-                <label class="item-check-container" style="margin: 0;">
-                    <input type="checkbox" class="item-verify-checkbox" data-tracking-id="${item.trackingId}" data-item-type="${item.type}" style="position: absolute; opacity: 0; cursor: pointer; height: 0; width: 0;" />
-                    <span class="checkmark-circle">
-                        <i data-lucide="check" class="check-icon-svg" style="width: 16px; height: 16px; color: #fff; display: none;"></i>
-                    </span>
-                </label>
-            </div>
+                return `
+                <div class="added-item-row" style="background: var(--bg-glass-solid); border: 1px solid var(--border-glass); color: var(--text-main); display: flex; align-items: center; gap: 1rem; padding: 0.75rem 1rem; border-radius: 8px;">
+                    <div style="display: flex; align-items: center; justify-content: center; flex-shrink: 0;">
+                        <label class="item-check-container" style="margin: 0;">
+                            <input type="checkbox" class="item-verify-checkbox" data-tracking-id="${item.trackingId}" data-item-type="${item.type}" style="position: absolute; opacity: 0; cursor: pointer; height: 0; width: 0;" />
+                            <span class="checkmark-circle">
+                                <i data-lucide="check" class="check-icon-svg" style="width: 16px; height: 16px; color: #fff; display: none;"></i>
+                            </span>
+                        </label>
+                    </div>
 
-            <div class="added-item-info" style="flex-grow: 1;">
-                <div class="added-item-details">
-                    <div style="display: flex; justify-content: space-between; align-items: start; width: 100%;">
-                        <div>
-                            <span class="added-item-title" style="color: ${item.colorHex}; font-weight: 600; font-size: 1rem;">
-                                ${translateItemName(item.type)} 
-                                ${item.serviceType && item.serviceType !== 'Same as Order' ? `<span style="font-size: 0.75rem; color: #fff; background: var(--primary); padding: 0.15rem 0.4rem; border-radius: 4px; margin-left: 0.4rem;">${t(item.serviceType)}</span>` : ''}
-                                <span style="font-size: 0.75rem; color: var(--primary); background: rgba(99, 102, 241, 0.1); padding: 0.15rem 0.4rem; border-radius: 4px; margin-left: 0.4rem; font-family: monospace;">${item.trackingId}</span>
-                            </span>
-                            <span class="added-item-meta" style="color: var(--text-muted); display: flex; align-items: center; gap: 0.5rem; flex-wrap: wrap; margin-top: 0.25rem;">
-                                <span class="added-item-color-dot" style="background: ${item.colorHex}; border: 1px solid var(--border-glass);"></span> ${translateColorName ? translateColorName(item.color) : item.color}
-                                ${item.brand ? `• ${item.brand}` : ''}
-                                • ${levelBadge}
-                            </span>
-                            ${photoThumbnail}
-                        </div>
-                        <div style="display: flex; flex-direction: column; align-items: center; gap: 0.5rem; flex-shrink: 0; margin-left: 1rem;">
-                            <img src="${itemQrUrl}" style="width: 48px; height: 48px; border-radius: 4px; border: 1px solid var(--border-glass);" title="Item QR Code" />
-                            <button type="button" class="btn btn-secondary" onclick="printItemQrCode('${item.trackingId}', '${item.type}')" style="padding: 0.25rem 0.5rem; font-size: 0.7rem; border-radius: 6px; display: flex; align-items: center; gap: 0.25rem;">
-                                <i data-lucide="printer" style="width: 12px; height: 12px;"></i> Print Tag
-                            </button>
+                    <div class="added-item-info" style="flex-grow: 1;">
+                        <div class="added-item-details">
+                            <div style="display: flex; justify-content: space-between; align-items: start; width: 100%;">
+                                <div>
+                                    <span class="added-item-title" style="color: ${item.colorHex}; font-weight: 600; font-size: 1rem;">
+                                        ${translateItemName(item.type)} 
+                                        ${item.serviceType && item.serviceType !== 'Same as Order' ? `<span style="font-size: 0.75rem; color: #fff; background: var(--primary); padding: 0.15rem 0.4rem; border-radius: 4px; margin-left: 0.4rem;">${t(item.serviceType)}</span>` : ''}
+                                        <span style="font-size: 0.75rem; color: var(--primary); background: rgba(99, 102, 241, 0.1); padding: 0.15rem 0.4rem; border-radius: 4px; margin-left: 0.4rem; font-family: monospace;">${item.trackingId}</span>
+                                    </span>
+                                    <span class="added-item-meta" style="color: var(--text-muted); display: flex; align-items: center; gap: 0.5rem; flex-wrap: wrap; margin-top: 0.25rem;">
+                                        <span class="added-item-color-dot" style="background: ${item.colorHex}; border: 1px solid var(--border-glass);"></span> ${translateColorName ? translateColorName(item.color) : item.color}
+                                        ${item.brand ? `• ${item.brand}` : ''}
+                                        • ${levelBadge}
+                                    </span>
+                                    ${photoThumbnail}
+                                </div>
+                                <div style="display: flex; flex-direction: column; align-items: center; gap: 0.5rem; flex-shrink: 0; margin-left: 1rem;">
+                                    <img src="${itemQrUrl}" style="width: 48px; height: 48px; border-radius: 4px; border: 1px solid var(--border-glass);" title="Item QR Code" />
+                                    <button type="button" class="btn btn-secondary" onclick="printItemQrCode('${item.trackingId}', '${item.type}')" style="padding: 0.25rem 0.5rem; font-size: 0.7rem; border-radius: 6px; display: flex; align-items: center; gap: 0.25rem;">
+                                        <i data-lucide="printer" style="width: 12px; height: 12px;"></i> Print Tag
+                                    </button>
+                                </div>
+                            </div>
                         </div>
                     </div>
                 </div>
-            </div>
-        </div>
-        `;
-    }).join('');
-    itemsList.innerHTML = itemsHtml;
-
-    // Helper to refresh activity logs inside the order modal
-    const refreshModalActivityLogs = async () => {
-        const historyContainer = document.getElementById('modalOrderActivityLog');
-        if (!historyContainer) return;
-        
-        try {
-            const res = await fetch(`${API_BASE}/activity-logs/${order.id}`);
-            const contentType = res.headers.get('content-type') || '';
-            let logs = [];
-            if (res.ok && contentType.includes('application/json')) {
-                logs = await res.json();
-            }
-            
-            if (logs.length === 0) {
-                historyContainer.innerHTML = `<div style="text-align: center; color: var(--text-muted); padding: 0.5rem;">No activity log recorded yet for Order #${order.id}.</div>`;
-                return;
-            }
-            
-            const isManager = activeStaffUser.role === 'Manager';
-
-            historyContainer.innerHTML = logs.map(log => {
-                const dateObj = new Date(log.created_at || Date.now());
-                const timeStr = dateObj.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
-                const dateStr = dateObj.toLocaleDateString([], { month: 'short', day: 'numeric' });
-                
-                const deleteBtnHtml = isManager ? `
-                    <button type="button" class="delete-log-btn" data-log-id="${log.id}" style="background:none; border:none; color:#ef4444; cursor:pointer; padding:0 0.2rem;" title="Delete Log Entry (Admin Only)">
-                        <i data-lucide="trash-2" style="width:12px; height:12px;"></i>
-                    </button>
-                ` : '';
-                
-                return `
-                    <div style="display: flex; align-items: center; justify-content: space-between; border-bottom: 1px dashed var(--border-glass); padding: 0.3rem 0; font-size: 0.8rem; gap: 0.5rem;">
-                        <div style="display: flex; align-items: center; gap: 0.4rem; flex: 1; flex-wrap: wrap;">
-                            <span style="font-weight: 700; color: var(--primary);">${log.actor_name}</span>
-                            <span class="badge" style="font-size: 0.65rem; padding: 0.1rem 0.35rem; background: rgba(99, 102, 241, 0.1); color: var(--primary);">${log.actor_role}</span>
-                            <span style="color: var(--text-main); font-weight: 500;">${log.details}</span>
-                        </div>
-                        <div style="display: flex; align-items: center; gap: 0.4rem; flex-shrink: 0;">
-                            <span style="color: var(--text-muted); font-size: 0.72rem;">${dateStr} ${timeStr}</span>
-                            ${deleteBtnHtml}
-                        </div>
-                    </div>
                 `;
             }).join('');
+            itemsList.innerHTML = itemsHtml;
+        }
 
-            if (typeof lucide !== 'undefined') lucide.createIcons();
-
-            // Bind delete listeners for Managers
-            if (isManager) {
-                historyContainer.querySelectorAll('.delete-log-btn').forEach(btn => {
-                    btn.onclick = async (e) => {
-                        e.stopPropagation();
-                        const logId = btn.dataset.logId;
-                        try {
-                            const delRes = await fetch(`${API_BASE}/activity-logs/${logId}`, {
-                                method: 'DELETE',
-                                headers: { 'Content-Type': 'application/json' },
-                                body: JSON.stringify({ userRole: activeStaffUser.role })
-                            });
-                            const delData = await delRes.json();
-                            if (delData.success) {
-                                showToast('Activity log deleted by Admin', 'success');
-                                refreshModalActivityLogs();
-                            } else {
-                                showToast(delData.error || 'Failed to delete log', 'error');
-                            }
-                        } catch (err) {
-                            showToast('Error deleting activity log', 'error');
-                        }
-                    };
+        // Load current verified state for checkboxes from database
+        try {
+            const res = await fetch(`${API_BASE}/item-verifications/order/${order.id}/status/${order.status}`);
+            const contentType = res.headers.get('content-type') || '';
+            if (res.ok && contentType.includes('application/json')) {
+                const verifiedStates = await res.json();
+                verifiedStates.forEach(state => {
+                    const cb = itemsList.querySelector(`.item-verify-checkbox[data-tracking-id="${state.tracking_id}"]`);
+                    if (cb) cb.checked = state.checked;
                 });
             }
         } catch (err) {
-            console.error("Error loading activity history:", err);
+            console.error("Error loading item verification states:", err);
         }
-    };
 
-    refreshModalActivityLogs();
-
-    // Load current verified state for checkboxes from database
-    try {
-        const res = await fetch(`${API_BASE}/item-verifications/order/${order.id}/status/${order.status}`);
-        const verifiedStates = await res.json();
-        
-        verifiedStates.forEach(state => {
-            const cb = itemsList.querySelector(`.item-verify-checkbox[data-tracking-id="${state.tracking_id}"]`);
-            if (cb) {
-                cb.checked = state.checked;
-            }
-        });
-    } catch (err) {
-        console.error("Error loading item verification states:", err);
-    }
-    
-    // Set up verification checklist progress counter
-    const verifyProgress = document.getElementById('modalVerifyProgress');
-    if (verifyProgress) {
-        verifyProgress.style.display = 'block';
-        const totalItems = order.items.length;
-        const updateVerifyCount = () => {
-            const checkedCount = itemsList.querySelectorAll('.item-verify-checkbox:checked').length;
-            if (currentLanguage === 'th') {
-                verifyProgress.innerText = `ตรวจสอบแล้ว ${checkedCount}/${totalItems} รายการ`;
-            } else {
-                verifyProgress.innerText = `Checked ${checkedCount}/${totalItems} items`;
-            }
-            if (checkedCount === totalItems) {
-                verifyProgress.style.color = '#15803d';
-                verifyProgress.style.backgroundColor = '#dcfce7';
-            } else {
-                verifyProgress.style.color = 'var(--primary)';
-                verifyProgress.style.backgroundColor = 'rgba(34, 41, 69, 0.05)';
-            }
-        };
-        updateVerifyCount();
-        
-        // Attach change listeners to save state automatically on check/uncheck
-        itemsList.querySelectorAll('.item-verify-checkbox').forEach(cb => {
-            cb.addEventListener('change', async (e) => {
-                updateVerifyCount();
-                const operatorName = (verifyOperator ? verifyOperator.value.trim() : '') || 'Staff';
-                const payload = {
-                    orderId: order.id,
-                    trackingId: cb.dataset.trackingId,
-                    status: order.status,
-                    checked: cb.checked,
-                    verifiedBy: operatorName
-                };
-                
-                try {
-                    // AUTO SAVE check status to DB
-                    await fetch(`${API_BASE}/item-verifications`, {
-                        method: 'POST',
-                        headers: { 'Content-Type': 'application/json' },
-                        body: JSON.stringify(payload)
-                    });
-                    
-                    // Refresh modal audit log timeline
-                    refreshModalActivityLogs();
-                } catch (err) {
-                    console.error("Error auto-saving item check:", err);
-                    showToast("Error saving check: " + err.message, "error");
+        // Set up verification checklist progress counter
+        const verifyProgress = document.getElementById('modalVerifyProgress');
+        if (verifyProgress) {
+            verifyProgress.style.display = 'block';
+            const totalItems = order.items.length;
+            const updateVerifyCount = () => {
+                const checkedCount = itemsList.querySelectorAll('.item-verify-checkbox:checked').length;
+                if (currentLanguage === 'th') {
+                    verifyProgress.innerText = `ตรวจสอบแล้ว ${checkedCount}/${totalItems} รายการ`;
+                } else {
+                    verifyProgress.innerText = `Checked ${checkedCount}/${totalItems} items`;
                 }
+                if (checkedCount === totalItems) {
+                    verifyProgress.style.color = '#15803d';
+                    verifyProgress.style.backgroundColor = '#dcfce7';
+                } else {
+                    verifyProgress.style.color = 'var(--primary)';
+                    verifyProgress.style.backgroundColor = 'rgba(34, 41, 69, 0.05)';
+                }
+            };
+            updateVerifyCount();
+            
+            // Attach change listeners to save state automatically on check/uncheck
+            itemsList.querySelectorAll('.item-verify-checkbox').forEach(cb => {
+                cb.addEventListener('change', async (e) => {
+                    updateVerifyCount();
+                    const operatorName = (verifyOperator ? verifyOperator.value.trim() : '') || 'Staff';
+                    const payload = {
+                        orderId: order.id,
+                        trackingId: cb.dataset.trackingId,
+                        status: order.status,
+                        checked: cb.checked,
+                        verifiedBy: operatorName
+                    };
+                    
+                    try {
+                        await fetch(`${API_BASE}/item-verifications`, {
+                            method: 'POST',
+                            headers: { 'Content-Type': 'application/json' },
+                            body: JSON.stringify(payload)
+                        });
+                        refreshModalActivityLogs(order.id);
+                    } catch (err) {
+                        console.error("Error auto-saving item check:", err);
+                    }
+                });
             });
-        });
+        }
+
+        // Refresh modal activity logs timeline
+        refreshModalActivityLogs(order.id);
+    } catch (err) {
+        console.error("Error setting up modal details:", err);
     }
 
-    // Load local history list inside modal
-    refreshModalVerifyHistory();
-
-    modalOverlay.classList.add('active');
+    if (modal) modal.classList.add('active');
     
     if (typeof lucide !== 'undefined') {
         lucide.createIcons();
@@ -2643,7 +2422,6 @@ window.openOrderModal = async (orderId) => {
     const printBtn = document.getElementById('printModalBtn');
     if (printBtn) {
         printBtn.onclick = () => printQrCode(order.id);
-    }
 };
 
 if (closeBtns) {
