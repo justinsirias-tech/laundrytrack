@@ -1413,6 +1413,9 @@ const renderAddedItems = () => {
                     <div class="pos-cart-item-title-row">
                         <span class="pos-cart-item-title">
                             ${translateItemName(item.type)} 
+                            <button type="button" class="cart-item-service-picker-btn" data-index="${index}" title="${currentLanguage === 'th' ? 'คลิกเพื่อเปลี่ยนบริการ' : 'Click to change service'}" style="font-size: 0.7rem; color: #fff; background: var(--primary); border: none; padding: 0.15rem 0.45rem; border-radius: 4px; margin-left: 0.4rem; cursor: pointer; font-weight: 600; display: inline-flex; align-items: center; gap: 0.2rem;">
+                                ${t(serviceKey)} <i data-lucide="chevron-down" style="width: 10px; height: 10px;"></i>
+                            </button>
                             <span style="font-size: 0.75rem; color: var(--primary); background: rgba(99, 102, 241, 0.1); padding: 0.15rem 0.4rem; border-radius: 4px; margin-left: 0.4rem; font-family: monospace;">${item.trackingId}</span>
                         </span>
                         <div style="display: flex; align-items: center; gap: 0.4rem;">
@@ -1436,6 +1439,14 @@ const renderAddedItems = () => {
                         </button>
                     </div>
                     
+                    <!-- Inline Service Switcher (initially hidden) -->
+                    <div class="inline-service-picker" id="inlineServicePicker-${index}" style="display: none; margin-top: 0.5rem; padding-top: 0.4rem; border-top: 1px dashed var(--border-glass); align-items: center; gap: 0.35rem; flex-wrap: wrap;">
+                        <span style="font-size: 0.7rem; color: var(--text-muted); margin-right: 0.25rem;">${currentLanguage === 'th' ? 'ย้ายไปบริการ:' : 'Move Service:'}</span>
+                        ${['Wash/Fold', 'Wash/Iron', 'Wash/Iron/Hang', 'Dry Clean', 'Pcs', 'Linens'].map(s => `
+                            <button type="button" class="inline-service-option ${serviceKey === s ? 'active' : ''}" data-service="${s}" data-item-index="${index}" style="font-size: 0.7rem; padding: 0.2rem 0.45rem; border-radius: 4px; border: 1px solid var(--border-glass); background: ${serviceKey === s ? 'var(--primary)' : '#fff'}; color: ${serviceKey === s ? '#fff' : 'var(--text-main)'}; cursor: pointer; font-weight: 600;">${t(s)}</button>
+                        `).join('')}
+                    </div>
+
                     <!-- Inline Color Picker (initially hidden) -->
                     <div class="inline-color-picker" id="inlineColorPicker-${index}" style="display: none; margin-top: 0.6rem; padding-top: 0.5rem; border-top: 1px dashed var(--border-glass); align-items: center; gap: 0.35rem; flex-wrap: wrap;">
                         <span style="font-size: 0.7rem; color: var(--text-muted); margin-right: 0.25rem;">${currentLanguage === 'th' ? 'เปลี่ยนสี:' : 'Change Color:'}</span>
@@ -1502,7 +1513,34 @@ const renderAddedItems = () => {
             });
         });
 
-        // 3. Color strip toggle inline picker
+        // 3. Service Tag toggle inline service picker
+        listContainer.querySelectorAll('.cart-item-service-picker-btn').forEach(btn => {
+            btn.addEventListener('click', (e) => {
+                e.stopPropagation();
+                const index = btn.dataset.index;
+                const picker = document.getElementById(`inlineServicePicker-${index}`);
+                if (picker) {
+                    const isHidden = picker.style.display === 'none';
+                    listContainer.querySelectorAll('.inline-service-picker').forEach(p => p.style.display = 'none');
+                    picker.style.display = isHidden ? 'flex' : 'none';
+                }
+            });
+        });
+
+        // 4. Inline service option selection
+        listContainer.querySelectorAll('.inline-service-option').forEach(opt => {
+            opt.addEventListener('click', (e) => {
+                e.stopPropagation();
+                const itemIndex = parseInt(opt.dataset.itemIndex);
+                const newService = opt.dataset.service;
+                if (currentDraftItems[itemIndex]) {
+                    currentDraftItems[itemIndex].serviceType = newService;
+                    renderAddedItems();
+                }
+            });
+        });
+
+        // 5. Color strip toggle inline picker
         listContainer.querySelectorAll('.pos-cart-item-color-strip').forEach(strip => {
             strip.addEventListener('click', () => {
                 const index = strip.dataset.index;
@@ -1516,7 +1554,7 @@ const renderAddedItems = () => {
             });
         });
 
-        // 4. Inline color option selection
+        // 6. Inline color option selection
         listContainer.querySelectorAll('.inline-color-option').forEach(opt => {
             opt.addEventListener('click', () => {
                 const itemIndex = parseInt(opt.dataset.itemIndex);
@@ -1530,7 +1568,7 @@ const renderAddedItems = () => {
             });
         });
 
-        // 5. Inline custom color picker selection
+        // 7. Inline custom color picker selection
         listContainer.querySelectorAll('.inline-custom-color-input').forEach(input => {
             input.addEventListener('change', (e) => {
                 const itemIndex = parseInt(input.dataset.itemIndex);
