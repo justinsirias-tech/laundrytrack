@@ -3685,7 +3685,9 @@ const renderPendingChecklistsTable = () => {
         
         return `
         <tr>
-            <td><strong>${o.orderId}</strong></td>
+            <td onclick="openOrderModal('${o.orderId}')" style="cursor: pointer;" title="Click to view order details">
+                <strong style="color: var(--primary); text-decoration: underline;">${o.orderId}</strong>
+            </td>
             <td>${o.customerName}</td>
             <td>${o.serviceType}</td>
             <td><span class="status-badge ${getStatusColorClass(o.status)}">${o.status}</span></td>
@@ -3725,32 +3727,41 @@ if (deptFilterGroup) {
 let currentDeptChecklistOrder = null;
 let currentDeptChecklistDept = 'Checker/Cashier';
 
-window.openDeptChecklistModal = (orderId, dept) => {
-    const order = orders.find(o => o.id === orderId);
-    if (!order) return;
+window.openDeptChecklistModal = async (orderId, dept) => {
+    const order = orders.find(o => String(o.id).toLowerCase() === String(orderId).toLowerCase());
+    if (!order) {
+        showToast(`Order #${orderId} not found in active orders list.`, 'error');
+        return;
+    }
     
     currentDeptChecklistOrder = order;
     currentDeptChecklistDept = dept || activeStaffUser.role;
     
-    document.getElementById('deptModalTitle').innerText = `${currentDeptChecklistDept} Checklist Verification`;
-    document.getElementById('deptModalSubtitle').innerText = `Order #${order.id} - ${order.customerName} (${order.serviceType})`;
+    const titleEl = document.getElementById('deptModalTitle');
+    const subTitleEl = document.getElementById('deptModalSubtitle');
+    const alertEl = document.getElementById('deptDiscrepancyAlert');
     
-    // Check if there is an active discrepancy locked for this order
-    fetch(`${API_BASE}/department-verifications/${orderId}`)
-    .then(res => res.json())
-    .then(data => {
-        const alertEl = document.getElementById('deptDiscrepancyAlert');
-        if (data.pendingDiscrepancies && data.pendingDiscrepancies.length > 0) {
-            alertEl.style.display = 'block';
-            alertEl.innerText = `⚠️ LOCKED: ${data.pendingDiscrepancies[0].discrepancy_details}. Requires Manager PIN Approval to proceed.`;
-        } else {
-            alertEl.style.display = 'none';
+    if (titleEl) titleEl.innerText = `${currentDeptChecklistDept} Checklist Verification`;
+    if (subTitleEl) subTitleEl.innerText = `Order #${order.id} - ${order.customerName} (${t(order.serviceType)})`;
+    if (alertEl) alertEl.style.display = 'none';
+    
+    renderDeptChecklistItems([]);
+    document.getElementById('deptChecklistModal').classList.add('active');
+    
+    try {
+        const res = await fetch(`${API_BASE}/department-verifications/${orderId}`);
+        const contentType = res.headers.get('content-type') || '';
+        if (res.ok && contentType.includes('application/json')) {
+            const data = await res.json();
+            if (data.pendingDiscrepancies && data.pendingDiscrepancies.length > 0 && alertEl) {
+                alertEl.style.display = 'block';
+                alertEl.innerText = `⚠️ LOCKED: ${data.pendingDiscrepancies[0].discrepancy_details}. Requires Manager PIN Approval to proceed.`;
+            }
+            renderDeptChecklistItems(data.verifications || []);
         }
-        
-        renderDeptChecklistItems(data.verifications || []);
-        document.getElementById('deptChecklistModal').classList.add('active');
-    })
-    .catch(err => console.error(err));
+    } catch (err) {
+        console.warn('Could not fetch existing department verifications from API:', err);
+    }
 };
 
 const renderDeptChecklistItems = (existingVerifs) => {
