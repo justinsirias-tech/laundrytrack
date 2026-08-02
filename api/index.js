@@ -200,8 +200,22 @@ const initDatabase = async () => {
         `);
         await client.query('ALTER TABLE discrepancy_logs DROP CONSTRAINT IF EXISTS discrepancy_logs_order_id_fkey');
 
+        // Create table for order activity history logs
+        await client.query(`
+            CREATE TABLE IF NOT EXISTS order_activity_logs (
+                id SERIAL PRIMARY KEY,
+                order_id VARCHAR(50) NOT NULL,
+                actor_name VARCHAR(100) NOT NULL,
+                actor_role VARCHAR(50) NOT NULL,
+                action_type VARCHAR(50) NOT NULL,
+                details TEXT NOT NULL,
+                created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+            )
+        `);
+
         await client.query('CREATE INDEX IF NOT EXISTS idx_dept_verifications ON department_verifications (order_id, department)');
         await client.query('CREATE INDEX IF NOT EXISTS idx_discrepancies_order_id ON discrepancy_logs (order_id)');
+        await client.query('CREATE INDEX IF NOT EXISTS idx_activity_logs_order_id ON order_activity_logs (order_id)');
 
         await client.query('COMMIT');
         console.log('Database tables successfully initialized.');
@@ -835,6 +849,53 @@ app.get('/api/pending-checklists', async (req, res) => {
         });
         
         res.json(report);
+    } catch (err) {
+        console.error(err);
+        res.status(500).json({ error: err.message });
+    }
+});
+
+// --- ORDER ACTIVITY LOG ENDPOINTS ---
+// Get activity history logs for an order
+app.get('/api/activity-logs/:orderId', async (req, res) => {
+    const { orderId } = req.params;
+    try {
+        const result = await pool.query('SELECT * FROM order_activity_logs WHERE order_id = $1 ORDER BY created_at DESC', [orderId]);
+        res.json(result.rows);
+    } catch (err) {
+        console.error(err);
+        res.status(500).json({ error: err.message });
+    }
+});
+
+// Add activity log entry for an order
+app.post('/api/activity-logs', async (req, res) => {
+    const { orderId, actorName, actorRole, actionType, details } = req.body;
+    if (!orderId || !details) {
+        return res.status(400).json({ error: 'Missing required log fields' });
+    }
+    try {
+        const result = await pool.query(
+            'INSERT INTO order_activity_logs (order_id, actor_name, actor_role, action_type, details) VALUES ($1, $2, $3, $4, $5) RETURNING *',
+            [orderId, actorName || 'Staff', actorRole || 'Staff', actionType || 'GENERAL', details]
+        );
+        res.json({ success: true, log: result.rows[0] });
+    } catch (err) {
+        console.error(err);
+        res.status(500).json({ error: err.message });
+    }
+});
+
+// Delete an activity log entry (Manager / Admin ONLY)
+app.delete('/api/activity-logs/:id', async (req, res) => {
+    const { id } = req.params;
+    const { userRole } = req.body || {};
+    if (userRole !== 'Manager') {
+        return res.status(403).json({ error: 'Permission Denied: Only Managers/Admins can delete activity logs.' });
+    }
+    try {
+        await pool.query('DELETE FROM order_activity_logs WHERE id = $1', [id]);
+        res.json({ success: true });
     } catch (err) {
         console.error(err);
         res.status(500).json({ error: err.message });

@@ -2467,40 +2467,85 @@ const openOrderModal = async (orderId) => {
     }).join('');
     itemsList.innerHTML = itemsHtml;
 
-    // Helper to refresh verification history inside the modal
-    const refreshModalVerifyHistory = async () => {
-        const historyContainer = document.getElementById('modalVerifyHistory');
+    // Helper to refresh activity logs inside the order modal
+    const refreshModalActivityLogs = async () => {
+        const historyContainer = document.getElementById('modalOrderActivityLog');
         if (!historyContainer) return;
         
         try {
-            const res = await fetch(`${API_BASE}/item-verifications/order/${order.id}`);
-            const logs = await res.json();
+            const res = await fetch(`${API_BASE}/activity-logs/${order.id}`);
+            const contentType = res.headers.get('content-type') || '';
+            let logs = [];
+            if (res.ok && contentType.includes('application/json')) {
+                logs = await res.json();
+            }
             
             if (logs.length === 0) {
-                historyContainer.innerHTML = `<div style="text-align: center; color: var(--text-muted); padding: 0.5rem;">No history yet. Start verifying items.</div>`;
+                historyContainer.innerHTML = `<div style="text-align: center; color: var(--text-muted); padding: 0.5rem;">No activity log recorded yet for Order #${order.id}.</div>`;
                 return;
             }
             
+            const isManager = activeStaffUser.role === 'Manager';
+
             historyContainer.innerHTML = logs.map(log => {
-                const timeStr = new Date(log.verified_at).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
-                const dateStr = new Date(log.verified_at).toLocaleDateString([], { month: 'short', day: 'numeric' });
-                const actionText = log.checked 
-                    ? `<span style="color: #10b981; font-weight: bold;">verified</span>` 
-                    : `<span style="color: #f97316; font-weight: bold;">unverified</span>`;
-                const matchingItem = order.items.find(i => i.trackingId === log.tracking_id);
-                const itemName = matchingItem ? translateItemName(matchingItem.type) : 'Item';
+                const dateObj = new Date(log.created_at || Date.now());
+                const timeStr = dateObj.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+                const dateStr = dateObj.toLocaleDateString([], { month: 'short', day: 'numeric' });
+                
+                const deleteBtnHtml = isManager ? `
+                    <button type="button" class="delete-log-btn" data-log-id="${log.id}" style="background:none; border:none; color:#ef4444; cursor:pointer; padding:0 0.2rem;" title="Delete Log Entry (Admin Only)">
+                        <i data-lucide="trash-2" style="width:12px; height:12px;"></i>
+                    </button>
+                ` : '';
                 
                 return `
-                    <div style="display: flex; justify-content: space-between; border-bottom: 1px dashed rgba(34, 41, 69, 0.05); padding: 0.15rem 0; font-size: 0.8rem;">
-                        <span><strong>${log.verified_by}</strong> ${actionText} ${itemName} at <span class="status-badge" style="padding: 0.1rem 0.35rem; font-size: 0.65rem; background: rgba(34, 41, 69, 0.08);">${t(log.status)}</span></span>
-                        <span style="color: var(--text-muted); font-size: 0.7rem;">${dateStr} ${timeStr}</span>
+                    <div style="display: flex; align-items: center; justify-content: space-between; border-bottom: 1px dashed var(--border-glass); padding: 0.3rem 0; font-size: 0.8rem; gap: 0.5rem;">
+                        <div style="display: flex; align-items: center; gap: 0.4rem; flex: 1; flex-wrap: wrap;">
+                            <span style="font-weight: 700; color: var(--primary);">${log.actor_name}</span>
+                            <span class="badge" style="font-size: 0.65rem; padding: 0.1rem 0.35rem; background: rgba(99, 102, 241, 0.1); color: var(--primary);">${log.actor_role}</span>
+                            <span style="color: var(--text-main); font-weight: 500;">${log.details}</span>
+                        </div>
+                        <div style="display: flex; align-items: center; gap: 0.4rem; flex-shrink: 0;">
+                            <span style="color: var(--text-muted); font-size: 0.72rem;">${dateStr} ${timeStr}</span>
+                            ${deleteBtnHtml}
+                        </div>
                     </div>
                 `;
             }).join('');
+
+            if (typeof lucide !== 'undefined') lucide.createIcons();
+
+            // Bind delete listeners for Managers
+            if (isManager) {
+                historyContainer.querySelectorAll('.delete-log-btn').forEach(btn => {
+                    btn.onclick = async (e) => {
+                        e.stopPropagation();
+                        const logId = btn.dataset.logId;
+                        try {
+                            const delRes = await fetch(`${API_BASE}/activity-logs/${logId}`, {
+                                method: 'DELETE',
+                                headers: { 'Content-Type': 'application/json' },
+                                body: JSON.stringify({ userRole: activeStaffUser.role })
+                            });
+                            const delData = await delRes.json();
+                            if (delData.success) {
+                                showToast('Activity log deleted by Admin', 'success');
+                                refreshModalActivityLogs();
+                            } else {
+                                showToast(delData.error || 'Failed to delete log', 'error');
+                            }
+                        } catch (err) {
+                            showToast('Error deleting activity log', 'error');
+                        }
+                    };
+                });
+            }
         } catch (err) {
-            console.error("Error loading verification history:", err);
+            console.error("Error loading activity history:", err);
         }
     };
+
+    refreshModalActivityLogs();
 
     // Load current verified state for checkboxes from database
     try {
@@ -3829,7 +3874,7 @@ const renderDeptChecklistItems = (existingVerifs) => {
     const prevCheckedSet = new Set(prevVerifs.filter(v => v.checked).map(v => v.tracking_id));
     
     container.innerHTML = order.items.map(item => {
-        const isChecked = prevVerifs.length > 0 ? prevCheckedSet.has(item.trackingId) : true;
+        const isChecked = prevVerifs.length > 0 ? prevCheckedSet.has(item.trackingId) : false;
         return `
         <div class="dept-checklist-item-row" style="display: flex; align-items: center; justify-content: space-between; padding: 0.6rem 0.8rem; background: #fff; border: 1px solid var(--border-glass); border-radius: 8px;">
             <div style="display: flex; align-items: center; gap: 0.75rem;">
@@ -3868,6 +3913,24 @@ document.querySelectorAll('.close-dept-checklist-modal').forEach(btn => {
     };
 });
 
+window.logOrderActivity = async (orderId, actionType, details) => {
+    try {
+        await fetch(`${API_BASE}/activity-logs`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+                orderId,
+                actorName: activeStaffUser.name,
+                actorRole: activeStaffUser.role,
+                actionType,
+                details
+            })
+        });
+    } catch (err) {
+        console.warn('Could not post activity log to API:', err);
+    }
+};
+
 const saveDeptChecklistBtn = document.getElementById('saveDeptChecklistBtn');
 if (saveDeptChecklistBtn) {
     saveDeptChecklistBtn.onclick = async () => {
@@ -3879,6 +3942,9 @@ if (saveDeptChecklistBtn) {
             checked: cb.checked
         }));
         
+        const checkedCount = verifications.filter(v => v.checked).length;
+        const totalCount = verifications.length;
+
         const modal = document.getElementById('deptChecklistModal');
         if (modal) modal.classList.remove('active');
         
@@ -3890,6 +3956,9 @@ if (saveDeptChecklistBtn) {
         } else if (currentDeptChecklistDept === 'Packing') {
             order.status = 'Packing';
         }
+
+        const logMsg = `${currentDeptChecklistDept} checklist performed by ${activeStaffUser.name} (${checkedCount}/${totalCount} items verified)`;
+        logOrderActivity(order.id, 'CHECKLIST_VERIFIED', logMsg);
 
         try {
             const res = await fetch(`${API_BASE}/department-verifications`, {
@@ -3907,6 +3976,7 @@ if (saveDeptChecklistBtn) {
                 const data = await res.json();
                 if (data.discrepancyFound) {
                     showToast(`⚠️ Discrepancy Detected! ${data.discrepancyDetails}`, 'error');
+                    logOrderActivity(order.id, 'DISCREPANCY_FLAGGED', `Count mismatch flagged by ${currentDeptChecklistDept}: ${data.discrepancyDetails}`);
                     triggerManagerApprovalModal(order.id, data.discrepancyDetails);
                 } else {
                     showToast(`Completed ${currentDeptChecklistDept} checklist for Order ${order.id}!`, 'success');
