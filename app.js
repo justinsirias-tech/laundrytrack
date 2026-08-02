@@ -356,9 +356,19 @@ const translateItemName = (name) => {
     return itemObj && typeof itemObj === 'object' ? itemObj.name : name;
 };
 
+const getCategoryThName = (name) => {
+    if (!name) return '';
+    const catObj = categories.find(c => c.name.toLowerCase() === name.toLowerCase());
+    if (catObj && catObj.name_th) return catObj.name_th;
+    return categoryTranslations[name] || '';
+};
+
 const translateCategoryName = (name) => {
+    if (!name) return '';
+    const catObj = categories.find(c => c.name.toLowerCase() === name.toLowerCase());
     if (currentLanguage === 'th') {
-        return categoryTranslations[name] || name;
+        if (catObj && catObj.name_th) return catObj.name_th;
+        if (categoryTranslations[name]) return categoryTranslations[name];
     }
     return name;
 };
@@ -2648,8 +2658,11 @@ const renderAdminItems = () => {
             
             return `
             <div class="admin-category-card" data-cat-id="${cat.id}">
-                <div class="admin-category-header">
-                    <span class="admin-category-title">${translateCategoryName(cat.name)}</span>
+                <div class="admin-category-header" style="display: flex; align-items: center; justify-content: space-between; gap: 0.4rem; padding-bottom: 0.5rem; border-bottom: 1px solid var(--border-glass); margin-bottom: 0.5rem;">
+                    <div style="display: flex; align-items: center; gap: 0.4rem; flex: 1;">
+                        <span class="admin-category-title" style="font-weight: 700; font-size: 0.9rem;">${cat.name}</span>
+                        <input type="text" class="admin-cat-th-input" data-cat-id="${cat.id}" value="${cat.name_th || getCategoryThName(cat.name)}" placeholder="ภาษาไทย..." style="padding: 0.2rem 0.4rem; font-size: 0.78rem; border-radius: 6px; border: 1px solid var(--border-glass); width: 100px; outline: none; background: #fff;" title="${currentLanguage === 'th' ? 'คลิกเพื่อแก้ไขหมวดหมู่ภาษาไทย' : 'Click to edit Thai category wording'}" />
+                    </div>
                     <button type="button" class="admin-delete-cat-btn" data-cat-id="${cat.id}" style="background: none; border: none; cursor: pointer; color: #ef4444; padding: 0.15rem; display: flex; align-items: center;">
                         <i data-lucide="x" style="width: 14px; height: 14px;"></i>
                     </button>
@@ -2670,7 +2683,7 @@ const renderAdminItems = () => {
     // 4. Bind Drag & Drop Events
     bindDragAndDropEvents();
 
-    // 5. Bind Thai wording input change events
+    // 5. Bind Thai wording input change events for Items
     document.querySelectorAll('.admin-item-th-input').forEach(input => {
         input.addEventListener('change', (e) => {
             const itemName = input.dataset.name;
@@ -2695,8 +2708,32 @@ const renderAdminItems = () => {
             .catch(err => console.error(err));
         });
     });
+
+    // 6. Bind Thai wording input change events for Categories
+    document.querySelectorAll('.admin-cat-th-input').forEach(input => {
+        input.addEventListener('change', (e) => {
+            const catId = input.dataset.catId;
+            const newTh = e.target.value.trim();
+            
+            const targetCat = categories.find(c => c.id === catId);
+            if (targetCat) {
+                targetCat.name_th = newTh;
+            }
+            
+            fetch(`${API_BASE}/categories/${catId}`, {
+                method: 'PUT',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ name_th: newTh })
+            })
+            .then(() => {
+                initItemTypeButtons();
+                showToast(currentLanguage === 'th' ? `อัปเดตชื่อหมวดหมู่ภาษาไทยเป็น "${newTh}"` : `Saved Thai category wording to "${newTh}"`, 'success');
+            })
+            .catch(err => console.error(err));
+        });
+    });
     
-    // 6. Bind delete buttons
+    // 7. Bind delete buttons
     // Delete library item button
     document.querySelectorAll('.admin-delete-library-item').forEach(btn => {
         btn.addEventListener('click', (e) => {
@@ -2790,23 +2827,18 @@ const createCategoryForm = document.getElementById('adminCreateCategoryForm');
 if (createCategoryForm) {
     createCategoryForm.addEventListener('submit', (e) => {
         e.preventDefault();
-        const input = document.getElementById('adminNewCategoryInput');
-        const catName = input.value.trim();
+        const inputEn = document.getElementById('adminNewCategoryInput');
+        const inputTh = document.getElementById('adminNewCategoryInputTh');
+        const catName = inputEn ? inputEn.value.trim() : '';
+        const thVal = inputTh ? inputTh.value.trim() : '';
         if (!catName) return;
         
-        // Capitalize category name
         const formattedCatName = catName.split(' ').map(w => w.charAt(0).toUpperCase() + w.slice(1)).join(' ');
-        
-        // Check duplicate category name (case-insensitive)
-        const exists = categories.some(c => c.name.toLowerCase() === formattedCatName.toLowerCase());
-        if (exists) {
-            showToast(`Category "${formattedCatName}" already exists.`, 'error');
-            return;
-        }
-        
+        const newCatId = 'cat-' + Date.now();
         const newCat = {
-            id: 'cat-' + Date.now(),
+            id: newCatId,
             name: formattedCatName,
+            name_th: thVal,
             items: []
         };
         
@@ -2814,17 +2846,20 @@ if (createCategoryForm) {
         fetch(`${API_BASE}/categories`, {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ id: newCat.id, name: newCat.name })
+            body: JSON.stringify({ id: newCatId, name: formattedCatName, name_th: thVal })
         })
         .then(() => {
-            input.value = '';
+            if (inputEn) inputEn.value = '';
+            if (inputTh) inputTh.value = '';
             initItemTypeButtons();
             renderAdminItems();
-            showToast(currentLanguage === 'th' ? `สร้างหมวดหมู่ "${formattedCatName}" สำเร็จ` : `Created category "${formattedCatName}"`, 'success');
+            showToast(currentLanguage === 'th' ? `สร้างหมวดหมู่ "${formattedCatName}" (${thVal || 'ไม่ระบุชื่อไทย'}) สำเร็จ` : `Created category "${formattedCatName}"`, 'success');
         })
         .catch(err => console.error(err));
     });
 }
+
+
 // --- VERIFICATION LOGIC ---
 let currentVerificationOrder = null;
 let currentVerificationTargetStatus = null;

@@ -142,6 +142,7 @@ const initDatabase = async () => {
         await client.query('ALTER TABLE order_items ADD COLUMN IF NOT EXISTS defect_image TEXT');
         await client.query('ALTER TABLE order_items ADD COLUMN IF NOT EXISTS tracking_id VARCHAR(100)');
         await client.query('ALTER TABLE clothing_types ADD COLUMN IF NOT EXISTS name_th VARCHAR(255)');
+        await client.query('ALTER TABLE item_categories ADD COLUMN IF NOT EXISTS name_th VARCHAR(255)');
 
         // Create table for status checklist verifications and audit logs
         await client.query(`
@@ -362,6 +363,7 @@ app.get('/api/categories', async (req, res) => {
         const formatted = catRes.rows.map(cat => ({
             id: cat.id,
             name: cat.name,
+            name_th: cat.name_th || '',
             items: itemsMap[cat.id] || []
         }));
         
@@ -372,12 +374,34 @@ app.get('/api/categories', async (req, res) => {
     }
 });
 
-// 8. Create new category
+// 8. Create or update category
 app.post('/api/categories', async (req, res) => {
-    const { id, name } = req.body;
+    const { id, name, name_th } = req.body;
     try {
-        await pool.query('INSERT INTO item_categories (id, name) VALUES ($1, $2)', [id, name]);
+        await pool.query(
+            'INSERT INTO item_categories (id, name, name_th) VALUES ($1, $2, $3) ON CONFLICT (id) DO UPDATE SET name = EXCLUDED.name, name_th = EXCLUDED.name_th',
+            [id, name, name_th || '']
+        );
         res.status(201).json({ success: true });
+    } catch (err) {
+        console.error(err);
+        res.status(500).json({ error: err.message });
+    }
+});
+
+// Update category Thai name specifically
+app.put('/api/categories/:id', async (req, res) => {
+    const { id } = req.params;
+    const { name, name_th } = req.body;
+    try {
+        if (name_th !== undefined && name !== undefined) {
+            await pool.query('UPDATE item_categories SET name = $1, name_th = $2 WHERE id = $3', [name, name_th, id]);
+        } else if (name_th !== undefined) {
+            await pool.query('UPDATE item_categories SET name_th = $1 WHERE id = $2', [name_th, id]);
+        } else if (name !== undefined) {
+            await pool.query('UPDATE item_categories SET name = $1 WHERE id = $2', [name, id]);
+        }
+        res.json({ success: true });
     } catch (err) {
         console.error(err);
         res.status(500).json({ error: err.message });
