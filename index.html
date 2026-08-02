@@ -439,34 +439,45 @@
                         <!-- Left Panel: Standard Items Library -->
                         <div class="glass-panel" style="padding: 1.25rem; background: var(--bg-glass-solid);">
                             <h3 style="font-size: 1rem; margin-bottom: 1rem; padding-bottom: 0.5rem; border-bottom: 1px solid var(--border-glass); color: var(--text-main);" data-i18n="items_library">1. Items Library</h3>
-                            <form id="adminAddItemForm" style="display: flex; flex-direction: column; gap: 0.5rem; margin-bottom: 1rem;">
-                                <div style="display: flex; gap: 0.4rem; flex-wrap: wrap;">
-                                    <input type="text" id="adminNewItemInput" required placeholder="English (e.g. Scarf)" style="flex: 1; min-width: 120px; padding: 0.5rem 0.6rem; font-size: 0.82rem;">
-                                    <input type="text" id="adminNewItemInputTh" placeholder="ไทย (เช่น ผ้าพันคอ)" style="flex: 1; min-width: 120px; padding: 0.5rem 0.6rem; font-size: 0.82rem;">
-                                    <input type="text" id="adminNewItemInputMy" placeholder="မြန်မာ (ဥပမာ- ပဝါ)" style="flex: 1; min-width: 120px; padding: 0.5rem 0.6rem; font-size: 0.82rem;">
-                                    <button type="submit" class="btn btn-primary" style="padding: 0.5rem; font-size: 0.9rem; display: flex; align-items: center; justify-content: center; width: 36px; height: 36px; flex-shrink: 0;" title="Add Item"><i data-lucide="plus" style="width: 18px; height: 18px;"></i></button>
+                            <form id="adminAddItemForm" style="display: flex; flex-direction: column; gap: 0.6rem; margin-bottom: 1.25rem;">
+                                <div>
+                                    <label style="font-size: 0.78rem; color: var(--text-muted); display: block; margin-bottom: 0.2rem;">English Item Name</label>
+                                    <input type="text" id="adminNewItemInput" required placeholder="e.g. Scarf, Blanket, Blazer" style="width: 100%; padding: 0.5rem 0.75rem; font-size: 0.85rem; border-radius: 8px;">
                                 </div>
+                                <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 0.5rem;">
+                                    <div>
+                                        <label style="font-size: 0.78rem; color: var(--text-muted); display: block; margin-bottom: 0.2rem;">ไทย (Thai)</label>
+                                        <input type="text" id="adminNewItemInputTh" placeholder="เช่น ผ้าพันคอ" style="width: 100%; padding: 0.45rem 0.6rem; font-size: 0.82rem; border-radius: 8px;">
+                                    </div>
+                                    <div>
+                                        <label style="font-size: 0.78rem; color: var(--text-muted); display: block; margin-bottom: 0.2rem;">မြန်မာ (Myanmar)</label>
+                                        <input type="text" id="adminNewItemInputMy" placeholder="ဥပမာ- ပဝါ" style="width: 100%; padding: 0.45rem 0.6rem; font-size: 0.82rem; border-radius: 8px;">
+                                    </div>
+                                </div>
+                                <button type="submit" class="btn btn-primary" style="width: 100%; padding: 0.55rem; font-size: 0.85rem; display: flex; align-items: center; justify-content: center; gap: 0.35rem;" title="Add Item">
+                                    <i data-lucide="plus" style="width: 16px; height: 16px;"></i> Add Item to Library
+                                </button>
                             </form>
                             
                             <label style="font-size: 0.8rem; color: var(--text-muted); display: block; margin-bottom: 0.5rem;" data-i18n="drag_assign">Library Items (Drag to assign):</label>
-                            <div id="adminLibraryDropzone" class="admin-library-dropzone" style="min-height: 250px; background: var(--bg-glass-solid); border: 2px dashed var(--border-glass); border-radius: 8px; padding: 0.75rem; display: flex; flex-direction: column; gap: 0.5rem; max-height: 450px; overflow-y: auto;">
+                            <div id="adminLibraryDropzone" class="admin-library-dropzone" style="min-height: 250px; background: var(--bg-glass-solid); border: 2px dashed var(--border-glass); border-radius: 8px; padding: 0.75rem; display: flex; flex-direction: column; gap: 0.5rem; max-height: 480px; overflow-y: auto;">
                                 <!-- Draggable item chips populated by JS -->
                             </div>
                         </div>
                         
                         <!-- Right Panel: Categories Board -->
                         <div class="glass-panel" style="padding: 1.25rem; background: var(--bg-glass-solid);">
-                            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1rem; padding-bottom: 0.5rem; border-bottom: 1px solid var(--border-glass);">
+                            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1rem; padding-bottom: 0.75rem; border-bottom: 1px solid var(--border-glass); flex-wrap: wrap; gap: 0.75rem;">
                                 <h3 style="font-size: 1rem; color: var(--text-main); margin: 0;" data-i18n="category_board">2. Category Board</h3>
                                 <form id="adminCreateCategoryForm" style="display: flex; gap: 0.4rem; flex-wrap: wrap; align-items: center;">
-                                    <input type="text" id="adminNewCategoryInput" required placeholder="English (e.g. Tops)" style="padding: 0.4rem 0.6rem; font-size: 0.82rem; width: 110px;">
-                                    <input type="text" id="adminNewCategoryInputTh" placeholder="ไทย (เช่น ท่อนบน)" style="padding: 0.4rem 0.6rem; font-size: 0.82rem; width: 110px;">
-                                    <input type="text" id="adminNewCategoryInputMy" placeholder="မြန်မာ (ဥပမာ- အထက်ပိုင်း)" style="padding: 0.4rem 0.6rem; font-size: 0.82rem; width: 110px;">
-                                    <button type="submit" class="btn btn-primary" style="padding: 0.4rem 0.75rem; font-size: 0.85rem; display: flex; align-items: center; gap: 0.25rem;"><i data-lucide="plus" style="width: 14px; height: 14px;"></i> <span data-i18n="create_category">Create Category</span></button>
+                                    <input type="text" id="adminNewCategoryInput" required placeholder="English (e.g. Tops)" style="padding: 0.45rem 0.65rem; font-size: 0.85rem; min-width: 120px;">
+                                    <input type="text" id="adminNewCategoryInputTh" placeholder="ไทย (เช่น ท่อนบน)" style="padding: 0.45rem 0.65rem; font-size: 0.85rem; min-width: 120px;">
+                                    <input type="text" id="adminNewCategoryInputMy" placeholder="မြန်မာ (ဥပမာ- အထက်ပိုင်း)" style="padding: 0.45rem 0.65rem; font-size: 0.85rem; min-width: 120px;">
+                                    <button type="submit" class="btn btn-primary" style="padding: 0.45rem 0.85rem; font-size: 0.85rem; display: flex; align-items: center; gap: 0.3rem;"><i data-lucide="plus" style="width: 14px; height: 14px;"></i> <span data-i18n="create_category">Create Category</span></button>
                                 </form>
                             </div>
                             
-                            <div id="adminCategoryBoard" class="admin-category-board" style="display: grid; grid-template-columns: repeat(auto-fill, minmax(220px, 1fr)); gap: 1rem; min-height: 350px;">
+                            <div id="adminCategoryBoard" class="admin-category-board" style="display: grid; grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); gap: 1.25rem; min-height: 350px;">
                                 <!-- Category cards populated by JS -->
                             </div>
                         </div>

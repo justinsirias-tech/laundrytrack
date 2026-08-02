@@ -2861,13 +2861,15 @@ const renderAdminItems = () => {
             const typeTh = getItemThName(typeName);
             const typeMy = getItemMyName(typeName);
             return `
-            <div class="admin-item-chip" draggable="true" data-type="${typeName}" style="display: flex; align-items: center; justify-content: space-between; gap: 0.4rem; width: 100%; padding: 0.4rem 0.6rem;">
-                <span style="font-weight: 600; min-width: 80px; color: var(--text-main); font-size: 0.85rem;">${typeName}</span>
-                <input type="text" class="admin-item-th-input" data-name="${typeName}" value="${typeTh}" placeholder="ไทย..." style="padding: 0.25rem 0.4rem; font-size: 0.78rem; border-radius: 6px; border: 1px solid var(--border-glass); flex: 1; min-width: 70px; outline: none; background: #fff;" title="Click to edit Thai wording" />
-                <input type="text" class="admin-item-my-input" data-name="${typeName}" value="${typeMy}" placeholder="မြန်မာ..." style="padding: 0.25rem 0.4rem; font-size: 0.78rem; border-radius: 6px; border: 1px solid var(--border-glass); flex: 1; min-width: 70px; outline: none; background: #fff;" title="Click to edit Myanmar wording" />
-                <button type="button" class="admin-delete-library-item" data-type="${typeName}" style="background: none; border: none; cursor: pointer; color: #ef4444; padding: 0.15rem; display: flex; align-items: center; justify-content: center;" title="Delete Item">
-                    <i data-lucide="trash-2" style="width: 14px; height: 14px;"></i>
-                </button>
+            <div class="admin-item-chip" draggable="true" data-type="${typeName}" style="display: flex; align-items: center; justify-content: space-between; gap: 0.5rem; width: 100%; padding: 0.45rem 0.6rem;">
+                <span style="font-weight: 600; min-width: 80px; color: var(--text-main); font-size: 0.85rem; flex: 1;">${typeName}</span>
+                <div style="display: flex; align-items: center; gap: 0.35rem; flex-shrink: 0;">
+                    <input type="text" class="admin-item-th-input" data-name="${typeName}" value="${typeTh}" placeholder="ไทย" style="padding: 0.25rem 0.4rem; font-size: 0.78rem; border-radius: 6px; border: 1px solid var(--border-glass); width: 75px; outline: none; background: #fff;" title="Click to edit Thai wording" />
+                    <input type="text" class="admin-item-my-input" data-name="${typeName}" value="${typeMy}" placeholder="မြန်မာ" style="padding: 0.25rem 0.4rem; font-size: 0.78rem; border-radius: 6px; border: 1px solid var(--border-glass); width: 75px; outline: none; background: #fff;" title="Click to edit Myanmar wording" />
+                    <button type="button" class="admin-delete-library-item" data-type="${typeName}" style="background: none; border: none; cursor: pointer; color: #ef4444; padding: 0.2rem; display: flex; align-items: center; justify-content: center;" title="Delete Item">
+                        <i data-lucide="trash-2" style="width: 15px; height: 15px;"></i>
+                    </button>
+                </div>
             </div>
             `;
         }).join('');
@@ -2893,10 +2895,12 @@ const renderAdminItems = () => {
                 const typeTh = getItemThName(typeName);
                 const typeMy = getItemMyName(typeName);
                 return `
-                <div class="admin-item-chip" draggable="true" data-type="${typeName}" style="display: flex; align-items: center; justify-content: space-between; gap: 0.3rem; width: 100%; padding: 0.35rem 0.4rem;">
-                    <span style="font-weight: 600; font-size: 0.8rem; min-width: 65px;">${typeName}</span>
-                    <input type="text" class="admin-item-th-input" data-name="${typeName}" value="${typeTh}" placeholder="ไทย..." style="padding: 0.18rem 0.3rem; font-size: 0.75rem; border-radius: 6px; border: 1px solid var(--border-glass); flex: 1; min-width: 60px; outline: none; background: #fff;" title="Edit Thai wording" />
-                    <input type="text" class="admin-item-my-input" data-name="${typeName}" value="${typeMy}" placeholder="မြန်မာ..." style="padding: 0.18rem 0.3rem; font-size: 0.75rem; border-radius: 6px; border: 1px solid var(--border-glass); flex: 1; min-width: 60px; outline: none; background: #fff;" title="Edit Myanmar wording" />
+                <div class="admin-item-chip" draggable="true" data-type="${typeName}" style="display: flex; align-items: center; justify-content: space-between; gap: 0.4rem; width: 100%; padding: 0.4rem 0.5rem;">
+                    <span style="font-weight: 600; font-size: 0.82rem; color: var(--text-main); flex: 1;">${typeName}</span>
+                    <div style="display: flex; align-items: center; gap: 0.3rem; flex-shrink: 0;">
+                        <input type="text" class="admin-item-th-input" data-name="${typeName}" value="${typeTh}" placeholder="ไทย" style="padding: 0.2rem 0.35rem; font-size: 0.76rem; border-radius: 6px; border: 1px solid var(--border-glass); width: 70px; outline: none; background: #fff;" title="Edit Thai wording" />
+                        <input type="text" class="admin-item-my-input" data-name="${typeName}" value="${typeMy}" placeholder="မြန်မာ" style="padding: 0.2rem 0.35rem; font-size: 0.76rem; border-radius: 6px; border: 1px solid var(--border-glass); width: 70px; outline: none; background: #fff;" title="Edit Myanmar wording" />
+                    </div>
                 </div>
                 `;
             }).join('');
@@ -2905,14 +2909,14 @@ const renderAdminItems = () => {
             
             return `
             <div class="admin-category-card" data-cat-id="${cat.id}">
-                <div class="admin-category-header" style="display: flex; align-items: center; justify-content: space-between; gap: 0.3rem; padding-bottom: 0.5rem; border-bottom: 1px solid var(--border-glass); margin-bottom: 0.5rem;">
-                    <div style="display: flex; align-items: center; gap: 0.3rem; flex: 1; flex-wrap: wrap;">
-                        <span class="admin-category-title" style="font-weight: 700; font-size: 0.88rem;">${cat.name}</span>
-                        <input type="text" class="admin-cat-th-input" data-cat-id="${cat.id}" value="${cat.name_th || getCategoryThName(cat.name)}" placeholder="ไทย..." style="padding: 0.18rem 0.3rem; font-size: 0.75rem; border-radius: 6px; border: 1px solid var(--border-glass); width: 75px; outline: none; background: #fff;" title="Edit Thai category wording" />
-                        <input type="text" class="admin-cat-my-input" data-cat-id="${cat.id}" value="${cat.name_my || getCategoryMyName(cat.name)}" placeholder="မြန်မာ..." style="padding: 0.18rem 0.3rem; font-size: 0.75rem; border-radius: 6px; border: 1px solid var(--border-glass); width: 75px; outline: none; background: #fff;" title="Edit Myanmar category wording" />
+                <div class="admin-category-header" style="display: flex; align-items: center; justify-content: space-between; gap: 0.4rem; padding-bottom: 0.5rem; border-bottom: 1px solid var(--border-glass); margin-bottom: 0.5rem;">
+                    <div style="display: flex; align-items: center; gap: 0.35rem; flex: 1; flex-wrap: wrap;">
+                        <span class="admin-category-title" style="font-weight: 700; font-size: 0.92rem; color: var(--text-main);">${cat.name}</span>
+                        <input type="text" class="admin-cat-th-input" data-cat-id="${cat.id}" value="${cat.name_th || getCategoryThName(cat.name)}" placeholder="ไทย" style="padding: 0.2rem 0.35rem; font-size: 0.76rem; border-radius: 6px; border: 1px solid var(--border-glass); width: 70px; outline: none; background: #fff;" title="Edit Thai category wording" />
+                        <input type="text" class="admin-cat-my-input" data-cat-id="${cat.id}" value="${cat.name_my || getCategoryMyName(cat.name)}" placeholder="မြန်မာ" style="padding: 0.2rem 0.35rem; font-size: 0.76rem; border-radius: 6px; border: 1px solid var(--border-glass); width: 70px; outline: none; background: #fff;" title="Edit Myanmar category wording" />
                     </div>
-                    <button type="button" class="admin-delete-cat-btn" data-cat-id="${cat.id}" style="background: none; border: none; cursor: pointer; color: #ef4444; padding: 0.15rem; display: flex; align-items: center;">
-                        <i data-lucide="x" style="width: 14px; height: 14px;"></i>
+                    <button type="button" class="admin-delete-cat-btn" data-cat-id="${cat.id}" style="background: none; border: none; cursor: pointer; color: #ef4444; padding: 0.2rem; display: flex; align-items: center;" title="Delete Category">
+                        <i data-lucide="x" style="width: 16px; height: 16px;"></i>
                     </button>
                 </div>
                 <div class="admin-category-dropzone" data-cat-id="${cat.id}">
