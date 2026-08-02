@@ -147,17 +147,18 @@
                                         <input type="tel" id="customerPhone" required placeholder="+1 234 567 8900">
                                     </div>
                                     <div class="form-group-compact">
-                                        <label for="serviceType" data-i18n="service_type">Service Type</label>
-                                        <select id="serviceType">
-                                            <option value="Wash/Fold" data-i18n="wash_fold">Wash/Fold</option>
-                                            <option value="Wash/Iron" data-i18n="wash_iron">Wash/Iron</option>
-                                            <option value="Wash/Iron/Hang" data-i18n="wash_iron_hang">Wash/Iron/Hang</option>
-                                            <option value="Dry Clean" data-i18n="dry_clean">Dry Clean</option>
-                                            <option value="Pcs" data-i18n="pcs">Pcs</option>
-                                            <option value="Linens" data-i18n="linens">Linens</option>
-                                            <option value="Mixed Services" data-i18n="mixed_services">Mixed Services</option>
-                                        </select>
-                                    </div>
+                                         <label data-i18n="service_type" style="font-weight: 600;">Service Type</label>
+                                         <input type="hidden" id="serviceType" value="Wash/Fold" />
+                                         <div class="service-btn-group" id="mainOrderServiceButtonGroup">
+                                             <button type="button" class="service-btn active" data-value="Wash/Fold" data-i18n="wash_fold">Wash/Fold</button>
+                                             <button type="button" class="service-btn" data-value="Wash/Iron" data-i18n="wash_iron">Wash/Iron</button>
+                                             <button type="button" class="service-btn" data-value="Wash/Iron/Hang" data-i18n="wash_iron_hang">Wash/Iron/Hang</button>
+                                             <button type="button" class="service-btn" data-value="Dry Clean" data-i18n="dry_clean">Dry Clean</button>
+                                             <button type="button" class="service-btn" data-value="Pcs" data-i18n="pcs">Pcs</button>
+                                             <button type="button" class="service-btn" data-value="Linens" data-i18n="linens">Linens</button>
+                                             <button type="button" class="service-btn" data-value="Mixed Services" data-i18n="mixed_services">Mixed Services</button>
+                                         </div>
+                                     </div>
                                 </div>
                                 
                                 <div class="cart-items-section">

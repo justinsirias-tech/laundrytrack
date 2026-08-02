@@ -1742,8 +1742,16 @@ if (form) {
             if (data.success) {
                 orders.push(newOrder);
                 e.target.reset();
-                currentDraftItems = []; // reset draft
-                renderAddedItems();
+                // Reset Main Service Type buttons back to Wash/Fold
+                const hiddenServiceInput = document.getElementById('serviceType');
+                if (hiddenServiceInput) hiddenServiceInput.value = 'Wash/Fold';
+                const mainBtnGrp = document.getElementById('mainOrderServiceButtonGroup');
+                if (mainBtnGrp) {
+                    mainBtnGrp.querySelectorAll('.service-btn').forEach(b => {
+                        if (b.dataset.value === 'Wash/Fold') b.classList.add('active');
+                        else b.classList.remove('active');
+                    });
+                }
                 
                 // Reset Mix Mode if ON
                 isMixMode = false;
@@ -1848,11 +1856,20 @@ if (brandSearchInput) {
     });
 }
 
-// Service Type Change Listener (re-render cart item groups)
-const mainServiceTypeSelect = document.getElementById('serviceType');
-if (mainServiceTypeSelect) {
-    mainServiceTypeSelect.addEventListener('change', () => {
-        renderAddedItems();
+// Main Order Service Type Button Group Listener
+const mainOrderServiceButtonGroup = document.getElementById('mainOrderServiceButtonGroup');
+if (mainOrderServiceButtonGroup) {
+    mainOrderServiceButtonGroup.querySelectorAll('.service-btn').forEach(btn => {
+        btn.addEventListener('click', () => {
+            mainOrderServiceButtonGroup.querySelectorAll('.service-btn').forEach(b => b.classList.remove('active'));
+            btn.classList.add('active');
+            const val = btn.dataset.value;
+            const hiddenInput = document.getElementById('serviceType');
+            if (hiddenInput) {
+                hiddenInput.value = val;
+            }
+            renderAddedItems();
+        });
     });
 }
 
