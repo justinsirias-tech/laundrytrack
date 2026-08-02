@@ -344,7 +344,7 @@ const i18n = {
         "Wash & Fold": "လျှော်/ခေါက်",
         "Wash/Fold": "လျှော်/ခေါက်",
         "Wash/Iron": "လျှော်/မီးပူတိုက်",
-        "Wash/Iron/Hang": "လျှော်/မီးပူ/ချိတ်",
+        "Wash/Iron/Hang": "လျှော်/မီးပူ/လန်း",
         "Dry Clean": "အခြောက်လျှော်",
         "Dry Cleaning": "အခြောက်လျှော်",
         "Ironing Only": "မီးပူတိုက် သက်သက်",
@@ -354,7 +354,7 @@ const i18n = {
         
         wash_fold: "လျှော်/ခေါက်",
         wash_iron: "လျှော်/မီးပူတိုက်",
-        wash_iron_hang: "လျှော်/မီးပူ/ချိတ်",
+        wash_iron_hang: "လျှော်/မီးပူ/လန်း",
         dry_clean: "အခြောက်လျှော်",
         dry_cleaning: "အခြောက်လျှော်",
         ironing_only: "မီးပူတိုက် သက်သက်",
