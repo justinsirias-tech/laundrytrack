@@ -156,10 +156,70 @@ const initDatabase = async () => {
                 verified_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
             )
         `);
-        await client.query('CREATE INDEX IF NOT EXISTS idx_verification_logs_order_id_status ON item_verification_logs (order_id, status)');
+        // Create table for staff users and roles
+        await client.query(`
+            CREATE TABLE IF NOT EXISTS app_users (
+                id SERIAL PRIMARY KEY,
+                username VARCHAR(100) UNIQUE NOT NULL,
+                name VARCHAR(255) NOT NULL,
+                role VARCHAR(50) NOT NULL,
+                pin VARCHAR(20) NOT NULL,
+                created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+            )
+        `);
+
+        // Create table for department checklist verifications
+        await client.query(`
+            CREATE TABLE IF NOT EXISTS department_verifications (
+                id SERIAL PRIMARY KEY,
+                order_id VARCHAR(50) NOT NULL REFERENCES orders(id) ON DELETE CASCADE,
+                department VARCHAR(50) NOT NULL,
+                tracking_id VARCHAR(100) NOT NULL,
+                checked BOOLEAN NOT NULL DEFAULT TRUE,
+                notes TEXT,
+                verified_by VARCHAR(100) NOT NULL,
+                verified_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+            )
+        `);
+
+        // Create table for discrepancy audit logs
+        await client.query(`
+            CREATE TABLE IF NOT EXISTS discrepancy_logs (
+                id SERIAL PRIMARY KEY,
+                order_id VARCHAR(50) NOT NULL REFERENCES orders(id) ON DELETE CASCADE,
+                department VARCHAR(50) NOT NULL,
+                previous_department VARCHAR(50) NOT NULL,
+                discrepancy_details TEXT NOT NULL,
+                status VARCHAR(20) NOT NULL DEFAULT 'PENDING',
+                approved_by VARCHAR(100),
+                approved_at TIMESTAMP
+            )
+        `);
+
+        await client.query('CREATE INDEX IF NOT EXISTS idx_dept_verifications ON department_verifications (order_id, department)');
+        await client.query('CREATE INDEX IF NOT EXISTS idx_discrepancies_order_id ON discrepancy_logs (order_id)');
 
         await client.query('COMMIT');
         console.log('Database tables successfully initialized.');
+
+        // Seed default staff users if empty
+        const usersCount = await client.query('SELECT COUNT(*) FROM app_users');
+        if (parseInt(usersCount.rows[0].count) === 0) {
+            console.log('Seeding default staff users into database...');
+            const defaultUsers = [
+                { username: 'admin', name: 'Manager / Admin', role: 'Manager', pin: '1234' },
+                { username: 'checker1', name: 'Sarah (Checker)', role: 'Checker/Cashier', pin: '1111' },
+                { username: 'washer1', name: 'John (Washer)', role: 'Washer', pin: '2222' },
+                { username: 'ironing1', name: 'Nok (Ironing)', role: 'Ironing', pin: '3333' },
+                { username: 'packing1', name: 'Somchai (Packing)', role: 'Packing', pin: '4444' }
+            ];
+            for (const u of defaultUsers) {
+                await client.query(
+                    'INSERT INTO app_users (username, name, role, pin) VALUES ($1, $2, $3, $4) ON CONFLICT DO NOTHING',
+                    [u.username, u.name, u.role, u.pin]
+                );
+            }
+        }
 
         // Seed default clothing types if empty
         const typesCount = await client.query('SELECT COUNT(*) FROM clothing_types');
@@ -525,6 +585,243 @@ app.post('/api/item-verifications', async (req, res) => {
         `;
         const result = await pool.query(query, [orderId, trackingId, status, checked, verifiedBy || 'Staff']);
         res.status(201).json({ success: true, log: result.rows[0] });
+    } catch (err) {
+        console.error(err);
+        res.status(500).json({ error: err.message });
+    }
+});
+
+// --- USER MANAGEMENT ENDPOINTS ---
+// Get all staff users
+app.get('/api/users', async (req, res) => {
+    try {
+        const result = await pool.query('SELECT id, username, name, role, pin, created_at FROM app_users ORDER BY id ASC');
+        res.json(result.rows);
+    } catch (err) {
+        console.error(err);
+        res.status(500).json({ error: err.message });
+    }
+});
+
+// Add staff user
+app.post('/api/users', async (req, res) => {
+    const { username, name, role, pin } = req.body;
+    if (!username || !name || !role || !pin) {
+        return res.status(400).json({ error: 'All fields (username, name, role, pin) are required' });
+    }
+    try {
+        const result = await pool.query(
+            'INSERT INTO app_users (username, name, role, pin) VALUES ($1, $2, $3, $4) RETURNING id, username, name, role, pin, created_at',
+            [username.trim(), name.trim(), role.trim(), pin.trim()]
+        );
+        res.status(201).json({ success: true, user: result.rows[0] });
+    } catch (err) {
+        console.error(err);
+        res.status(500).json({ error: err.message });
+    }
+});
+
+// Update staff user
+app.put('/api/users/:id', async (req, res) => {
+    const { id } = req.params;
+    const { name, role, pin } = req.body;
+    try {
+        const result = await pool.query(
+            'UPDATE app_users SET name = $1, role = $2, pin = $3 WHERE id = $4 RETURNING id, username, name, role, pin, created_at',
+            [name.trim(), role.trim(), pin.trim(), id]
+        );
+        res.json({ success: true, user: result.rows[0] });
+    } catch (err) {
+        console.error(err);
+        res.status(500).json({ error: err.message });
+    }
+});
+
+// Delete staff user
+app.delete('/api/users/:id', async (req, res) => {
+    const { id } = req.params;
+    try {
+        await pool.query('DELETE FROM app_users WHERE id = $1', [id]);
+        res.json({ success: true });
+    } catch (err) {
+        console.error(err);
+        res.status(500).json({ error: err.message });
+    }
+});
+
+// Verify staff PIN
+app.post('/api/users/verify-pin', async (req, res) => {
+    const { pin } = req.body;
+    try {
+        const result = await pool.query('SELECT id, username, name, role FROM app_users WHERE pin = $1', [pin]);
+        if (result.rows.length === 0) {
+            return res.status(401).json({ error: 'Invalid PIN' });
+        }
+        res.json({ success: true, user: result.rows[0] });
+    } catch (err) {
+        console.error(err);
+        res.status(500).json({ error: err.message });
+    }
+});
+
+// --- DEPARTMENT VERIFICATION & PENDING CHECKLISTS ENDPOINTS ---
+// Submit department checklist verification & check for discrepancies
+app.post('/api/department-verifications', async (req, res) => {
+    const { orderId, department, verifications, verifiedBy } = req.body;
+    if (!orderId || !department || !Array.isArray(verifications)) {
+        return res.status(400).json({ error: 'Invalid request body' });
+    }
+    
+    const client = await pool.connect();
+    try {
+        await client.query('BEGIN');
+        
+        await client.query('DELETE FROM department_verifications WHERE order_id = $1 AND department = $2', [orderId, department]);
+        
+        for (const item of verifications) {
+            await client.query(
+                'INSERT INTO department_verifications (order_id, department, tracking_id, checked, notes, verified_by) VALUES ($1, $2, $3, $4, $5, $6)',
+                [orderId, department, item.trackingId, item.checked, item.notes || '', verifiedBy || 'Staff']
+            );
+        }
+        
+        const deptOrder = ['Checker/Cashier', 'Washer', 'Ironing', 'Packing'];
+        const currentIdx = deptOrder.indexOf(department);
+        let discrepancyFound = false;
+        let discrepancyDetails = '';
+        let prevDeptName = '';
+        
+        if (currentIdx > 0) {
+            const prevVerifsRes = await client.query(
+                `SELECT department, tracking_id, checked FROM department_verifications WHERE order_id = $1 ORDER BY verified_at DESC`,
+                [orderId]
+            );
+            
+            for (let i = currentIdx - 1; i >= 0; i--) {
+                const targetDept = deptOrder[i];
+                const prevDeptItems = prevVerifsRes.rows.filter(r => r.department === targetDept);
+                if (prevDeptItems.length > 0) {
+                    prevDeptName = targetDept;
+                    const currentCheckedCount = verifications.filter(v => v.checked).length;
+                    const prevCheckedCount = prevDeptItems.filter(v => v.checked).length;
+                    
+                    if (currentCheckedCount !== prevCheckedCount) {
+                        discrepancyFound = true;
+                        discrepancyDetails = `Count mismatch: ${department} verified ${currentCheckedCount} item(s), but ${targetDept} verified ${prevCheckedCount} item(s).`;
+                    }
+                    break;
+                }
+            }
+        }
+        
+        if (discrepancyFound) {
+            await client.query(
+                `INSERT INTO discrepancy_logs (order_id, department, previous_department, discrepancy_details, status) VALUES ($1, $2, $3, $4, 'PENDING')`,
+                [orderId, department, prevDeptName, discrepancyDetails]
+            );
+        }
+        
+        await client.query('COMMIT');
+        res.json({ success: true, discrepancyFound, discrepancyDetails });
+    } catch (err) {
+        await client.query('ROLLBACK');
+        console.error(err);
+        res.status(500).json({ error: err.message });
+    } finally {
+        client.release();
+    }
+});
+
+// Get department verifications for an order
+app.get('/api/department-verifications/:orderId', async (req, res) => {
+    const { orderId } = req.params;
+    try {
+        const verifsRes = await pool.query('SELECT * FROM department_verifications WHERE order_id = $1 ORDER BY verified_at ASC', [orderId]);
+        const discRes = await pool.query('SELECT * FROM discrepancy_logs WHERE order_id = $1 AND status = \'PENDING\' ORDER BY id DESC', [orderId]);
+        res.json({ verifications: verifsRes.rows, pendingDiscrepancies: discRes.rows });
+    } catch (err) {
+        console.error(err);
+        res.status(500).json({ error: err.message });
+    }
+});
+
+// Approve discrepancy with Manager PIN
+app.post('/api/discrepancies/approve', async (req, res) => {
+    const { orderId, managerPin } = req.body;
+    try {
+        const userRes = await pool.query('SELECT name, role FROM app_users WHERE pin = $1', [managerPin]);
+        if (userRes.rows.length === 0 || userRes.rows[0].role !== 'Manager') {
+            return res.status(403).json({ error: 'Invalid Manager PIN or insufficient privileges.' });
+        }
+        
+        const manager = userRes.rows[0];
+        await pool.query(
+            `UPDATE discrepancy_logs SET status = 'APPROVED', approved_by = $1, approved_at = CURRENT_TIMESTAMP WHERE order_id = $2 AND status = 'PENDING'`,
+            [manager.name, orderId]
+        );
+        
+        res.json({ success: true, approvedBy: manager.name });
+    } catch (err) {
+        console.error(err);
+        res.status(500).json({ error: err.message });
+    }
+});
+
+// Get unperformed / pending checklists report for all active orders
+app.get('/api/pending-checklists', async (req, res) => {
+    try {
+        const ordersRes = await pool.query(`
+            SELECT o.id, o.customer_name, o.service_type, o.status, o.order_date, o.created_at,
+                   COUNT(i.id) as item_count
+            FROM orders o
+            LEFT JOIN order_items i ON o.id = i.order_id
+            WHERE o.status NOT IN ('Completed', 'Cancelled', 'Delivered')
+            GROUP BY o.id
+            ORDER BY o.created_at DESC
+        `);
+        
+        const verifsRes = await pool.query(`SELECT DISTINCT order_id, department FROM department_verifications`);
+        const discRes = await pool.query(`SELECT order_id, department, discrepancy_details FROM discrepancy_logs WHERE status = 'PENDING'`);
+        
+        const completedDeptsMap = {};
+        verifsRes.rows.forEach(r => {
+            if (!completedDeptsMap[r.order_id]) completedDeptsMap[r.order_id] = new Set();
+            completedDeptsMap[r.order_id].add(r.department);
+        });
+        
+        const activeDiscrepanciesMap = {};
+        discRes.rows.forEach(r => {
+            activeDiscrepanciesMap[r.order_id] = r.discrepancy_details;
+        });
+        
+        const report = ordersRes.rows.map(o => {
+            const service = (o.service_type || '').toLowerCase();
+            let mandatoryDepts = ['Checker/Cashier', 'Washer', 'Ironing', 'Packing'];
+            if (service.includes('wash/fold') || service.includes('wash & fold') || service.includes('pcs') || service.includes('linens')) {
+                mandatoryDepts = ['Checker/Cashier', 'Washer', 'Packing'];
+            } else if (service.includes('ironing only')) {
+                mandatoryDepts = ['Checker/Cashier', 'Ironing', 'Packing'];
+            }
+            
+            const completedSet = completedDeptsMap[o.id] || new Set();
+            const pendingDepts = mandatoryDepts.filter(d => !completedSet.has(d));
+            
+            return {
+                orderId: o.id,
+                customerName: o.customer_name,
+                serviceType: o.service_type,
+                status: o.status,
+                orderDate: o.order_date,
+                itemCount: parseInt(o.item_count || 0),
+                mandatoryDepts,
+                completedDepts: Array.from(completedSet),
+                pendingDepts,
+                hasPendingDiscrepancy: !!activeDiscrepanciesMap[o.id],
+                discrepancyDetails: activeDiscrepanciesMap[o.id] || null
+            };
+        });
+        
+        res.json(report);
     } catch (err) {
         console.error(err);
         res.status(500).json({ error: err.message });

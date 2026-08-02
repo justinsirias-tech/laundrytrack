@@ -40,6 +40,10 @@
                     <i data-lucide="kanban-square"></i>
                     <span data-i18n="tracking_board">Tracking Board</span>
                 </button>
+                <button class="nav-item" data-view="checklists">
+                    <i data-lucide="clipboard-check"></i>
+                    <span data-i18n="checklists_tracker">Pending Checklists</span>
+                </button>
                 <button class="nav-item" data-view="admin">
                     <i data-lucide="settings"></i>
                     <span data-i18n="admin_panel">Admin Panel</span>
@@ -65,6 +69,11 @@
                     <input type="text" placeholder="Search orders, customers, or IDs..." id="searchInput" data-i18n-placeholder="search_placeholder">
                 </div>
                 <div class="header-actions">
+                    <button id="activeStaffBadgeBtn" class="btn btn-secondary" style="padding: 0.35rem 0.65rem; font-size: 0.82rem; font-weight: 600; border-radius: 6px; display: flex; align-items: center; gap: 0.4rem; background: var(--bg-glass-solid);" title="Click to switch Active Staff User / Department">
+                        <i data-lucide="user-check" style="width: 15px; height: 15px; color: #10b981;"></i>
+                        <span id="activeStaffNameDisplay">Manager / Admin</span>
+                        <span id="activeStaffRoleDisplay" class="badge" style="font-size: 0.7rem; padding: 0.15rem 0.4rem; background: #6366f1; color: #fff; border-radius: 4px;">Manager</span>
+                    </button>
                     <button id="langToggleBtn" class="btn btn-secondary" style="padding: 0.4rem 0.6rem; font-size: 0.85rem; font-weight: 600; min-width: 65px; border-radius: 6px; display: flex; align-items: center; justify-content: center; gap: 0.25rem;">
                         <i data-lucide="languages" style="width: 14px; height: 14px;"></i>
                         <span id="currentLangText">EN</span>
@@ -371,14 +380,56 @@
                     </div>
                 </div>
 
+                <!-- Pending Checklists Tracker View -->
+                <div id="checklists-view" class="view">
+                    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1rem;">
+                        <h2 class="view-title" style="margin: 0;">📋 Unperformed Checklists Tracker</h2>
+                        <button type="button" id="refreshChecklistsBtn" class="btn btn-secondary" style="padding: 0.4rem 0.8rem; font-size: 0.85rem; display: flex; align-items: center; gap: 0.3rem;">
+                            <i data-lucide="refresh-cw" style="width: 14px; height: 14px;"></i> Refresh Tracker
+                        </button>
+                    </div>
+                    
+                    <!-- Department Filter Pills -->
+                    <div style="display: flex; gap: 0.5rem; margin-bottom: 1.25rem; flex-wrap: wrap;" id="deptFilterGroup">
+                        <button type="button" class="btn btn-secondary active-dept-filter" data-dept="ALL" style="padding: 0.4rem 0.8rem; font-size: 0.82rem; border-radius: 20px;">All Departments</button>
+                        <button type="button" class="btn btn-secondary" data-dept="Checker/Cashier" style="padding: 0.4rem 0.8rem; font-size: 0.82rem; border-radius: 20px;">Checker/Cashier</button>
+                        <button type="button" class="btn btn-secondary" data-dept="Washer" style="padding: 0.4rem 0.8rem; font-size: 0.82rem; border-radius: 20px;">Washer</button>
+                        <button type="button" class="btn btn-secondary" data-dept="Ironing" style="padding: 0.4rem 0.8rem; font-size: 0.82rem; border-radius: 20px;">Ironing</button>
+                        <button type="button" class="btn btn-secondary" data-dept="Packing" style="padding: 0.4rem 0.8rem; font-size: 0.82rem; border-radius: 20px;">Packing</button>
+                    </div>
+
+                    <div class="glass-panel" style="padding: 1.25rem; background: var(--bg-glass-solid);">
+                        <div class="table-container" style="max-height: 550px; overflow-y: auto;">
+                            <table class="excel-table">
+                                <thead>
+                                    <tr>
+                                        <th>Order ID</th>
+                                        <th>Customer</th>
+                                        <th>Service Type</th>
+                                        <th>Current Status</th>
+                                        <th>Mandatory Checklists</th>
+                                        <th>Pending Department Checklists</th>
+                                        <th>Discrepancy Status</th>
+                                        <th>Action</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="pendingChecklistsTableBody">
+                                    <tr><td colspan="8" style="text-align: center; color: var(--text-muted); padding: 1.5rem;">Loading pending department checklists...</td></tr>
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+
                 <!-- Admin View -->
                 <div id="admin-view" class="view">
                     <h2 class="view-title" data-i18n="admin_settings">Admin Settings</h2>
                     
                     <!-- Admin Inner Tabs -->
-                    <div class="admin-tabs" style="display: flex; gap: 1rem; margin-bottom: 1.5rem; border-bottom: 1px solid var(--border-glass); padding-bottom: 0.5rem;">
+                    <div class="admin-tabs" style="display: flex; gap: 1rem; margin-bottom: 1.5rem; border-bottom: 1px solid var(--border-glass); padding-bottom: 0.5rem; flex-wrap: wrap;">
                         <button class="admin-tab active" data-tab="categories" style="background: none; border: none; font-size: 1rem; font-weight: 600; color: var(--primary); cursor: pointer; padding: 0.5rem 1rem; border-bottom: 2px solid var(--primary);">Items & Categories</button>
                         <button class="admin-tab" data-tab="brands" style="background: none; border: none; font-size: 1rem; font-weight: 600; color: var(--text-muted); cursor: pointer; padding: 0.5rem 1rem; border-bottom: 2px solid transparent;">Brand Database</button>
+                        <button class="admin-tab" data-tab="users" style="background: none; border: none; font-size: 1rem; font-weight: 600; color: var(--text-muted); cursor: pointer; padding: 0.5rem 1rem; border-bottom: 2px solid transparent;">User Privileges & Roles</button>
                         <button class="admin-tab" data-tab="logs" style="background: none; border: none; font-size: 1rem; font-weight: 600; color: var(--text-muted); cursor: pointer; padding: 0.5rem 1rem; border-bottom: 2px solid transparent;">Verification Logs</button>
                     </div>
 
@@ -435,6 +486,61 @@
                             <div id="adminBrandsBoard" style="display: grid; grid-template-columns: repeat(auto-fill, minmax(140px, 1fr)); gap: 1rem; min-height: 150px; max-height: 350px; overflow-y: auto; padding-right: 0.5rem;">
                                 <!-- Brand cards populated by JS -->
                             </div>
+                        </div>
+                    </div>
+
+                    <div id="admin-tab-users" class="admin-tab-content" style="display: none;">
+                        <div class="glass-panel" style="padding: 1.25rem; background: var(--bg-glass-solid); margin-bottom: 1.5rem;">
+                            <h3 style="font-size: 1rem; color: var(--text-main); margin-bottom: 1rem; padding-bottom: 0.5rem; border-bottom: 1px solid var(--border-glass);">Create Staff User & Assign Department Privilege</h3>
+                            <form id="adminCreateUserForm" style="display: grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); gap: 1rem; align-items: end;">
+                                <div>
+                                    <label style="font-size: 0.8rem; color: var(--text-muted); display: block; margin-bottom: 0.25rem;">Staff Name</label>
+                                    <input type="text" id="adminUserNameInput" required placeholder="e.g. Sarah Connor" style="width: 100%; padding: 0.5rem; font-size: 0.85rem;">
+                                </div>
+                                <div>
+                                    <label style="font-size: 0.8rem; color: var(--text-muted); display: block; margin-bottom: 0.25rem;">Username</label>
+                                    <input type="text" id="adminUserUsernameInput" required placeholder="e.g. sarahc" style="width: 100%; padding: 0.5rem; font-size: 0.85rem;">
+                                </div>
+                                <div>
+                                    <label style="font-size: 0.8rem; color: var(--text-muted); display: block; margin-bottom: 0.25rem;">Department Privilege</label>
+                                    <select id="adminUserRoleSelect" required style="width: 100%; padding: 0.5rem; font-size: 0.85rem; background: #fff;">
+                                        <option value="Checker/Cashier">1. Checker/Cashier</option>
+                                        <option value="Washer">2. Washer</option>
+                                        <option value="Ironing">3. Ironing</option>
+                                        <option value="Packing">4. Packing</option>
+                                        <option value="Manager">Manager / Admin</option>
+                                    </select>
+                                </div>
+                                <div>
+                                    <label style="font-size: 0.8rem; color: var(--text-muted); display: block; margin-bottom: 0.25rem;">Security PIN (4 digits)</label>
+                                    <input type="password" id="adminUserPinInput" required maxlength="6" placeholder="e.g. 1234" style="width: 100%; padding: 0.5rem; font-size: 0.85rem;">
+                                </div>
+                                <div>
+                                    <button type="submit" class="btn btn-primary" style="width: 100%; padding: 0.5rem; font-size: 0.85rem; display: flex; align-items: center; justify-content: center; gap: 0.3rem;"><i data-lucide="user-plus" style="width: 16px; height: 16px;"></i> Create Staff User</button>
+                                </div>
+                            </form>
+                        </div>
+
+                        <div class="glass-panel" style="padding: 1.25rem; background: var(--bg-glass-solid);">
+                            <h3 style="font-size: 1rem; color: var(--text-main); margin-bottom: 1rem; padding-bottom: 0.5rem; border-bottom: 1px solid var(--border-glass);">Staff Directory & Department Roles</h3>
+                            <div class="table-container">
+                                <table class="excel-table">
+                                    <thead>
+                                        <tr>
+                                            <th>ID</th>
+                                            <th>Staff Name</th>
+                                            <th>Username</th>
+                                            <th>Department Role</th>
+                                            <th>Security PIN</th>
+                                            <th>Action</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody id="usersDirectoryTableBody">
+                                        <tr><td colspan="6" style="text-align: center; color: var(--text-muted); padding: 1.5rem;">Loading staff directory...</td></tr>
+                                    </tbody>
+                                </table>
+                            </div>
+                        </div>
                     </div>
                     
                     <div id="admin-tab-logs" class="admin-tab-content" style="display: none;">
@@ -575,6 +681,81 @@
             </div>
             <div class="modal-header" style="justify-content: center; background: #000;">
                 <button type="button" class="btn btn-primary" id="capturePhotoBtn" style="border-radius: 50px; width: 64px; height: 64px; display: flex; align-items: center; justify-content: center; box-shadow: 0 4px 10px rgba(0,0,0,0.3); border: 4px solid #fff;"><i data-lucide="camera" style="width: 24px; height: 24px;"></i></button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Active User / PIN Switcher Modal -->
+    <div id="userPinModal" class="modal-overlay">
+        <div class="modal-content glass-panel" style="max-width: 420px;">
+            <div class="modal-header">
+                <h2>👤 Switch Staff / Department User</h2>
+                <button type="button" class="btn btn-secondary close-user-pin-modal" style="padding: 0.4rem;"><i data-lucide="x"></i></button>
+            </div>
+            <div class="modal-body" style="padding: 1rem;">
+                <p style="font-size: 0.85rem; color: var(--text-muted); margin-bottom: 1rem;">Select staff user or enter 4-digit PIN to switch active department context:</p>
+                <div id="quickUserSelectButtons" style="display: grid; grid-template-columns: repeat(2, 1fr); gap: 0.5rem; margin-bottom: 1.25rem;">
+                    <!-- Staff quick switch buttons populated by JS -->
+                </div>
+                <form id="pinVerificationForm" style="display: flex; flex-direction: column; gap: 0.75rem; border-top: 1px solid var(--border-glass); padding-top: 1rem;">
+                    <label style="font-size: 0.85rem; font-weight: 600; color: var(--text-main);">Or enter PIN:</label>
+                    <div style="display: flex; gap: 0.5rem;">
+                        <input type="password" id="userPinInput" required maxlength="6" placeholder="Enter PIN (e.g. 1111)" style="flex: 1; padding: 0.6rem 0.8rem; font-size: 1.1rem; letter-spacing: 4px; text-align: center;">
+                        <button type="submit" class="btn btn-primary" style="padding: 0.6rem 1rem;">Verify</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <!-- Department Verification Checklist Modal -->
+    <div id="deptChecklistModal" class="modal-overlay">
+        <div class="modal-content glass-panel" style="max-width: 600px;">
+            <div class="modal-header">
+                <div>
+                    <h2 id="deptModalTitle" style="margin: 0;">Department Checklist Verification</h2>
+                    <span id="deptModalSubtitle" style="font-size: 0.85rem; color: var(--text-muted);">Order ID: -</span>
+                </div>
+                <button type="button" class="btn btn-secondary close-dept-checklist-modal" style="padding: 0.4rem;"><i data-lucide="x"></i></button>
+            </div>
+            <div class="modal-body" style="padding: 1rem; max-height: 65vh; overflow-y: auto;">
+                <div id="deptDiscrepancyAlert" class="alert alert-warning" style="display: none; background: rgba(239, 68, 68, 0.1); border: 1px solid #ef4444; color: #dc2626; padding: 0.75rem 1rem; border-radius: 8px; font-size: 0.85rem; margin-bottom: 1rem; font-weight: 500;">
+                    <!-- Discrepancy warning text populated by JS -->
+                </div>
+                <p style="font-size: 0.85rem; color: var(--text-muted); margin-bottom: 0.75rem;">Verify each item tag for your department before submitting:</p>
+                <div id="deptChecklistItemsContainer" style="display: flex; flex-direction: column; gap: 0.5rem;">
+                    <!-- Checklist item rows populated by JS -->
+                </div>
+            </div>
+            <div class="modal-footer" style="justify-content: space-between;">
+                <span id="deptVerifiedSummary" style="font-size: 0.85rem; font-weight: 600; color: var(--primary);">Checked 0/0 items</span>
+                <div style="display: flex; gap: 0.5rem;">
+                    <button type="button" class="btn btn-secondary close-dept-checklist-modal">Cancel</button>
+                    <button type="button" class="btn btn-primary" id="saveDeptChecklistBtn"><i data-lucide="check-circle" style="width: 16px; height: 16px;"></i> Complete Department Checklist</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Manager Discrepancy Approval Modal -->
+    <div id="managerApprovalModal" class="modal-overlay" style="z-index: 3100;">
+        <div class="modal-content glass-panel" style="max-width: 450px;">
+            <div class="modal-header" style="background: rgba(239, 68, 68, 0.1); border-bottom: 1px solid rgba(239, 68, 68, 0.2);">
+                <h2 style="color: #dc2626; display: flex; align-items: center; gap: 0.4rem; margin: 0;"><i data-lucide="shield-alert" style="width: 20px; height: 20px;"></i> Discrepancy Gatekeeper Locked</h2>
+                <button type="button" class="btn btn-secondary close-manager-approval-modal" style="padding: 0.4rem;"><i data-lucide="x"></i></button>
+            </div>
+            <div class="modal-body" style="padding: 1rem;">
+                <p style="font-size: 0.85rem; color: var(--text-main); font-weight: 600; margin-bottom: 0.5rem;">A discrepancy was detected in this order:</p>
+                <div id="managerDiscrepancyDetailText" style="font-size: 0.82rem; background: rgba(0,0,0,0.04); padding: 0.6rem; border-radius: 6px; border: 1px solid var(--border-glass); margin-bottom: 1rem; color: #dc2626; font-family: monospace;">
+                    <!-- Discrepancy detail text -->
+                </div>
+                <p style="font-size: 0.82rem; color: var(--text-muted); margin-bottom: 1rem;">This order is locked from proceeding further. A Manager must enter their 4-digit PIN to approve the discrepancy override:</p>
+                <form id="managerApprovalForm" style="display: flex; flex-direction: column; gap: 0.75rem;">
+                    <input type="password" id="managerPinInput" required maxlength="6" placeholder="Enter Manager PIN (Default: 1234)" style="padding: 0.6rem 0.8rem; font-size: 1.1rem; letter-spacing: 4px; text-align: center;">
+                    <button type="submit" class="btn btn-primary" style="padding: 0.6rem; background: #dc2626; border-color: #dc2626; width: 100%; display: flex; justify-content: center; align-items: center; gap: 0.4rem;">
+                        <i data-lucide="check-square" style="width: 16px; height: 16px;"></i> Approve Discrepancy & Unlock Progress
+                    </button>
+                </form>
             </div>
         </div>
     </div>

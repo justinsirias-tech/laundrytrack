@@ -773,6 +773,12 @@ document.querySelectorAll('.nav-item').forEach(button => {
         document.querySelectorAll('.view').forEach(v => v.classList.remove('active'));
         const targetView = document.getElementById(`${viewId}-view`);
         if (targetView) targetView.classList.add('active');
+
+        if (viewId === 'checklists') {
+            loadPendingChecklistsTracker();
+        } else if (viewId === 'admin') {
+            loadUsers();
+        }
     });
 });
 
@@ -3140,44 +3146,479 @@ const loadVerificationLogs = async () => {
     }
 };
 
+// --- USER MANAGEMENT & MULTI-DEPARTMENT GATEKEEPER LOGIC ---
+let appUsers = [];
+let activeStaffUser = {
+    id: 1,
+    username: 'admin',
+    name: 'Manager / Admin',
+    role: 'Manager',
+    pin: '1234'
+};
+
+const updateActiveStaffUI = () => {
+    const nameEl = document.getElementById('activeStaffNameDisplay');
+    const roleEl = document.getElementById('activeStaffRoleDisplay');
+    if (nameEl) nameEl.innerText = activeStaffUser.name;
+    if (roleEl) {
+        roleEl.innerText = activeStaffUser.role;
+        // Role badge colors
+        if (activeStaffUser.role === 'Manager') roleEl.style.background = '#6366f1';
+        else if (activeStaffUser.role === 'Checker/Cashier') roleEl.style.background = '#3b82f6';
+        else if (activeStaffUser.role === 'Washer') roleEl.style.background = '#06b6d4';
+        else if (activeStaffUser.role === 'Ironing') roleEl.style.background = '#f59e0b';
+        else if (activeStaffUser.role === 'Packing') roleEl.style.background = '#10b981';
+    }
+};
+
+const loadUsers = async () => {
+    const tbody = document.getElementById('usersDirectoryTableBody');
+    try {
+        const res = await fetch(`${API_BASE}/users`);
+        appUsers = await res.json();
+        renderUsersDirectory();
+    } catch (err) {
+        console.error('Error loading users:', err);
+        if (tbody) tbody.innerHTML = `<tr><td colspan="6" style="text-align:center; color: var(--text-muted);">Error loading users.</td></tr>`;
+    }
+};
+
+const renderUsersDirectory = () => {
+    const tbody = document.getElementById('usersDirectoryTableBody');
+    if (!tbody) return;
+    
+    if (appUsers.length === 0) {
+        tbody.innerHTML = `<tr><td colspan="6" style="text-align: center; color: var(--text-muted); padding: 1.5rem;">No staff users created.</td></tr>`;
+        return;
+    }
+    
+    tbody.innerHTML = appUsers.map(user => `
+        <tr>
+            <td><strong>#${user.id}</strong></td>
+            <td><strong>${user.name}</strong> ${user.username === activeStaffUser.username ? '<span class="badge" style="background:#10b981; color:#fff; font-size:0.65rem; padding:0.15rem 0.3rem;">ACTIVE</span>' : ''}</td>
+            <td><code>${user.username}</code></td>
+            <td><span class="status-badge text-blue">${user.role}</span></td>
+            <td><code>••••</code></td>
+            <td>
+                <button type="button" class="btn btn-secondary" onclick="switchStaffUserDirectly('${user.username}')" style="padding: 0.2rem 0.5rem; font-size: 0.75rem;">Switch To</button>
+                ${user.username !== 'admin' ? `<button type="button" class="btn btn-danger" onclick="deleteStaffUser(${user.id})" style="padding: 0.2rem 0.5rem; font-size: 0.75rem; background:#ef4444; color:#fff; border:none; border-radius:4px; margin-left:0.25rem;">Delete</button>` : ''}
+            </td>
+        </tr>
+    `).join('');
+};
+
+window.switchStaffUserDirectly = (username) => {
+    const found = appUsers.find(u => u.username === username);
+    if (found) {
+        activeStaffUser = found;
+        updateActiveStaffUI();
+        renderUsersDirectory();
+        showToast(`Switched active user to ${found.name} (${found.role})`, 'success');
+    }
+};
+
+window.deleteStaffUser = (id) => {
+    if (!confirm('Are you sure you want to delete this staff user?')) return;
+    fetch(`${API_BASE}/users/${id}`, { method: 'DELETE' })
+    .then(() => {
+        showToast('Deleted staff user', 'success');
+        loadUsers();
+    })
+    .catch(err => console.error(err));
+};
+
+// PIN Switcher Modal setup
+const openUserPinModal = () => {
+    const modal = document.getElementById('userPinModal');
+    const container = document.getElementById('quickUserSelectButtons');
+    if (!modal) return;
+    
+    if (container && appUsers.length > 0) {
+        container.innerHTML = appUsers.map(u => `
+            <button type="button" class="btn btn-secondary" onclick="switchStaffUserDirectly('${u.username}'); document.getElementById('userPinModal').classList.remove('active');" style="padding: 0.5rem; font-size: 0.8rem; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 0.15rem; background: ${u.username === activeStaffUser.username ? '#e0e7ff' : '#fff'};">
+                <span style="font-weight: 600; color: var(--text-main);">${u.name}</span>
+                <span style="font-size: 0.7rem; color: var(--text-muted);">${u.role}</span>
+            </button>
+        `).join('');
+    }
+    
+    modal.classList.add('active');
+};
+
+const badgeBtn = document.getElementById('activeStaffBadgeBtn');
+if (badgeBtn) {
+    badgeBtn.onclick = () => {
+        loadUsers().then(openUserPinModal);
+    };
+}
+
+document.querySelectorAll('.close-user-pin-modal').forEach(btn => {
+    btn.onclick = () => {
+        const modal = document.getElementById('userPinModal');
+        if (modal) modal.classList.remove('active');
+    };
+});
+
+const pinForm = document.getElementById('pinVerificationForm');
+if (pinForm) {
+    pinForm.addEventListener('submit', (e) => {
+        e.preventDefault();
+        const pinInput = document.getElementById('userPinInput');
+        const pinVal = pinInput ? pinInput.value.trim() : '';
+        if (!pinVal) return;
+        
+        fetch(`${API_BASE}/users/verify-pin`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ pin: pinVal })
+        })
+        .then(res => res.json())
+        .then(data => {
+            if (data.success && data.user) {
+                activeStaffUser = data.user;
+                updateActiveStaffUI();
+                renderUsersDirectory();
+                pinInput.value = '';
+                document.getElementById('userPinModal').classList.remove('active');
+                showToast(`Authenticated as ${data.user.name} (${data.user.role})`, 'success');
+            } else {
+                showToast('Invalid Security PIN', 'error');
+            }
+        })
+        .catch(err => {
+            console.error(err);
+            showToast('Error verifying PIN', 'error');
+        });
+    });
+}
+
+const createUserForm = document.getElementById('adminCreateUserForm');
+if (createUserForm) {
+    createUserForm.addEventListener('submit', (e) => {
+        e.preventDefault();
+        const nameVal = document.getElementById('adminUserNameInput').value.trim();
+        const usernameVal = document.getElementById('adminUserUsernameInput').value.trim();
+        const roleVal = document.getElementById('adminUserRoleSelect').value;
+        const pinVal = document.getElementById('adminUserPinInput').value.trim();
+        
+        if (!nameVal || !usernameVal || !roleVal || !pinVal) return;
+        
+        fetch(`${API_BASE}/users`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ name: nameVal, username: usernameVal, role: roleVal, pin: pinVal })
+        })
+        .then(res => res.json())
+        .then(data => {
+            if (data.success) {
+                showToast(`Created staff user ${nameVal}`, 'success');
+                createUserForm.reset();
+                loadUsers();
+            } else {
+                showToast(data.error || 'Failed to create user', 'error');
+            }
+        })
+        .catch(err => console.error(err));
+    });
+}
+
+// --- UNPERFORMED CHECKLISTS TRACKER LOGIC ---
+let activeChecklistDeptFilter = 'ALL';
+let pendingChecklistsData = [];
+
+const loadPendingChecklistsTracker = async () => {
+    const tbody = document.getElementById('pendingChecklistsTableBody');
+    if (!tbody) return;
+    
+    try {
+        tbody.innerHTML = `<tr><td colspan="8" style="text-align: center; color: var(--text-muted); padding: 1.5rem;">Loading pending department checklists...</td></tr>`;
+        const res = await fetch(`${API_BASE}/pending-checklists`);
+        pendingChecklistsData = await res.json();
+        renderPendingChecklistsTable();
+    } catch (err) {
+        console.error(err);
+        tbody.innerHTML = `<tr><td colspan="8" style="text-align: center; color: var(--text-muted); padding: 1.5rem;">Error loading pending checklists: ${err.message}</td></tr>`;
+    }
+};
+
+const renderPendingChecklistsTable = () => {
+    const tbody = document.getElementById('pendingChecklistsTableBody');
+    if (!tbody) return;
+    
+    let filtered = pendingChecklistsData;
+    if (activeChecklistDeptFilter !== 'ALL') {
+        filtered = pendingChecklistsData.filter(item => item.pendingDepts.includes(activeChecklistDeptFilter));
+    }
+    
+    if (filtered.length === 0) {
+        tbody.innerHTML = `<tr><td colspan="8" style="text-align: center; color: var(--text-muted); padding: 1.5rem;">No active orders with pending checklists found for this filter.</td></tr>`;
+        return;
+    }
+    
+    tbody.innerHTML = filtered.map(o => {
+        const mandatoryBadges = o.mandatoryDepts.map(dept => {
+            const isCompleted = o.completedDepts.includes(dept);
+            return `<span class="badge" style="font-size:0.7rem; padding:0.15rem 0.4rem; background:${isCompleted ? '#10b981' : '#cbd5e1'}; color:${isCompleted ? '#fff' : '#475569'}; margin-right:0.2rem;">${dept} ${isCompleted ? '✓' : ''}</span>`;
+        }).join('');
+        
+        const pendingBadges = o.pendingDepts.length > 0 
+            ? o.pendingDepts.map(dept => `<span class="badge" style="font-size:0.7rem; padding:0.15rem 0.4rem; background:#f59e0b; color:#fff; margin-right:0.2rem;">${dept}</span>`).join('')
+            : `<span style="color:#10b981; font-weight:600; font-size:0.8rem;">All Checklists Done ✓</span>`;
+            
+        const discBadge = o.hasPendingDiscrepancy 
+            ? `<button type="button" onclick="triggerManagerApprovalModal('${o.orderId}', '${(o.discrepancyDetails || '').replace(/'/g, "\\'")}')" class="btn btn-secondary" style="padding:0.2rem 0.5rem; font-size:0.75rem; background:rgba(239,68,68,0.1); border:1px solid #ef4444; color:#dc2626; font-weight:600; border-radius:4px;">⚠️ Discrepancy Locked (Approve)</button>`
+            : `<span style="color:var(--text-muted); font-size:0.8rem;">Clean</span>`;
+            
+        const targetDeptToPerform = o.pendingDepts[0] || activeStaffUser.role;
+        
+        return `
+        <tr>
+            <td><strong>${o.orderId}</strong></td>
+            <td>${o.customerName}</td>
+            <td>${o.serviceType}</td>
+            <td><span class="status-badge ${getStatusColorClass(o.status)}">${o.status}</span></td>
+            <td><div style="display:flex; flex-wrap:wrap; gap:0.2rem;">${mandatoryBadges}</div></td>
+            <td><div style="display:flex; flex-wrap:wrap; gap:0.2rem;">${pendingBadges}</div></td>
+            <td>${discBadge}</td>
+            <td>
+                ${o.pendingDepts.length > 0 ? `
+                    <button type="button" class="btn btn-primary" onclick="openDeptChecklistModal('${o.orderId}', '${targetDeptToPerform}')" style="padding:0.25rem 0.6rem; font-size:0.8rem; display:flex; align-items:center; gap:0.25rem;">
+                        <i data-lucide="check-square" style="width:14px; height:14px;"></i> Perform ${targetDeptToPerform} Checklist
+                    </button>
+                ` : `<span style="color:#10b981; font-size:0.8rem; font-weight:bold;">Completed</span>`}
+            </td>
+        </tr>
+        `;
+    }).join('');
+    
+    if (typeof lucide !== 'undefined') lucide.createIcons();
+};
+
+const refreshChecklistsBtn = document.getElementById('refreshChecklistsBtn');
+if (refreshChecklistsBtn) refreshChecklistsBtn.onclick = loadPendingChecklistsTracker;
+
+const deptFilterGroup = document.getElementById('deptFilterGroup');
+if (deptFilterGroup) {
+    deptFilterGroup.querySelectorAll('button').forEach(btn => {
+        btn.onclick = () => {
+            deptFilterGroup.querySelectorAll('button').forEach(b => b.classList.remove('active-dept-filter'));
+            btn.classList.add('active-dept-filter');
+            activeChecklistDeptFilter = btn.dataset.dept;
+            renderPendingChecklistsTable();
+        };
+    });
+}
+
+// --- DEPARTMENT CHECKLIST VERIFICATION MODAL LOGIC ---
+let currentDeptChecklistOrder = null;
+let currentDeptChecklistDept = 'Checker/Cashier';
+
+window.openDeptChecklistModal = (orderId, dept) => {
+    const order = orders.find(o => o.id === orderId);
+    if (!order) return;
+    
+    currentDeptChecklistOrder = order;
+    currentDeptChecklistDept = dept || activeStaffUser.role;
+    
+    document.getElementById('deptModalTitle').innerText = `${currentDeptChecklistDept} Checklist Verification`;
+    document.getElementById('deptModalSubtitle').innerText = `Order #${order.id} - ${order.customerName} (${order.serviceType})`;
+    
+    // Check if there is an active discrepancy locked for this order
+    fetch(`${API_BASE}/department-verifications/${orderId}`)
+    .then(res => res.json())
+    .then(data => {
+        const alertEl = document.getElementById('deptDiscrepancyAlert');
+        if (data.pendingDiscrepancies && data.pendingDiscrepancies.length > 0) {
+            alertEl.style.display = 'block';
+            alertEl.innerText = `⚠️ LOCKED: ${data.pendingDiscrepancies[0].discrepancy_details}. Requires Manager PIN Approval to proceed.`;
+        } else {
+            alertEl.style.display = 'none';
+        }
+        
+        renderDeptChecklistItems(data.verifications || []);
+        document.getElementById('deptChecklistModal').classList.add('active');
+    })
+    .catch(err => console.error(err));
+};
+
+const renderDeptChecklistItems = (existingVerifs) => {
+    const container = document.getElementById('deptChecklistItemsContainer');
+    const order = currentDeptChecklistOrder;
+    if (!container || !order) return;
+    
+    const prevVerifs = existingVerifs.filter(v => v.department === currentDeptChecklistDept);
+    const prevCheckedSet = new Set(prevVerifs.filter(v => v.checked).map(v => v.tracking_id));
+    
+    container.innerHTML = order.items.map(item => {
+        const isChecked = prevVerifs.length > 0 ? prevCheckedSet.has(item.trackingId) : true;
+        return `
+        <div class="dept-checklist-item-row" style="display: flex; align-items: center; justify-content: space-between; padding: 0.6rem 0.8rem; background: #fff; border: 1px solid var(--border-glass); border-radius: 8px;">
+            <div style="display: flex; align-items: center; gap: 0.75rem;">
+                <input type="checkbox" class="dept-item-checkbox" data-tracking-id="${item.trackingId}" ${isChecked ? 'checked' : ''} style="width: 20px; height: 20px; cursor: pointer;" />
+                <div>
+                    <div style="font-weight: 600; font-size: 0.88rem; color: var(--text-main);">${translateItemName(item.type)} - ${translateColorName(item.color)} (${item.brand || 'No Brand'})</div>
+                    <div style="font-size: 0.78rem; font-family: monospace; color: var(--text-muted);">${item.trackingId}</div>
+                </div>
+            </div>
+            <div>
+                <span class="badge" style="font-size: 0.75rem; background: rgba(34, 41, 69, 0.05); color: var(--text-main); padding: 0.2rem 0.5rem;">${item.serviceType || 'Standard'}</span>
+            </div>
+        </div>
+        `;
+    }).join('');
+    
+    updateDeptVerifiedSummary();
+    
+    container.querySelectorAll('.dept-item-checkbox').forEach(cb => {
+        cb.onchange = updateDeptVerifiedSummary;
+    });
+};
+
+const updateDeptVerifiedSummary = () => {
+    const checkboxes = document.querySelectorAll('.dept-item-checkbox');
+    const checkedCount = Array.from(checkboxes).filter(cb => cb.checked).length;
+    const totalCount = checkboxes.length;
+    const summaryEl = document.getElementById('deptVerifiedSummary');
+    if (summaryEl) summaryEl.innerText = `Checked ${checkedCount}/${totalCount} items verified`;
+};
+
+document.querySelectorAll('.close-dept-checklist-modal').forEach(btn => {
+    btn.onclick = () => {
+        const modal = document.getElementById('deptChecklistModal');
+        if (modal) modal.classList.remove('active');
+    };
+});
+
+const saveDeptChecklistBtn = document.getElementById('saveDeptChecklistBtn');
+if (saveDeptChecklistBtn) {
+    saveDeptChecklistBtn.onclick = () => {
+        const order = currentDeptChecklistOrder;
+        if (!order) return;
+        
+        const verifications = Array.from(document.querySelectorAll('.dept-item-checkbox')).map(cb => ({
+            trackingId: cb.dataset.trackingId,
+            checked: cb.checked
+        }));
+        
+        fetch(`${API_BASE}/department-verifications`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+                orderId: order.id,
+                department: currentDeptChecklistDept,
+                verifications: verifications,
+                verifiedBy: activeStaffUser.name
+            })
+        })
+        .then(res => res.json())
+        .then(data => {
+            document.getElementById('deptChecklistModal').classList.remove('active');
+            if (data.discrepancyFound) {
+                showToast(`⚠️ Discrepancy Detected! ${data.discrepancyDetails}`, 'error');
+                triggerManagerApprovalModal(order.id, data.discrepancyDetails);
+            } else {
+                showToast(`Completed ${currentDeptChecklistDept} checklist for Order ${order.id}!`, 'success');
+                loadPendingChecklistsTracker();
+                refreshAllViews();
+            }
+        })
+        .catch(err => {
+            console.error(err);
+            showToast('Error saving department checklist.', 'error');
+        });
+    };
+}
+
+// --- MANAGER DISCREPANCY APPROVAL MODAL LOGIC ---
+window.triggerManagerApprovalModal = (orderId, discrepancyDetails) => {
+    const textEl = document.getElementById('managerDiscrepancyDetailText');
+    if (textEl) textEl.innerText = discrepancyDetails || 'Count mismatch detected between departments.';
+    
+    const form = document.getElementById('managerApprovalForm');
+    if (form) form.dataset.orderId = orderId;
+    
+    document.getElementById('managerApprovalModal').classList.add('active');
+    setTimeout(() => {
+        const input = document.getElementById('managerPinInput');
+        if (input) input.focus();
+    }, 100);
+};
+
+document.querySelectorAll('.close-manager-approval-modal').forEach(btn => {
+    btn.onclick = () => {
+        const modal = document.getElementById('managerApprovalModal');
+        if (modal) modal.classList.remove('active');
+    };
+});
+
+const managerApprovalForm = document.getElementById('managerApprovalForm');
+if (managerApprovalForm) {
+    managerApprovalForm.addEventListener('submit', (e) => {
+        e.preventDefault();
+        const orderId = managerApprovalForm.dataset.orderId;
+        const pinInput = document.getElementById('managerPinInput');
+        const pinVal = pinInput ? pinInput.value.trim() : '';
+        if (!orderId || !pinVal) return;
+        
+        fetch(`${API_BASE}/discrepancies/approve`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ orderId: orderId, managerPin: pinVal })
+        })
+        .then(res => res.json())
+        .then(data => {
+            if (data.success) {
+                pinInput.value = '';
+                document.getElementById('managerApprovalModal').classList.remove('active');
+                showToast(`Discrepancy Approved by ${data.approvedBy}! Order ${orderId} is now unlocked.`, 'success');
+                loadPendingChecklistsTracker();
+                refreshAllViews();
+            } else {
+                showToast(data.error || 'Invalid Manager PIN.', 'error');
+            }
+        })
+        .catch(err => {
+            console.error(err);
+            showToast('Error approving discrepancy.', 'error');
+        });
+    });
+}
+
+// Update initAdminTabs to load users
 const initAdminTabs = () => {
     const adminTabs = document.querySelectorAll('.admin-tab');
     if (!adminTabs.length) return;
     
     adminTabs.forEach(tab => {
         tab.addEventListener('click', () => {
-            // Remove active state from all tabs
             adminTabs.forEach(t => {
                 t.classList.remove('active');
                 t.style.color = 'var(--text-muted)';
                 t.style.borderBottomColor = 'transparent';
             });
             
-            // Set active state on clicked tab
             tab.classList.add('active');
             tab.style.color = 'var(--primary)';
             tab.style.borderBottomColor = 'var(--primary)';
             
-            // Hide all tab contents
             document.querySelectorAll('.admin-tab-content').forEach(content => {
                 content.style.display = 'none';
             });
             
-            // Show target tab content
             const targetId = `admin-tab-${tab.dataset.tab}`;
             const targetContent = document.getElementById(targetId);
             if (targetContent) {
                 targetContent.style.display = 'block';
             }
             
-            // Load logs if tab clicked
             if (tab.dataset.tab === 'logs') {
                 loadVerificationLogs();
+            } else if (tab.dataset.tab === 'users') {
+                loadUsers();
             }
         });
     });
     
-    // Set up refresh button
     const refreshBtn = document.getElementById('refreshVerificationLogsBtn');
     if (refreshBtn) {
         refreshBtn.onclick = loadVerificationLogs;
