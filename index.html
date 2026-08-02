@@ -388,9 +388,12 @@
                         <!-- Left Panel: Standard Items Library -->
                         <div class="glass-panel" style="padding: 1.25rem; background: var(--bg-glass-solid);">
                             <h3 style="font-size: 1rem; margin-bottom: 1rem; padding-bottom: 0.5rem; border-bottom: 1px solid var(--border-glass); color: var(--text-main);" data-i18n="items_library">1. Items Library</h3>
-                            <form id="adminAddItemForm" style="display: flex; gap: 0.5rem; margin-bottom: 1rem;">
-                                <input type="text" id="adminNewItemInput" required placeholder="e.g. Scarf, Blanket" style="flex: 1; padding: 0.5rem 0.75rem; font-size: 0.9rem;">
-                                <button type="submit" class="btn btn-primary" style="padding: 0.5rem; font-size: 0.9rem; display: flex; align-items: center; justify-content: center; width: 40px; height: 40px;"><i data-lucide="plus" style="width: 18px; height: 18px;"></i></button>
+                            <form id="adminAddItemForm" style="display: flex; flex-direction: column; gap: 0.5rem; margin-bottom: 1rem;">
+                                <div style="display: flex; gap: 0.4rem;">
+                                    <input type="text" id="adminNewItemInput" required placeholder="English (e.g. Scarf)" style="flex: 1; padding: 0.5rem 0.6rem; font-size: 0.82rem;">
+                                    <input type="text" id="adminNewItemInputTh" placeholder="ภาษาไทย (เช่น ผ้าพันคอ)" style="flex: 1; padding: 0.5rem 0.6rem; font-size: 0.82rem;">
+                                    <button type="submit" class="btn btn-primary" style="padding: 0.5rem; font-size: 0.9rem; display: flex; align-items: center; justify-content: center; width: 36px; height: 36px; flex-shrink: 0;" title="Add Item"><i data-lucide="plus" style="width: 18px; height: 18px;"></i></button>
+                                </div>
                             </form>
                             
                             <label style="font-size: 0.8rem; color: var(--text-muted); display: block; margin-bottom: 0.5rem;" data-i18n="drag_assign">Library Items (Drag to assign):</label>

@@ -141,6 +141,7 @@ const initDatabase = async () => {
         await client.query('ALTER TABLE order_items ADD COLUMN IF NOT EXISTS service_type VARCHAR(100)');
         await client.query('ALTER TABLE order_items ADD COLUMN IF NOT EXISTS defect_image TEXT');
         await client.query('ALTER TABLE order_items ADD COLUMN IF NOT EXISTS tracking_id VARCHAR(100)');
+        await client.query('ALTER TABLE clothing_types ADD COLUMN IF NOT EXISTS name_th VARCHAR(255)');
 
         // Create table for status checklist verifications and audit logs
         await client.query(`
@@ -296,20 +297,36 @@ app.put('/api/orders/:id/status', async (req, res) => {
 // 4. Get standard clothing types (Items library)
 app.get('/api/clothing-types', async (req, res) => {
     try {
-        const result = await pool.query('SELECT name FROM clothing_types ORDER BY name ASC');
-        res.json(result.rows.map(r => r.name));
+        const result = await pool.query('SELECT name, name_th FROM clothing_types ORDER BY name ASC');
+        res.json(result.rows.map(r => ({ name: r.name, name_th: r.name_th || '' })));
     } catch (err) {
         console.error(err);
         res.status(500).json({ error: err.message });
     }
 });
 
-// 5. Add item to library
+// 5. Add or update item in library
 app.post('/api/clothing-types', async (req, res) => {
-    const { name } = req.body;
+    const { name, name_th } = req.body;
     try {
-        await pool.query('INSERT INTO clothing_types (name) VALUES ($1) ON CONFLICT DO NOTHING', [name]);
+        await pool.query(
+            'INSERT INTO clothing_types (name, name_th) VALUES ($1, $2) ON CONFLICT (name) DO UPDATE SET name_th = EXCLUDED.name_th',
+            [name, name_th || '']
+        );
         res.status(201).json({ success: true });
+    } catch (err) {
+        console.error(err);
+        res.status(500).json({ error: err.message });
+    }
+});
+
+// Update item Thai name specifically
+app.put('/api/clothing-types/:name', async (req, res) => {
+    const { name } = req.params;
+    const { name_th } = req.body;
+    try {
+        await pool.query('UPDATE clothing_types SET name_th = $1 WHERE name = $2', [name_th || '', name]);
+        res.json({ success: true });
     } catch (err) {
         console.error(err);
         res.status(500).json({ error: err.message });

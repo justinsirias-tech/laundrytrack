@@ -333,11 +333,27 @@ const t = (key) => {
     return (i18n[currentLanguage] && i18n[currentLanguage][key]) ? i18n[currentLanguage][key] : key;
 };
 
-const translateItemName = (name) => {
-    if (currentLanguage === 'th') {
-        return itemTranslations[name] || name;
+const getItemThName = (name) => {
+    if (!name) return '';
+    const itemObj = clothingTypes.find(t => (typeof t === 'object' ? t.name : t).toLowerCase() === name.toLowerCase());
+    if (itemObj && typeof itemObj === 'object' && itemObj.name_th) {
+        return itemObj.name_th;
     }
-    return name;
+    return itemTranslations[name] || '';
+};
+
+const translateItemName = (name) => {
+    if (!name) return '';
+    const itemObj = clothingTypes.find(t => (typeof t === 'object' ? t.name : t).toLowerCase() === name.toLowerCase());
+    if (currentLanguage === 'th') {
+        if (itemObj && typeof itemObj === 'object' && itemObj.name_th) {
+            return itemObj.name_th;
+        }
+        if (itemTranslations[name]) {
+            return itemTranslations[name];
+        }
+    }
+    return itemObj && typeof itemObj === 'object' ? itemObj.name : name;
 };
 
 const translateCategoryName = (name) => {
@@ -1946,7 +1962,8 @@ const loadAllData = async () => {
         orders = await ordersRes.json();
         
         const typesRes = await fetch(`${API_BASE}/clothing-types`);
-        clothingTypes = await typesRes.json();
+        const typesData = await typesRes.json();
+        clothingTypes = typesData.map(t => typeof t === 'string' ? { name: t, name_th: itemTranslations[t] || '' } : { name: t.name, name_th: t.name_th || itemTranslations[t.name] || '' });
         
         const catsRes = await fetch(`${API_BASE}/categories`);
         categories = await catsRes.json();
@@ -2566,22 +2583,35 @@ const renderAdminItems = () => {
     const assignedItems = new Set();
     categories.forEach(cat => {
         if (cat.items) {
-            cat.items.forEach(item => assignedItems.add(item));
+            cat.items.forEach(item => assignedItems.add(typeof item === 'object' ? item.name : item));
         }
     });
-    const unassignedItems = clothingTypes.filter(item => !assignedItems.has(item));
-    unassignedItems.sort((a, b) => a.localeCompare(b));
+
+    const allTypeNames = clothingTypes.map(t => typeof t === 'object' ? t.name : t);
+    
+    const unassignedItems = clothingTypes.filter(itemObj => {
+        const typeName = typeof itemObj === 'object' ? itemObj.name : itemObj;
+        return !assignedItems.has(typeName);
+    });
+    unassignedItems.sort((a, b) => {
+        const nameA = typeof a === 'object' ? a.name : a;
+        const nameB = typeof b === 'object' ? b.name : b;
+        return nameA.localeCompare(nameB);
+    });
     
     // 2. Render Library (Unassigned Items) Dropzone
     if (unassignedItems.length === 0) {
         libraryDropzone.innerHTML = `<div class="admin-category-empty">${currentLanguage === 'th' ? 'จัดหมวดหมู่รายการทั้งหมดแล้ว' : 'All library items assigned.'}</div>`;
     } else {
-        libraryDropzone.innerHTML = unassignedItems.map(type => {
+        libraryDropzone.innerHTML = unassignedItems.map(itemObj => {
+            const typeName = typeof itemObj === 'object' ? itemObj.name : itemObj;
+            const typeTh = getItemThName(typeName);
             return `
-            <div class="admin-item-chip" draggable="true" data-type="${type}">
-                <span>${translateItemName(type)}</span>
-                <button type="button" class="admin-delete-library-item" data-type="${type}" style="background: none; border: none; cursor: pointer; color: #ef4444; padding: 0.15rem; display: flex; align-items: center; justify-content: center;">
-                    <i data-lucide="trash-2" style="width: 12px; height: 12px;"></i>
+            <div class="admin-item-chip" draggable="true" data-type="${typeName}" style="display: flex; align-items: center; justify-content: space-between; gap: 0.5rem; width: 100%; padding: 0.4rem 0.6rem;">
+                <span style="font-weight: 600; min-width: 90px; color: var(--text-main); font-size: 0.85rem;">${typeName}</span>
+                <input type="text" class="admin-item-th-input" data-name="${typeName}" value="${typeTh}" placeholder="ภาษาไทย..." style="padding: 0.25rem 0.5rem; font-size: 0.8rem; border-radius: 6px; border: 1px solid var(--border-glass); flex: 1; outline: none; background: #fff;" title="${currentLanguage === 'th' ? 'คลิกเพื่อแก้ไขคำภาษาไทย' : 'Click to edit Thai wording'}" />
+                <button type="button" class="admin-delete-library-item" data-type="${typeName}" style="background: none; border: none; cursor: pointer; color: #ef4444; padding: 0.15rem; display: flex; align-items: center; justify-content: center;" title="Delete Item">
+                    <i data-lucide="trash-2" style="width: 14px; height: 14px;"></i>
                 </button>
             </div>
             `;
@@ -2594,12 +2624,22 @@ const renderAdminItems = () => {
     } else {
         categoryBoard.innerHTML = [...categories].sort((a, b) => a.name.localeCompare(b.name)).map(cat => {
             // Render item chips assigned to this category
-            const validCatItems = (cat.items || []).filter(item => clothingTypes.includes(item));
-            validCatItems.sort((a, b) => a.localeCompare(b));
-            const itemsHtml = validCatItems.map(type => {
+            const validCatItems = (cat.items || []).filter(item => {
+                const name = typeof item === 'object' ? item.name : item;
+                return allTypeNames.includes(name);
+            });
+            validCatItems.sort((a, b) => {
+                const nameA = typeof a === 'object' ? a.name : a;
+                const nameB = typeof b === 'object' ? b.name : b;
+                return nameA.localeCompare(nameB);
+            });
+            const itemsHtml = validCatItems.map(item => {
+                const typeName = typeof item === 'object' ? item.name : item;
+                const typeTh = getItemThName(typeName);
                 return `
-                <div class="admin-item-chip" draggable="true" data-type="${type}">
-                    <span>${translateItemName(type)}</span>
+                <div class="admin-item-chip" draggable="true" data-type="${typeName}" style="display: flex; align-items: center; justify-content: space-between; gap: 0.4rem; width: 100%; padding: 0.35rem 0.5rem;">
+                    <span style="font-weight: 600; font-size: 0.82rem; min-width: 70px;">${typeName}</span>
+                    <input type="text" class="admin-item-th-input" data-name="${typeName}" value="${typeTh}" placeholder="ภาษาไทย..." style="padding: 0.2rem 0.4rem; font-size: 0.78rem; border-radius: 6px; border: 1px solid var(--border-glass); flex: 1; outline: none; background: #fff;" title="${currentLanguage === 'th' ? 'คลิกเพื่อแก้ไขคำภาษาไทย' : 'Click to edit Thai wording'}" />
                 </div>
                 `;
             }).join('');
@@ -2629,8 +2669,34 @@ const renderAdminItems = () => {
     
     // 4. Bind Drag & Drop Events
     bindDragAndDropEvents();
+
+    // 5. Bind Thai wording input change events
+    document.querySelectorAll('.admin-item-th-input').forEach(input => {
+        input.addEventListener('change', (e) => {
+            const itemName = input.dataset.name;
+            const newTh = e.target.value.trim();
+            
+            const targetObj = clothingTypes.find(t => (typeof t === 'object' ? t.name : t).toLowerCase() === itemName.toLowerCase());
+            if (targetObj && typeof targetObj === 'object') {
+                targetObj.name_th = newTh;
+            } else {
+                clothingTypes.push({ name: itemName, name_th: newTh });
+            }
+            
+            fetch(`${API_BASE}/clothing-types/${encodeURIComponent(itemName)}`, {
+                method: 'PUT',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ name_th: newTh })
+            })
+            .then(() => {
+                initItemTypeButtons();
+                showToast(currentLanguage === 'th' ? `อัปเดตคำภาษาไทยสำหรับ "${itemName}" เป็น "${newTh}"` : `Saved Thai wording for "${itemName}"`, 'success');
+            })
+            .catch(err => console.error(err));
+        });
+    });
     
-    // 5. Bind delete buttons
+    // 6. Bind delete buttons
     // Delete library item button
     document.querySelectorAll('.admin-delete-library-item').forEach(btn => {
         btn.addEventListener('click', (e) => {
@@ -2638,11 +2704,11 @@ const renderAdminItems = () => {
             const typeToDelete = btn.dataset.type;
             
             // Remove from clothingTypes
-            clothingTypes = clothingTypes.filter(t => t !== typeToDelete);
+            clothingTypes = clothingTypes.filter(t => (typeof t === 'object' ? t.name : t) !== typeToDelete);
             
             // Remove from any category as well
             categories.forEach(cat => {
-                if (cat.items) cat.items = cat.items.filter(t => t !== typeToDelete);
+                if (cat.items) cat.items = cat.items.filter(t => (typeof t === 'object' ? t.name : t) !== typeToDelete);
             });
             
             // Send API requests
@@ -2652,7 +2718,8 @@ const renderAdminItems = () => {
             .then(() => {
                 // If active selection was deleted
                 if (selectedItemType.type === typeToDelete) {
-                    selectedItemType = { type: clothingTypes[0] || '' };
+                    const firstItem = clothingTypes[0];
+                    selectedItemType = { type: typeof firstItem === 'object' ? firstItem.name : (firstItem || '') };
                 }
                 initItemTypeButtons();
                 renderAdminItems();
@@ -2687,31 +2754,33 @@ const adminForm = document.getElementById('adminAddItemForm');
 if (adminForm) {
     adminForm.addEventListener('submit', (e) => {
         e.preventDefault();
-        const input = document.getElementById('adminNewItemInput');
-        const newType = input.value.trim();
+        const inputEn = document.getElementById('adminNewItemInput');
+        const inputTh = document.getElementById('adminNewItemInputTh');
+        const newType = inputEn ? inputEn.value.trim() : '';
+        const thVal = inputTh ? inputTh.value.trim() : '';
         if (!newType) return;
         
         // Capitalize first letter of each word
         const formattedType = newType.split(' ').map(w => w.charAt(0).toUpperCase() + w.slice(1)).join(' ');
         
-        // Check duplication case-insensitive
-        const exists = clothingTypes.some(t => t.toLowerCase() === formattedType.toLowerCase());
-        if (exists) {
-            showToast(`Category "${formattedType}" already exists.`, 'error');
-            return;
+        const existingIdx = clothingTypes.findIndex(t => (typeof t === 'object' ? t.name : t).toLowerCase() === formattedType.toLowerCase());
+        if (existingIdx > -1) {
+            clothingTypes[existingIdx] = { name: formattedType, name_th: thVal };
+        } else {
+            clothingTypes.push({ name: formattedType, name_th: thVal });
         }
         
-        clothingTypes.push(formattedType);
         fetch(`${API_BASE}/clothing-types`, {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ name: formattedType })
+            body: JSON.stringify({ name: formattedType, name_th: thVal })
         })
         .then(() => {
-            input.value = '';
+            if (inputEn) inputEn.value = '';
+            if (inputTh) inputTh.value = '';
             initItemTypeButtons();
             renderAdminItems();
-            showToast(currentLanguage === 'th' ? `เพิ่มรายการผ้า "${formattedType}" สำเร็จ` : `Added standard item "${formattedType}"`, 'success');
+            showToast(currentLanguage === 'th' ? `บันทึกรายการผ้า "${formattedType}" (${thVal || 'ไม่ระบุชื่อไทย'}) สำเร็จ` : `Saved item "${formattedType}"`, 'success');
         })
         .catch(err => console.error(err));
     });
