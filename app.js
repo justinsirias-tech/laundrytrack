@@ -54,9 +54,15 @@ const defaultMockOrders = [
     }
 ];
 
-const API_BASE = (window.location.port === '5000' || window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1')
-    ? `http://${window.location.hostname}:3001/api`
-    : '/api';
+const getApiBase = () => {
+    const host = window.location.hostname || 'localhost';
+    const port = window.location.port;
+    if (host === 'localhost' || host === '127.0.0.1' || host === '' || port === '5000' || port === '3000' || port === '5500') {
+        return `http://${host}:3001/api`;
+    }
+    return '/api';
+};
+const API_BASE = getApiBase();
 
 // Current active data model fetched dynamically from PostgreSQL
 let orders = [];
@@ -2193,32 +2199,61 @@ if (searchInput) {
 const loadAllData = async () => {
     try {
         const ordersRes = await fetch(`${API_BASE}/orders`);
-        orders = await ordersRes.json();
-        
-        const typesRes = await fetch(`${API_BASE}/clothing-types`);
-        const typesData = await typesRes.json();
-        clothingTypes = typesData.map(t => typeof t === 'string' ? { name: t, name_th: itemTranslations[t] || '' } : { name: t.name, name_th: t.name_th || itemTranslations[t.name] || '' });
-        
-        const catsRes = await fetch(`${API_BASE}/categories`);
-        categories = await catsRes.json();
-        
-        try {
-            const brandsRes = await fetch(`${API_BASE}/clothing-brands`);
-            clothingBrands = await brandsRes.json();
-        } catch (err) {
-            console.error("Error fetching clothing brands:", err);
+        if (ordersRes.ok) {
+            const fetchedOrders = await ordersRes.json();
+            if (Array.isArray(fetchedOrders) && fetchedOrders.length > 0) {
+                orders = fetchedOrders;
+            } else if (!orders || orders.length === 0) {
+                orders = defaultMockOrders;
+            }
+        } else {
+            if (!orders || orders.length === 0) orders = defaultMockOrders;
         }
-        
-        refreshAllViews();
-        initItemTypeButtons();
-        renderAdminItems();
-        renderAdminBrands();
-        initBrandButtons();
-        applyTranslations();
     } catch (err) {
-        console.error("Error loading data from database backend:", err);
-        showToast("Error: " + err.message, "error");
+        console.warn("Could not fetch orders from backend API, using local orders fallback:", err);
+        if (!orders || orders.length === 0) orders = defaultMockOrders;
     }
+
+    try {
+        const typesRes = await fetch(`${API_BASE}/clothing-types`);
+        if (typesRes.ok) {
+            const typesData = await typesRes.json();
+            if (Array.isArray(typesData) && typesData.length > 0) {
+                clothingTypes = typesData.map(t => typeof t === 'string' ? { name: t, name_th: itemTranslations[t] || '' } : { name: t.name, name_th: t.name_th || itemTranslations[t.name] || '' });
+            }
+        }
+    } catch (err) {
+        console.warn("Error fetching clothing types:", err);
+    }
+    
+    try {
+        const catsRes = await fetch(`${API_BASE}/categories`);
+        if (catsRes.ok) {
+            const catsData = await catsRes.json();
+            if (Array.isArray(catsData) && catsData.length > 0) {
+                categories = catsData;
+            }
+        }
+    } catch (err) {
+        console.warn("Error fetching categories:", err);
+    }
+    
+    try {
+        const brandsRes = await fetch(`${API_BASE}/clothing-brands`);
+        if (brandsRes.ok) {
+            clothingBrands = await brandsRes.json();
+        }
+    } catch (err) {
+        console.warn("Error fetching clothing brands:", err);
+    }
+    
+    // Always refresh views and render UI elements
+    refreshAllViews();
+    initItemTypeButtons();
+    renderAdminItems();
+    renderAdminBrands();
+    initBrandButtons();
+    applyTranslations();
 };
 
 const refreshModalActivityLogs = async (targetOrderId) => {
