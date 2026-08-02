@@ -940,18 +940,22 @@ const updateCompletedOrdersTable = () => {
     });
 };
 
-const isStatusInColumn = (orderStatus, columnStatus) => {
-    if (!orderStatus) return false;
+const getOrderColumnStatus = (orderStatus) => {
+    if (!orderStatus) return 'Received';
     const s = String(orderStatus).trim().toLowerCase();
-    const c = String(columnStatus).trim().toLowerCase();
-    if (s === c) return true;
-    if (c === 'received' && (s === 'received' || s === 'new' || s === 'pending')) return true;
-    if (c === 'wash & dry' && (s === 'wash & dry' || s === 'washing' || s === 'drying' || s === 'wash & fold' || s === 'wash/fold' || s === 'wash/iron/hang' || s === 'dry clean' || s === 'dry cleaning')) return true;
-    if (c === 'ironing' && (s === 'ironing' || s === 'iron' || s === 'wash/iron' || s === 'ironing only')) return true;
-    if (c === 'packing' && (s === 'packing' || s === 'pack')) return true;
-    if (c === 'ready' && (s === 'ready' || s === 'ready for delivery')) return true;
-    if (c === 'delivered' && (s === 'delivered' || s === 'completed')) return true;
-    return false;
+    
+    if (s === 'received' || s === 'new' || s === 'pending') return 'Received';
+    if (s === 'wash & dry' || s === 'washing' || s === 'drying' || s === 'wash & fold' || s === 'wash/fold' || s === 'wash/iron/hang' || s === 'dry clean' || s === 'dry cleaning' || s === 'in progress' || s === 'processing' || s === 'mixed services') return 'Wash & Dry';
+    if (s === 'ironing' || s === 'iron' || s === 'wash/iron' || s === 'ironing only') return 'Ironing';
+    if (s === 'packing' || s === 'pack') return 'Packing';
+    if (s === 'ready' || s === 'ready for delivery') return 'Ready';
+    if (s === 'delivered' || s === 'completed') return 'Delivered';
+    
+    return 'Received'; // Catch-all safe default
+};
+
+const isStatusInColumn = (orderStatus, columnStatus) => {
+    return getOrderColumnStatus(orderStatus).toLowerCase() === String(columnStatus).trim().toLowerCase();
 };
 
 const updateKanbanBoard = () => {
