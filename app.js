@@ -1,6 +1,17 @@
 // Data Models
 const statuses = ['Received', 'Wash & Dry', 'Ironing', 'Packing', 'Ready', 'Delivered'];
 
+const safeCreateIcons = () => {
+    try {
+        if (typeof lucide !== 'undefined' && typeof lucide.createIcons === 'function') {
+            safeCreateIcons();
+        }
+    } catch (e) {
+        console.warn("Lucide icons notice:", e);
+    }
+};
+
+
 // Local Storage Keys
 const STORAGE_KEY = 'tls_orders';
 
@@ -726,7 +737,7 @@ const showToast = (message, type = 'info') => {
     
     toast.innerHTML = `<i data-lucide="${icon}"></i> <span>${message}</span>`;
     container.appendChild(toast);
-    lucide.createIcons();
+    safeCreateIcons();
     
     setTimeout(() => {
         toast.style.animation = 'toastSlideOut 0.3s ease forwards';
@@ -850,7 +861,7 @@ const updateDashboardStats = () => {
         </div>
     `).join('');
     
-    lucide.createIcons();
+    safeCreateIcons();
 };
 
 const updateRecentOrdersTable = () => {
@@ -874,7 +885,7 @@ const updateRecentOrdersTable = () => {
         </tr>
     `).join('');
     
-    lucide.createIcons();
+    safeCreateIcons();
 };
 
 const updateCompletedOrdersTable = () => {
@@ -920,7 +931,7 @@ const updateCompletedOrdersTable = () => {
     });
     
     tbody.innerHTML = html;
-    lucide.createIcons();
+    safeCreateIcons();
     tbody.querySelectorAll('tr[data-id]').forEach(row => {
         row.onclick = () => {
             const orderId = row.dataset.id;
@@ -1000,7 +1011,7 @@ const updateKanbanBoard = () => {
         `}).join('');
     });
     
-    lucide.createIcons();
+    safeCreateIcons();
     setupDragAndDrop();
 
     // Bind click listeners on Kanban cards to expand order details modal
@@ -1272,7 +1283,7 @@ const renderActiveColorCheckmark = () => {
         }
     });
     if (typeof lucide !== 'undefined') {
-        lucide.createIcons();
+        safeCreateIcons();
     }
 };
 
@@ -1780,7 +1791,7 @@ const renderAddedItems = () => {
     }).join('');
     
     if (typeof lucide !== 'undefined') {
-        lucide.createIcons();
+        safeCreateIcons();
     }
     
     // Bind handlers
@@ -2233,7 +2244,7 @@ if (searchInput) {
             `).join('') : `<tr><td colspan="6" style="text-align:center; color: var(--text-muted); padding: 1rem;">No matching completed orders found.</td></tr>`;
         }
         
-        lucide.createIcons();
+        safeCreateIcons();
     });
 }
 
@@ -2360,7 +2371,7 @@ const refreshModalActivityLogs = async (targetOrderId) => {
             `;
         }).join('');
 
-        if (typeof lucide !== 'undefined') lucide.createIcons();
+        safeCreateIcons();
 
         // Bind delete listeners for Managers
         if (isManager) {
@@ -2573,7 +2584,7 @@ window.openOrderModal = async (orderId) => {
     if (modal) modal.classList.add('active');
     
     if (typeof lucide !== 'undefined') {
-        lucide.createIcons();
+        safeCreateIcons();
     }
     
     const printBtn = document.getElementById('printModalBtn');
@@ -2881,7 +2892,7 @@ const renderAdminItems = () => {
     }
     
     if (typeof lucide !== 'undefined') {
-        lucide.createIcons();
+        safeCreateIcons();
     }
     
     // 4. Bind Drag & Drop Events
@@ -3169,7 +3180,7 @@ const renderVerificationList = () => {
     });
     
     listEl.innerHTML = html;
-    if(typeof lucide !== 'undefined') lucide.createIcons();
+    safeCreateIcons();
     
     document.getElementById('verificationCount').innerText = `${verifiedItemTrackingIds.size} / ${order.items.length}`;
     
@@ -3288,7 +3299,7 @@ const renderAdminBrands = () => {
     }).join('');
     
     if (typeof lucide !== 'undefined') {
-        lucide.createIcons();
+        safeCreateIcons();
     }
     
     // Bind delete buttons
@@ -3750,7 +3761,7 @@ const renderPendingChecklistsTable = () => {
         `;
     }).join('');
     
-    if (typeof lucide !== 'undefined') lucide.createIcons();
+    safeCreateIcons();
 };
 
 const refreshChecklistsBtn = document.getElementById('refreshChecklistsBtn');
