@@ -180,7 +180,7 @@
                                     <h3 class="pos-section-title"><span data-i18n="current_items">Current Items</span> (<span id="itemCount">0</span>)</h3>
                                     <div class="pos-cart-items-list" id="addedItemsList">
                                         <!-- Populated dynamically as cards -->
-                                        <div class="empty-cart-placeholder" data-i18n="no_items">No items added yet.</div>
+                                        <div class="empty-cart-placeholder" data-i18n="no_items"><span data-i18n="no_items">No items added yet.</span></div>
                                     </div>
                                 </div>
                                 
@@ -409,7 +409,7 @@
                                         <th>Current Status</th>
                                         <th>Mandatory Checklists</th>
                                         <th>Pending Department Checklists</th>
-                                        <th>Discrepancy Status</th>
+                                        <th data-i18n="discrepancy_status">Discrepancy Status</th>
                                         <th>Action</th>
                                     </tr>
                                 </thead>
@@ -427,10 +427,10 @@
                     
                     <!-- Admin Inner Tabs -->
                     <div class="admin-tabs" style="display: flex; gap: 1rem; margin-bottom: 1.5rem; border-bottom: 1px solid var(--border-glass); padding-bottom: 0.5rem; flex-wrap: wrap;">
-                        <button class="admin-tab active" data-tab="categories" style="background: none; border: none; font-size: 1rem; font-weight: 600; color: var(--primary); cursor: pointer; padding: 0.5rem 1rem; border-bottom: 2px solid var(--primary);">Items & Categories</button>
-                        <button class="admin-tab" data-tab="brands" style="background: none; border: none; font-size: 1rem; font-weight: 600; color: var(--text-muted); cursor: pointer; padding: 0.5rem 1rem; border-bottom: 2px solid transparent;">Brand Database</button>
-                        <button class="admin-tab" data-tab="users" style="background: none; border: none; font-size: 1rem; font-weight: 600; color: var(--text-muted); cursor: pointer; padding: 0.5rem 1rem; border-bottom: 2px solid transparent;">User Privileges & Roles</button>
-                        <button class="admin-tab" data-tab="logs" style="background: none; border: none; font-size: 1rem; font-weight: 600; color: var(--text-muted); cursor: pointer; padding: 0.5rem 1rem; border-bottom: 2px solid transparent;">Verification Logs</button>
+                        <button class="admin-tab active" data-tab="categories" style="background: none; border: none; font-size: 1rem; font-weight: 600; color: var(--primary); cursor: pointer; padding: 0.5rem 1rem; border-bottom: 2px solid var(--primary);" data-i18n="items_categories_tab">Items & Categories</button>
+                        <button class="admin-tab" data-tab="brands" style="background: none; border: none; font-size: 1rem; font-weight: 600; color: var(--text-muted); cursor: pointer; padding: 0.5rem 1rem; border-bottom: 2px solid transparent;" data-i18n="brand_database_tab">Brand Database</button>
+                        <button class="admin-tab" data-tab="users" style="background: none; border: none; font-size: 1rem; font-weight: 600; color: var(--text-muted); cursor: pointer; padding: 0.5rem 1rem; border-bottom: 2px solid transparent;" data-i18n="user_privileges_tab">User Privileges & Roles</button>
+                        <button class="admin-tab" data-tab="logs" style="background: none; border: none; font-size: 1rem; font-weight: 600; color: var(--text-muted); cursor: pointer; padding: 0.5rem 1rem; border-bottom: 2px solid transparent;" data-i18n="verification_logs_tab">Verification Logs</button>
                     </div>
 
                     <div id="admin-tab-categories" class="admin-tab-content">
@@ -441,16 +441,16 @@
                             <h3 style="font-size: 1rem; margin-bottom: 1rem; padding-bottom: 0.5rem; border-bottom: 1px solid var(--border-glass); color: var(--text-main);" data-i18n="items_library">1. Items Library</h3>
                             <form id="adminAddItemForm" style="display: flex; flex-direction: column; gap: 0.6rem; margin-bottom: 1.25rem;">
                                 <div>
-                                    <label style="font-size: 0.78rem; color: var(--text-muted); display: block; margin-bottom: 0.2rem;">English Item Name</label>
+                                    <label style="font-size: 0.78rem; color: var(--text-muted); display: block; margin-bottom: 0.2rem;" data-i18n="english_item_name">English Item Name</label>
                                     <input type="text" id="adminNewItemInput" required placeholder="e.g. Scarf, Blanket, Blazer" style="width: 100%; padding: 0.5rem 0.75rem; font-size: 0.85rem; border-radius: 8px;">
                                 </div>
                                 <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 0.5rem;">
                                     <div>
-                                        <label style="font-size: 0.78rem; color: var(--text-muted); display: block; margin-bottom: 0.2rem;">ไทย (Thai)</label>
+                                        <label style="font-size: 0.78rem; color: var(--text-muted); display: block; margin-bottom: 0.2rem;" data-i18n="thai_item_name">ไทย (Thai)</label>
                                         <input type="text" id="adminNewItemInputTh" placeholder="เช่น ผ้าพันคอ" style="width: 100%; padding: 0.45rem 0.6rem; font-size: 0.82rem; border-radius: 8px;">
                                     </div>
                                     <div>
-                                        <label style="font-size: 0.78rem; color: var(--text-muted); display: block; margin-bottom: 0.2rem;">မြန်မာ (Myanmar)</label>
+                                        <label style="font-size: 0.78rem; color: var(--text-muted); display: block; margin-bottom: 0.2rem;" data-i18n="myanmar_item_name">မြန်မာ (Myanmar)</label>
                                         <input type="text" id="adminNewItemInputMy" placeholder="ဥပမာ- ပဝါ" style="width: 100%; padding: 0.45rem 0.6rem; font-size: 0.82rem; border-radius: 8px;">
                                     </div>
                                 </div>
@@ -504,18 +504,18 @@
 
                     <div id="admin-tab-users" class="admin-tab-content" style="display: none;">
                         <div class="glass-panel" style="padding: 1.25rem; background: var(--bg-glass-solid); margin-bottom: 1.5rem;">
-                            <h3 style="font-size: 1rem; color: var(--text-main); margin-bottom: 1rem; padding-bottom: 0.5rem; border-bottom: 1px solid var(--border-glass);">Create Staff User & Assign Department Privilege</h3>
+                            <h3 style="font-size: 1rem; color: var(--text-main); margin-bottom: 1rem; padding-bottom: 0.5rem; border-bottom: 1px solid var(--border-glass);" data-i18n="create_staff_user">Create Staff User & Assign Department Privilege</h3>
                             <form id="adminCreateUserForm" style="display: grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); gap: 1rem; align-items: end;">
                                 <div>
-                                    <label style="font-size: 0.8rem; color: var(--text-muted); display: block; margin-bottom: 0.25rem;">Staff Name</label>
+                                    <label style="font-size: 0.8rem; color: var(--text-muted); display: block; margin-bottom: 0.25rem;" data-i18n="staff_name">Staff Name</label>
                                     <input type="text" id="adminUserNameInput" required placeholder="e.g. Sarah Connor" style="width: 100%; padding: 0.5rem; font-size: 0.85rem;">
                                 </div>
                                 <div>
-                                    <label style="font-size: 0.8rem; color: var(--text-muted); display: block; margin-bottom: 0.25rem;">Username</label>
+                                    <label style="font-size: 0.8rem; color: var(--text-muted); display: block; margin-bottom: 0.25rem;" data-i18n="username">Username</label>
                                     <input type="text" id="adminUserUsernameInput" required placeholder="e.g. sarahc" style="width: 100%; padding: 0.5rem; font-size: 0.85rem;">
                                 </div>
                                 <div>
-                                    <label style="font-size: 0.8rem; color: var(--text-muted); display: block; margin-bottom: 0.25rem;">Department Privilege</label>
+                                    <label style="font-size: 0.8rem; color: var(--text-muted); display: block; margin-bottom: 0.25rem;" data-i18n="dept_privilege">Department Privilege</label>
                                     <select id="adminUserRoleSelect" required style="width: 100%; padding: 0.5rem; font-size: 0.85rem; background: #fff;">
                                         <option value="Checker/Cashier">1. Checker/Cashier</option>
                                         <option value="Washer">2. Washer</option>
@@ -525,7 +525,7 @@
                                     </select>
                                 </div>
                                 <div>
-                                    <label style="font-size: 0.8rem; color: var(--text-muted); display: block; margin-bottom: 0.25rem;">Security PIN (4 digits)</label>
+                                    <label style="font-size: 0.8rem; color: var(--text-muted); display: block; margin-bottom: 0.25rem;" data-i18n="security_pin">Security PIN (4 digits)</label>
                                     <input type="password" id="adminUserPinInput" required maxlength="6" placeholder="e.g. 1234" style="width: 100%; padding: 0.5rem; font-size: 0.85rem;">
                                 </div>
                                 <div>
@@ -535,7 +535,7 @@
                         </div>
 
                         <div class="glass-panel" style="padding: 1.25rem; background: var(--bg-glass-solid);">
-                            <h3 style="font-size: 1rem; color: var(--text-main); margin-bottom: 1rem; padding-bottom: 0.5rem; border-bottom: 1px solid var(--border-glass);">Staff Directory & Department Roles</h3>
+                            <h3 style="font-size: 1rem; color: var(--text-main); margin-bottom: 1rem; padding-bottom: 0.5rem; border-bottom: 1px solid var(--border-glass);" data-i18n="staff_directory">Staff Directory & Department Roles</h3>
                             <div class="table-container">
                                 <table class="excel-table">
                                     <thead>
@@ -543,7 +543,7 @@
                                             <th>ID</th>
                                             <th>Staff Name</th>
                                             <th>Username</th>
-                                            <th>Department Role</th>
+                                            <th data-i18n="dept_role">Department Role</th>
                                             <th>Security PIN</th>
                                             <th>Action</th>
                                         </tr>
@@ -559,7 +559,7 @@
                     <div id="admin-tab-logs" class="admin-tab-content" style="display: none;">
                         <div class="glass-panel" style="padding: 1.25rem; background: var(--bg-glass-solid);">
                             <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1rem; padding-bottom: 0.5rem; border-bottom: 1px solid var(--border-glass);">
-                                <h3 style="font-size: 1rem; color: var(--text-main); margin: 0;">System Verification Logs</h3>
+                                <h3 style="font-size: 1rem; color: var(--text-main); margin: 0;" data-i18n="system_verification_logs">System Verification Logs</h3>
                                 <button type="button" id="refreshVerificationLogsBtn" class="btn btn-secondary" style="padding: 0.4rem 0.75rem; font-size: 0.85rem; display: flex; align-items: center; gap: 0.25rem;">
                                     <i data-lucide="refresh-cw" style="width: 14px; height: 14px;"></i> Refresh
                                 </button>
@@ -569,11 +569,11 @@
                                 <table class="excel-table">
                                     <thead>
                                         <tr>
-                                            <th>Timestamp</th>
+                                            <th data-i18n="timestamp">Timestamp</th>
                                             <th>Staff Name</th>
                                             <th>Order ID</th>
-                                            <th>Item Tracking ID</th>
-                                            <th>Board Status</th>
+                                            <th data-i18n="item_tracking_id">Item Tracking ID</th>
+                                            <th data-i18n="board_status">Board Status</th>
                                             <th>Action</th>
                                         </tr>
                                     </thead>
@@ -661,11 +661,11 @@
     <div class="modal-overlay" id="verificationModal">
         <div class="modal-content" style="max-width: 500px;">
             <div class="modal-header">
-                <h2 id="verificationTitle">Verify Transfer</h2>
+                <h2 id="verificationTitle" data-i18n="verify_transfer">Verify Transfer</h2>
                 <button type="button" class="btn btn-secondary" id="closeVerificationBtn" style="padding: 0.5rem;"><i data-lucide="x"></i></button>
             </div>
             <div class="modal-body" style="padding: 1rem; max-height: 60vh; overflow-y: auto;">
-                <p style="margin-bottom: 1rem; font-size: 0.9rem; color: var(--text-muted);">Please scan or verify each item before the transfer is completed.</p>
+                <p style="margin-bottom: 1rem; font-size: 0.9rem; color: var(--text-muted);"><span data-i18n="verify_transfer_desc">Please scan or verify each item before the transfer is completed.</span></p>
                 <input type="text" id="verificationScannerInput" placeholder="Scan ITM-XXX tag here..." style="width: 100%; margin-bottom: 1rem; padding: 0.75rem; font-family: monospace; font-size: 1.1rem; text-transform: uppercase;">
                 <div id="verificationItemsList" style="display: flex; flex-direction: column; gap: 0.5rem;">
                     <!-- Verification rows here -->
@@ -674,8 +674,8 @@
             <div class="modal-header" style="justify-content: space-between; border-top: 1px solid var(--border-glass); border-bottom: none;">
                 <div style="font-weight: 600;">Verified: <span id="verificationCount" style="color: var(--primary);">0 / 0</span></div>
                 <div style="display: flex; gap: 0.5rem;">
-                    <button type="button" class="btn btn-secondary" id="cancelVerificationBtn">Cancel Transfer</button>
-                    <button type="button" class="btn btn-primary" id="confirmVerificationBtn" disabled style="opacity: 0.5; cursor: not-allowed;">Confirm Transfer</button>
+                    <button type="button" class="btn btn-secondary" id="cancelVerificationBtn" data-i18n="cancel_transfer">Cancel Transfer</button>
+                    <button type="button" class="btn btn-primary" id="confirmVerificationBtn" disabled style="opacity: 0.5; cursor: not-allowed;" data-i18n="confirm_transfer">Confirm Transfer</button>
                 </div>
             </div>
         </div>
@@ -685,7 +685,7 @@
     <div class="modal-overlay" id="cameraModal">
         <div class="modal-content" style="max-width: 500px; text-align: center;">
             <div class="modal-header">
-                <h2>Take Photo</h2>
+                <h2 data-i18n="take_photo">Take Photo</h2>
                 <button type="button" class="btn btn-secondary" id="closeCameraBtn" style="padding: 0.5rem;"><i data-lucide="x"></i></button>
             </div>
             <div class="modal-body" style="display: flex; flex-direction: column; align-items: center; gap: 1rem; background: #000; position: relative;">
@@ -702,16 +702,16 @@
     <div id="userPinModal" class="modal-overlay">
         <div class="modal-content glass-panel" style="max-width: 420px;">
             <div class="modal-header">
-                <h2>👤 Switch Staff / Department User</h2>
+                <h2 data-i18n="switch_staff_user">👤 Switch Staff / Department User</h2>
                 <button type="button" class="btn btn-secondary close-user-pin-modal" style="padding: 0.4rem;"><i data-lucide="x"></i></button>
             </div>
             <div class="modal-body" style="padding: 1rem;">
-                <p style="font-size: 0.85rem; color: var(--text-muted); margin-bottom: 1rem;">Select staff user or enter 4-digit PIN to switch active department context:</p>
+                <p style="font-size: 0.85rem; color: var(--text-muted); margin-bottom: 1rem;"><span data-i18n="switch_staff_desc">Select staff user or enter 4-digit PIN to switch active department context:</span></p>
                 <div id="quickUserSelectButtons" style="display: grid; grid-template-columns: repeat(2, 1fr); gap: 0.5rem; margin-bottom: 1.25rem;">
                     <!-- Staff quick switch buttons populated by JS -->
                 </div>
                 <form id="pinVerificationForm" style="display: flex; flex-direction: column; gap: 0.75rem; border-top: 1px solid var(--border-glass); padding-top: 1rem;">
-                    <label style="font-size: 0.85rem; font-weight: 600; color: var(--text-main);">Or enter PIN:</label>
+                    <label style="font-size: 0.85rem; font-weight: 600; color: var(--text-main);" data-i18n="or_enter_pin">Or enter PIN:</label>
                     <div style="display: flex; gap: 0.5rem;">
                         <input type="password" id="userPinInput" required maxlength="6" placeholder="Enter PIN (e.g. 1111)" style="flex: 1; padding: 0.6rem 0.8rem; font-size: 1.1rem; letter-spacing: 4px; text-align: center;">
                         <button type="submit" class="btn btn-primary" style="padding: 0.6rem 1rem;">Verify</button>
@@ -726,7 +726,7 @@
         <div class="modal-content glass-panel" style="max-width: 600px;">
             <div class="modal-header">
                 <div>
-                    <h2 id="deptModalTitle" style="margin: 0;">Department Checklist Verification</h2>
+                    <h2 id="deptModalTitle" style="margin: 0;" data-i18n="dept_checklist_verification">Department Checklist Verification</h2>
                     <span id="deptModalSubtitle" style="font-size: 0.85rem; color: var(--text-muted);">Order ID: -</span>
                 </div>
                 <button type="button" class="btn btn-secondary close-dept-checklist-modal" style="padding: 0.4rem;"><i data-lucide="x"></i></button>
@@ -735,7 +735,7 @@
                 <div id="deptDiscrepancyAlert" class="alert alert-warning" style="display: none; background: rgba(239, 68, 68, 0.1); border: 1px solid #ef4444; color: #dc2626; padding: 0.75rem 1rem; border-radius: 8px; font-size: 0.85rem; margin-bottom: 1rem; font-weight: 500;">
                     <!-- Discrepancy warning text populated by JS -->
                 </div>
-                <p style="font-size: 0.85rem; color: var(--text-muted); margin-bottom: 0.75rem;">Verify each item tag for your department before submitting:</p>
+                <p style="font-size: 0.85rem; color: var(--text-muted); margin-bottom: 0.75rem;"><span data-i18n="dept_checklist_desc">Verify each item tag for your department before submitting:</span></p>
                 <div id="deptChecklistItemsContainer" style="display: flex; flex-direction: column; gap: 0.5rem;">
                     <!-- Checklist item rows populated by JS -->
                 </div>
@@ -758,11 +758,11 @@
                 <button type="button" class="btn btn-secondary close-manager-approval-modal" style="padding: 0.4rem;"><i data-lucide="x"></i></button>
             </div>
             <div class="modal-body" style="padding: 1rem;">
-                <p style="font-size: 0.85rem; color: var(--text-main); font-weight: 600; margin-bottom: 0.5rem;">A discrepancy was detected in this order:</p>
+                <p style="font-size: 0.85rem; color: var(--text-main); font-weight: 600; margin-bottom: 0.5rem;"><span data-i18n="discrepancy_detected">A discrepancy was detected in this order:</span></p>
                 <div id="managerDiscrepancyDetailText" style="font-size: 0.82rem; background: rgba(0,0,0,0.04); padding: 0.6rem; border-radius: 6px; border: 1px solid var(--border-glass); margin-bottom: 1rem; color: #dc2626; font-family: monospace;">
                     <!-- Discrepancy detail text -->
                 </div>
-                <p style="font-size: 0.82rem; color: var(--text-muted); margin-bottom: 1rem;">This order is locked from proceeding further. A Manager must enter their 4-digit PIN to approve the discrepancy override:</p>
+                <p style="font-size: 0.82rem; color: var(--text-muted); margin-bottom: 1rem;"><span data-i18n="discrepancy_pin_desc">This order is locked from proceeding further. A Manager must enter their 4-digit PIN to approve the discrepancy override:</span></p>
                 <form id="managerApprovalForm" style="display: flex; flex-direction: column; gap: 0.75rem;">
                     <input type="password" id="managerPinInput" required maxlength="6" placeholder="Enter Manager PIN (Default: 1234)" style="padding: 0.6rem 0.8rem; font-size: 1.1rem; letter-spacing: 4px; text-align: center;">
                     <button type="submit" class="btn btn-primary" style="padding: 0.6rem; background: #dc2626; border-color: #dc2626; width: 100%; display: flex; justify-content: center; align-items: center; gap: 0.4rem;">
@@ -796,6 +796,6 @@
         </button>
     </nav>
 
-    <script src="app.js?v=1785686200000"></script>
+    <script src="app.js?v=1785686300000"></script>
 </body>
 </html>
