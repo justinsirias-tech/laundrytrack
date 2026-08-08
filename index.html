@@ -443,6 +443,7 @@
                         <button class="admin-tab" data-tab="brands" style="background: none; border: none; font-size: 1rem; font-weight: 600; color: var(--text-muted); cursor: pointer; padding: 0.5rem 1rem; border-bottom: 2px solid transparent;" data-i18n="brand_database_tab">Brand Database</button>
                         <button class="admin-tab" data-tab="users" style="background: none; border: none; font-size: 1rem; font-weight: 600; color: var(--text-muted); cursor: pointer; padding: 0.5rem 1rem; border-bottom: 2px solid transparent;" data-i18n="user_privileges_tab">User Privileges & Roles</button>
                         <button class="admin-tab" data-tab="logs" style="background: none; border: none; font-size: 1rem; font-weight: 600; color: var(--text-muted); cursor: pointer; padding: 0.5rem 1rem; border-bottom: 2px solid transparent;" data-i18n="verification_logs_tab">Verification Logs</button>
+                        <button class="admin-tab" data-tab="sync" style="background: none; border: none; font-size: 1rem; font-weight: 600; color: var(--text-muted); cursor: pointer; padding: 0.5rem 1rem; border-bottom: 2px solid transparent;" data-i18n="system_sync_tab">🔌 System Sync & Webhooks</button>
                     </div>
 
                     <div id="admin-tab-categories" class="admin-tab-content">
@@ -593,6 +594,64 @@
                                         <tr><td colspan="6" style="text-align: center; color: var(--text-muted); padding: 1.5rem;">Click Refresh to load logs.</td></tr>
                                     </tbody>
                                 </table>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Tab 5: System Sync & Webhook Integrations -->
+                    <div id="admin-tab-sync" class="admin-tab-content" style="display: none;">
+                        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1.5rem; align-items: start;">
+                            
+                            <!-- Left: Webhook Listener Registration Form -->
+                            <div class="glass-panel" style="padding: 1.25rem; background: var(--bg-glass-solid);">
+                                <h3 style="font-size: 1rem; color: var(--text-main); margin-bottom: 1rem; padding-bottom: 0.5rem; border-bottom: 1px solid var(--border-glass); display: flex; align-items: center; gap: 0.4rem;">
+                                    <i data-lucide="webhook" style="width: 18px; height: 18px; color: #10b981;"></i> Register External System Webhook
+                                </h3>
+                                <form id="webhookRegisterForm" style="display: flex; flex-direction: column; gap: 0.8rem;">
+                                    <div>
+                                        <label style="font-size: 0.8rem; color: var(--text-muted); display: block; margin-bottom: 0.25rem;">Target External System Name</label>
+                                        <input type="text" id="syncSystemNameInput" required placeholder="e.g. Odoo ERP, POS Terminal, Loyverse, Shopify" style="width: 100%; padding: 0.5rem; font-size: 0.85rem;" />
+                                    </div>
+                                    <div>
+                                        <label style="font-size: 0.8rem; color: var(--text-muted); display: block; margin-bottom: 0.25rem;">Webhook Listener URL (HTTPS/HTTP)</label>
+                                        <input type="url" id="syncWebhookUrlInput" required placeholder="https://api.yourcompany.com/v1/laundry-sync" style="width: 100%; padding: 0.5rem; font-size: 0.85rem;" />
+                                    </div>
+                                    <div>
+                                        <label style="font-size: 0.8rem; color: var(--text-muted); display: block; margin-bottom: 0.25rem;">Secret Token / API Key (Optional HMAC)</label>
+                                        <input type="text" id="syncSecretTokenInput" placeholder="e.g. sec_tok_991823a78" style="width: 100%; padding: 0.5rem; font-size: 0.85rem;" />
+                                    </div>
+                                    <div>
+                                        <label style="font-size: 0.8rem; color: var(--text-muted); display: block; margin-bottom: 0.25rem;">Events to Subscribe</label>
+                                        <select id="syncEventTypesSelect" style="width: 100%; padding: 0.5rem; font-size: 0.85rem; background: #fff;">
+                                            <option value="*">All Events (* order.created, order.status_updated, item.verified)</option>
+                                            <option value="order.created">Order Created Only</option>
+                                            <option value="order.status_updated">Order Status Update Only</option>
+                                        </select>
+                                    </div>
+                                    <button type="submit" class="btn btn-primary" style="padding: 0.55rem; font-size: 0.85rem; background: #10b981; border: none; font-weight: 600; display: flex; align-items: center; justify-content: center; gap: 0.4rem;">
+                                        <i data-lucide="plus" style="width: 16px; height: 16px;"></i> Register Webhook Listener
+                                    </button>
+                                </form>
+                            </div>
+
+                            <!-- Right: Registered Webhooks & Sync Logs -->
+                            <div style="display: flex; flex-direction: column; gap: 1rem;">
+                                <div class="glass-panel" style="padding: 1.25rem; background: var(--bg-glass-solid);">
+                                    <h3 style="font-size: 1rem; color: var(--text-main); margin-bottom: 0.75rem;">Connected External Systems</h3>
+                                    <div id="webhooksListContainer" style="display: flex; flex-direction: column; gap: 0.5rem;">
+                                        <div style="text-align: center; color: var(--text-muted); padding: 1rem; font-size: 0.82rem;">No external system webhooks registered yet.</div>
+                                    </div>
+                                </div>
+
+                                <div class="glass-panel" style="padding: 1.25rem; background: var(--bg-glass-solid);">
+                                    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 0.75rem;">
+                                        <h3 style="font-size: 1rem; color: var(--text-main); margin: 0;">Cross-System Sync Activity Log</h3>
+                                        <button type="button" class="btn btn-secondary" onclick="loadSyncLogs()" style="padding: 0.25rem 0.5rem; font-size: 0.75rem;">Refresh Logs</button>
+                                    </div>
+                                    <div id="syncLogsContainer" style="font-size: 0.78rem; max-height: 200px; overflow-y: auto; display: flex; flex-direction: column; gap: 0.35rem;">
+                                        <div style="text-align: center; color: var(--text-muted); padding: 1rem;">Click Refresh Logs to view history.</div>
+                                    </div>
+                                </div>
                             </div>
                         </div>
                     </div>
@@ -1015,6 +1074,6 @@
         </button>
     </nav>
 
-    <script src="app.js?v=1785686800000"></script>
+    <script src="app.js?v=1785686900000"></script>
 </body>
 </html>

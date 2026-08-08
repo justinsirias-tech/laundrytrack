@@ -273,7 +273,8 @@ const i18n = {
         mobile_app: "Mobile & Tablet App",
         mobile_apk: "Mobile App & APK",
         mobile_section_title: "📱 Mobile Phone & Tablet App Download Center",
-        mobile_section_desc: "Install the app on Android phones, iPads, or tablets. Use your phone camera to scan garment QR tags, verify order item quantities, and manage department checklists on the move."
+        mobile_section_desc: "Install the app on Android phones, iPads, or tablets. Use your phone camera to scan garment QR tags, verify order item quantities, and manage department checklists on the move.",
+        system_sync_tab: "🔌 System Sync & Webhooks"
     },
     th: {
         dashboard: "แผงควบคุมหลัก",
@@ -421,7 +422,8 @@ const i18n = {
         mobile_app: "แอปมือถือและแท็บเล็ต",
         mobile_apk: "ดาวน์โหลด APK มือถือ",
         mobile_section_title: "📱 ศูนย์ดาวน์โหลดแอปมือถือและแท็บเล็ต",
-        mobile_section_desc: "ติดตั้งแอปบนโทรศัพท์ Android, iPad หรือแท็บเล็ต ใช้กล้องมือถือสแกนคิวอาร์แท็กผ้า ตรวจสอบจำนวนชิ้นผ้าในออเดอร์ และจัดการรายการเช็กลิสต์ประจำแผนกได้อย่างสะดวก"
+        mobile_section_desc: "ติดตั้งแอปบนโทรศัพท์ Android, iPad หรือแท็บเล็ต ใช้กล้องมือถือสแกนคิวอาร์แท็กผ้า ตรวจสอบจำนวนชิ้นผ้าในออเดอร์ และจัดการรายการเช็กลิสต์ประจำแผนกได้อย่างสะดวก",
+        system_sync_tab: "🔌 เชื่อมต่อระบบภายนอก (System Sync)"
     },
     my: {
         dashboard: "ဒက်ရှ်ဘုတ် ပင်မစာမျက်နှာ",
@@ -570,7 +572,8 @@ const i18n = {
         mobile_app: "မိုဘိုင်း နှင့် တက်ဘလတ် အက်ပ်",
         mobile_apk: "မိုဘိုင်း APK ဒေါင်းလုဒ်",
         mobile_section_title: "📱 မိုဘိုင်း ဖုန်း နှင့် တက်ဘလတ် အက်ပ် ဒေါင်းလုဒ် စင်တာ",
-        mobile_section_desc: "Android ဖုန်း၊ iPad သို့မဟုတ် တက်ဘလတ်များတွင် အက်ပ် ထည့်သွင်းပါ။ ဖုန်း ကင်မရာဖြင့် အထည် QR တံဆိပ်များကို စကန်ဖတ်ပါ၊ အော်ဒါ အရေအတွက်များကို စစ်ဆေးပါ၊ ဌာနအလိုက် စစ်ဆေးမှု စာရင်းများကို လွယ်ကူစွာ စီမံပါ။"
+        mobile_section_desc: "Android ဖုန်း၊ iPad သို့မဟုတ် တက်ဘလတ်များတွင် အက်ပ် ထည့်သွင်းပါ။ ဖုန်း ကင်မရာဖြင့် အထည် QR တံဆိပ်များကို စကန်ဖတ်ပါ၊ အော်ဒါ အရေအတွက်များကို စစ်ဆေးပါ၊ ဌာနအလိုက် စစ်ဆေးမှု စာရင်းများကို လွယ်ကူစွာ စီမံပါ။",
+        system_sync_tab: "🔌 ပြင်ပစနစ်များ ချိတ်ဆက်ခြင်း (System Sync)"
     }
 };
 
@@ -4652,4 +4655,104 @@ if (mobileSearchInput) {
         if (e.key === 'Enter') runMobileOrderQuantityCheck();
     });
 }
+
+// ==========================================
+// System Sync & Webhooks Frontend Manager
+// ==========================================
+const webhookRegisterForm = document.getElementById('webhookRegisterForm');
+const webhooksListContainer = document.getElementById('webhooksListContainer');
+const syncLogsContainer = document.getElementById('syncLogsContainer');
+
+const loadRegisteredWebhooks = async () => {
+    if (!webhooksListContainer) return;
+    try {
+        const res = await fetch(`${API_BASE}/sync/webhooks`);
+        if (!res.ok) return;
+        const listeners = await res.json();
+
+        if (listeners.length === 0) {
+            webhooksListContainer.innerHTML = `<div style="text-align: center; color: var(--text-muted); padding: 1rem; font-size: 0.82rem;">No external system webhooks registered yet.</div>`;
+            return;
+        }
+
+        webhooksListContainer.innerHTML = listeners.map(l => `
+            <div style="background: rgba(0,0,0,0.02); border: 1px solid var(--border-glass); border-radius: 8px; padding: 0.6rem 0.8rem; display: flex; justify-content: space-between; align-items: center; gap: 0.5rem;">
+                <div style="overflow: hidden;">
+                    <div style="font-weight: 700; font-size: 0.88rem; color: var(--primary);">${l.target_system}</div>
+                    <div style="font-size: 0.75rem; color: var(--text-muted); font-family: monospace; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; max-width: 280px;">${l.webhook_url}</div>
+                    <span style="font-size: 0.68rem; background: rgba(16,185,129,0.1); color: #10b981; padding: 0.1rem 0.35rem; border-radius: 4px; font-weight: 600;">Events: ${l.event_types}</span>
+                </div>
+                <button type="button" class="btn btn-secondary" onclick="deleteWebhookListener(${l.id})" style="padding: 0.25rem 0.5rem; font-size: 0.72rem; color: #ef4444; border-color: rgba(239,68,68,0.3);">Remove</button>
+            </div>
+        `).join('');
+    } catch(e) {}
+};
+
+window.deleteWebhookListener = async (id) => {
+    if (!confirm('Are you sure you want to remove this sync webhook?')) return;
+    try {
+        await fetch(`${API_BASE}/sync/webhooks/${id}`, { method: 'DELETE' });
+        showToast('Webhook removed', 'success');
+        loadRegisteredWebhooks();
+    } catch(e) {}
+};
+
+window.loadSyncLogs = async () => {
+    if (!syncLogsContainer) return;
+    try {
+        const res = await fetch(`${API_BASE}/sync/logs`);
+        if (!res.ok) return;
+        const logs = await res.json();
+
+        if (logs.length === 0) {
+            syncLogsContainer.innerHTML = `<div style="text-align: center; color: var(--text-muted); padding: 1rem;">No synchronization logs recorded yet.</div>`;
+            return;
+        }
+
+        syncLogsContainer.innerHTML = logs.map(log => `
+            <div style="background: #fff; padding: 0.4rem 0.6rem; border-radius: 6px; border: 1px solid rgba(0,0,0,0.05); font-size: 0.76rem; display: flex; justify-content: space-between; align-items: center;">
+                <div>
+                    <span style="font-weight: 700; color: ${log.direction === 'INBOUND' ? '#6366f1' : '#10b981'};">[${log.direction}] ${log.system_name}</span>
+                    <span style="color: var(--text-muted);"> • ${log.event_type}</span>
+                </div>
+                <span style="font-size: 0.68rem; color: var(--text-muted);">${new Date(log.timestamp).toLocaleTimeString()}</span>
+            </div>
+        `).join('');
+    } catch(e) {}
+};
+
+if (webhookRegisterForm) {
+    webhookRegisterForm.addEventListener('submit', async (e) => {
+        e.preventDefault();
+        const target_system = document.getElementById('syncSystemNameInput').value.trim();
+        const webhook_url = document.getElementById('syncWebhookUrlInput').value.trim();
+        const secret_token = document.getElementById('syncSecretTokenInput').value.trim();
+        const event_types = document.getElementById('syncEventTypesSelect').value;
+
+        try {
+            const res = await fetch(`${API_BASE}/sync/webhooks`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ target_system, webhook_url, secret_token, event_types })
+            });
+            if (res.ok) {
+                showToast(`System Webhook for "${target_system}" registered successfully!`, 'success');
+                webhookRegisterForm.reset();
+                loadRegisteredWebhooks();
+            }
+        } catch(err) {
+            showToast('Failed to register webhook', 'error');
+        }
+    });
+}
+
+// Auto-load sync webhooks when Admin tab opens
+document.querySelectorAll('.admin-tab').forEach(tab => {
+    tab.addEventListener('click', () => {
+        if (tab.dataset.tab === 'sync') {
+            loadRegisteredWebhooks();
+            loadSyncLogs();
+        }
+    });
+});
 
