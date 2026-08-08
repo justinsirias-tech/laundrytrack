@@ -2787,12 +2787,13 @@ window.openOrderModal = async (orderId) => {
     }
 };
 
-const modalOverlay = document.getElementById('orderModal');
-const closeBtns = document.querySelectorAll('.close-modal');
+const modalOverlay = document.getElementById('orderDetailsModal');
+const closeBtns = document.querySelectorAll('#orderDetailsModal .close-modal, .close-modal');
 
 if (closeBtns && closeBtns.length) {
     closeBtns.forEach(btn => btn.addEventListener('click', () => {
-        if (modalOverlay) modalOverlay.classList.remove('active');
+        const targetModal = document.getElementById('orderDetailsModal');
+        if (targetModal) targetModal.classList.remove('active');
     }));
 }
 
