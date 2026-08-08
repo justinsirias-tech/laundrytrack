@@ -269,7 +269,11 @@ const i18n = {
         add_brand: "Add Brand",
         ai_visual_search: "AI Visual Search",
         ai_matcher_title: "AI Lost Item Visual Search & Matcher",
-        ai_matcher_desc: "Missing or detached item tag? Take or upload a photo of the untagged garment. AI will analyze visual features, colors, and defect records to match the item to its original customer order."
+        ai_matcher_desc: "Missing or detached item tag? Take or upload a photo of the untagged garment. AI will analyze visual features, colors, and defect records to match the item to its original customer order.",
+        mobile_app: "Mobile & Tablet App",
+        mobile_apk: "Mobile App & APK",
+        mobile_section_title: "📱 Mobile Phone & Tablet App Download Center",
+        mobile_section_desc: "Install the app on Android phones, iPads, or tablets. Use your phone camera to scan garment QR tags, verify order item quantities, and manage department checklists on the move."
     },
     th: {
         dashboard: "แผงควบคุมหลัก",
@@ -413,7 +417,11 @@ const i18n = {
         add_brand: "เพิ่มแบรนด์",
         ai_visual_search: "ค้นหาด้วย AI ด้วยภาพถ่าย",
         ai_matcher_title: "ระบบค้นหาผ้าหลุดแท็กด้วย AI Visual Matcher",
-        ai_matcher_desc: "ป้ายแท็กผ้าหลุดหายหรือไม่ชัดเจน? ถ่ายหรืออัปโหลดรูปผ้าที่ไม่มีแท็ก ระบบ AI จะวิเคราะห์สี ประเภทผ้า และภาพถ่ายเดิม เพื่อจับคู่กับออเดอร์ลูกค้าที่ถูกต้อง"
+        ai_matcher_desc: "ป้ายแท็กผ้าหลุดหายหรือไม่ชัดเจน? ถ่ายหรืออัปโหลดรูปผ้าที่ไม่มีแท็ก ระบบ AI จะวิเคราะห์สี ประเภทผ้า และภาพถ่ายเดิม เพื่อจับคู่กับออเดอร์ลูกค้าที่ถูกต้อง",
+        mobile_app: "แอปมือถือและแท็บเล็ต",
+        mobile_apk: "ดาวน์โหลด APK มือถือ",
+        mobile_section_title: "📱 ศูนย์ดาวน์โหลดแอปมือถือและแท็บเล็ต",
+        mobile_section_desc: "ติดตั้งแอปบนโทรศัพท์ Android, iPad หรือแท็บเล็ต ใช้กล้องมือถือสแกนคิวอาร์แท็กผ้า ตรวจสอบจำนวนชิ้นผ้าในออเดอร์ และจัดการรายการเช็กลิสต์ประจำแผนกได้อย่างสะดวก"
     },
     my: {
         dashboard: "ဒက်ရှ်ဘုတ် ပင်မစာမျက်နှာ",
@@ -558,7 +566,11 @@ const i18n = {
         add_brand: "တံဆိပ် ထည့်သွင်းမည်",
         ai_visual_search: "AI ဓာတ်ပုံ ရှာဖွေမှု",
         ai_matcher_title: "တံဆိပ်ပျောက် အထည်များ AI ဓာတ်ပုံဖြင့် ရှာဖွေစနစ်",
-        ai_matcher_desc: "အထည် တံဆိပ် ပျောက်ဆုံးနေပါသလား။ တံဆိပ်မပါသော အထည်၏ ဓာတ်ပုံကို ရိုက်ပါ သို့မဟုတ် တင်ပါ၊ AI က အရောင်၊ အထည်အမျိုးအစားနှင့် မူလဓာတ်ပုံများကို ခွဲခြမ်းစိတ်ဖြာ၍ မူလအော်ဒါနှင့် ကိုက်ညီအောင် ရှာဖွေပေးပါမည်။"
+        ai_matcher_desc: "အထည် တံဆိပ် ပျောက်ဆုံးနေပါသလား။ တံဆိပ်မပါသော အထည်၏ ဓာတ်ပုံကို ရိုက်ပါ သို့မဟုတ် တင်ပါ၊ AI က အရောင်၊ အထည်အမျိုးအစားနှင့် မူလဓာတ်ပုံများကို ခွဲခြမ်းစိတ်ဖြာ၍ မူလအော်ဒါနှင့် ကိုက်ညီအောင် ရှာဖွေပေးပါမည်။",
+        mobile_app: "မိုဘိုင်း နှင့် တက်ဘလတ် အက်ပ်",
+        mobile_apk: "မိုဘိုင်း APK ဒေါင်းလုဒ်",
+        mobile_section_title: "📱 မိုဘိုင်း ဖုန်း နှင့် တက်ဘလတ် အက်ပ် ဒေါင်းလုဒ် စင်တာ",
+        mobile_section_desc: "Android ဖုန်း၊ iPad သို့မဟုတ် တက်ဘလတ်များတွင် အက်ပ် ထည့်သွင်းပါ။ ဖုန်း ကင်မရာဖြင့် အထည် QR တံဆိပ်များကို စကန်ဖတ်ပါ၊ အော်ဒါ အရေအတွက်များကို စစ်ဆေးပါ၊ ဌာနအလိုက် စစ်ဆေးမှု စာရင်းများကို လွယ်ကူစွာ စီမံပါ။"
     }
 };
 
@@ -4537,4 +4549,107 @@ window.openOrderAndPrintTag = (orderId) => {
     if (aiVisualSearchModal) aiVisualSearchModal.classList.remove('active');
     if (window.openOrderModal) window.openOrderModal(orderId);
 };
+
+// ==========================================
+// PWA App Installation & Mobile Sandbox
+// ==========================================
+let deferredPwaPrompt = null;
+window.addEventListener('beforeinstallprompt', (e) => {
+    e.preventDefault();
+    deferredPwaPrompt = e;
+    const pwaInstallBtn = document.getElementById('pwaInstallBtn');
+    if (pwaInstallBtn) {
+        pwaInstallBtn.style.display = 'flex';
+    }
+});
+
+const pwaInstallBtn = document.getElementById('pwaInstallBtn');
+if (pwaInstallBtn) {
+    pwaInstallBtn.addEventListener('click', async () => {
+        if (deferredPwaPrompt) {
+            deferredPwaPrompt.prompt();
+            const { outcome } = await deferredPwaPrompt.userChoice;
+            if (outcome === 'accepted') {
+                showToast('App installed to home screen!', 'success');
+            }
+            deferredPwaPrompt = null;
+        } else {
+            showToast('To install app: Tap your browser menu (⋮ or Share) -> "Add to Home Screen"', 'info');
+        }
+    });
+}
+
+// Mobile Item Quantity & Order Checker Sandbox
+const mobileSearchInput = document.getElementById('mobileSearchInput');
+const mobileSearchBtn = document.getElementById('mobileSearchBtn');
+const mobileSearchResultCard = document.getElementById('mobileSearchResultCard');
+
+const runMobileOrderQuantityCheck = () => {
+    if (!mobileSearchInput || !mobileSearchResultCard) return;
+    const query = mobileSearchInput.value.trim().toLowerCase();
+    if (!query) {
+        showToast('Please enter an Order ID, Customer Name, or Tag ID', 'info');
+        return;
+    }
+
+    let foundOrder = orders.find(o => o.id.toLowerCase().includes(query) || (o.customerName && o.customerName.toLowerCase().includes(query)));
+    let targetItem = null;
+
+    if (!foundOrder) {
+        orders.forEach(o => {
+            if (o.items) {
+                const match = o.items.find(i => i.trackingId && i.trackingId.toLowerCase().includes(query));
+                if (match) {
+                    foundOrder = o;
+                    targetItem = match;
+                }
+            }
+        });
+    }
+
+    if (!foundOrder) {
+        mobileSearchResultCard.innerHTML = `
+            <div style="text-align: center; color: #ef4444; padding: 1rem; font-weight: 600; font-size: 0.85rem;">
+                ⚠️ No matching order or garment tag found for "${query}".
+            </div>
+        `;
+        return;
+    }
+
+    const itemsCount = foundOrder.items ? foundOrder.items.length : 0;
+    const itemsHtml = foundOrder.items ? foundOrder.items.map(i => `
+        <div style="background: rgba(0,0,0,0.03); padding: 0.4rem 0.6rem; border-radius: 6px; font-size: 0.8rem; margin-top: 0.3rem; display: flex; justify-content: space-between; align-items: center;">
+            <span>${getItemSvgIcon(i.type, 'var(--primary)', 14)} <strong>${translateItemName(i.type)}</strong> (${translateColorName(i.color || 'White')})</span>
+            <span style="font-family: monospace; font-size: 0.72rem; background: var(--primary); color: #fff; padding: 0.1rem 0.35rem; border-radius: 4px;">${i.trackingId}</span>
+        </div>
+    `).join('') : '';
+
+    mobileSearchResultCard.innerHTML = `
+        <div style="display: flex; justify-content: space-between; align-items: start; border-bottom: 1px solid var(--border-glass); padding-bottom: 0.5rem; margin-bottom: 0.5rem;">
+            <div>
+                <span style="font-weight: 700; color: var(--primary); font-size: 1.05rem;">Order #${foundOrder.id}</span>
+                <div style="font-size: 0.85rem; font-weight: 600; color: var(--text-main);">${foundOrder.customerName || 'Walk-in'}</div>
+            </div>
+            <div style="text-align: right;">
+                <span class="badge" style="font-size: 0.72rem; background: #6366f1; color: #fff; padding: 0.15rem 0.5rem; border-radius: 6px;">${foundOrder.status}</span>
+                <div style="font-size: 0.8rem; font-weight: 700; color: #10b981; margin-top: 0.2rem;">Total: ${itemsCount} Pcs</div>
+            </div>
+        </div>
+        <div style="font-size: 0.78rem; font-weight: 600; color: var(--text-muted); margin-bottom: 0.2rem;">Order Item Breakdown (${itemsCount} Pcs):</div>
+        ${itemsHtml}
+        <button type="button" class="btn btn-primary" onclick="openOrderModal('${foundOrder.id}')" style="width: 100%; margin-top: 0.75rem; padding: 0.4rem; font-size: 0.78rem;">
+            View Full Order Details & Print Tags
+        </button>
+    `;
+    if (typeof lucide !== 'undefined') safeCreateIcons();
+};
+
+if (mobileSearchBtn) {
+    mobileSearchBtn.addEventListener('click', runMobileOrderQuantityCheck);
+}
+if (mobileSearchInput) {
+    mobileSearchInput.addEventListener('keypress', (e) => {
+        if (e.key === 'Enter') runMobileOrderQuantityCheck();
+    });
+}
 

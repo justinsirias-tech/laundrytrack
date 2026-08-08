@@ -44,6 +44,10 @@
                     <i data-lucide="clipboard-check"></i>
                     <span data-i18n="checklists_tracker">Pending Checklists</span>
                 </button>
+                <button class="nav-item" data-view="mobile">
+                    <i data-lucide="smartphone"></i>
+                    <span data-i18n="mobile_app">Mobile & Tablet App</span>
+                </button>
                 <button class="nav-item" data-view="admin">
                     <i data-lucide="settings"></i>
                     <span data-i18n="admin_panel">Admin Panel</span>
@@ -77,6 +81,10 @@
                     <button id="aiVisualSearchBtn" class="btn" style="padding: 0.4rem 0.75rem; font-size: 0.82rem; font-weight: 600; border-radius: 6px; display: flex; align-items: center; gap: 0.4rem; background: linear-gradient(135deg, #6366f1 0%, #8b5cf6 100%); color: #fff; border: none; cursor: pointer; box-shadow: 0 2px 8px rgba(99, 102, 241, 0.3);" title="AI Image Search: Match lost/untagged items using photos">
                         <i data-lucide="sparkles" style="width: 15px; height: 15px; color: #fef08a;"></i>
                         <span data-i18n="ai_visual_search">AI Visual Search</span>
+                    </button>
+                    <button id="mobileAppHeaderBtn" class="btn btn-secondary" style="padding: 0.4rem 0.75rem; font-size: 0.82rem; font-weight: 600; border-radius: 6px; display: flex; align-items: center; gap: 0.4rem; background: var(--bg-glass-solid);" title="Install Mobile & Tablet App / Download APK" onclick="document.querySelector('[data-view=mobile]').click()">
+                        <i data-lucide="smartphone" style="width: 15px; height: 15px; color: #10b981;"></i>
+                        <span data-i18n="mobile_apk">Mobile App & APK</span>
                     </button>
                     <button id="langToggleBtn" class="btn btn-secondary" style="padding: 0.4rem 0.6rem; font-size: 0.85rem; font-weight: 600; min-width: 65px; border-radius: 6px; display: flex; align-items: center; justify-content: center; gap: 0.25rem;">
                         <i data-lucide="languages" style="width: 14px; height: 14px;"></i>
@@ -590,6 +598,136 @@
                     </div>
                 </div>
 
+                <!-- Mobile & Tablet App Download View -->
+                <div id="mobile-view" class="view">
+                    <div class="view-header" style="margin-bottom: 1.5rem;">
+                        <div>
+                            <h1 style="font-size: 1.5rem; display: flex; align-items: center; gap: 0.5rem; margin: 0;">
+                                <i data-lucide="smartphone" style="width: 28px; height: 28px; color: #10b981;"></i>
+                                <span data-i18n="mobile_section_title">📱 Mobile Phone & Tablet App Download Center</span>
+                            </h1>
+                            <p style="font-size: 0.9rem; color: var(--text-muted); margin-top: 0.3rem;" data-i18n="mobile_section_desc">
+                                Install the app on Android phones, iPads, or tablets. Use your phone camera to scan garment QR tags, verify order item quantities, and manage department checklists on the move.
+                            </p>
+                        </div>
+                    </div>
+
+                    <!-- 3 Installation Columns -->
+                    <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 1.25rem; margin-bottom: 2rem;">
+                        
+                        <!-- Option 1: Direct APK Download -->
+                        <div class="glass-panel" style="padding: 1.5rem; border-radius: 12px; display: flex; flex-direction: column; justify-content: space-between; border-top: 4px solid #10b981;">
+                            <div>
+                                <div style="display: flex; align-items: center; gap: 0.5rem; margin-bottom: 0.75rem;">
+                                    <div style="background: rgba(16, 185, 129, 0.15); width: 42px; height: 42px; border-radius: 10px; display: flex; align-items: center; justify-content: center;">
+                                        <i data-lucide="download-cloud" style="width: 22px; height: 22px; color: #10b981;"></i>
+                                    </div>
+                                    <div>
+                                        <h3 style="margin: 0; font-size: 1.05rem; color: var(--text-main);">Android APK Download</h3>
+                                        <span style="font-size: 0.72rem; color: #10b981; font-weight: 600;">v1.0.4 • Android 8.0+</span>
+                                    </div>
+                                </div>
+                                <p style="font-size: 0.82rem; color: var(--text-muted); margin-bottom: 1rem;">
+                                    Download the standalone Android APK installer directly to your Android phone or tablet. Works offline with camera barcode scanner support.
+                                </p>
+                            </div>
+                            <a href="LaundryTrack_v1.0.apk" download class="btn btn-primary" style="width: 100%; padding: 0.65rem; font-size: 0.88rem; font-weight: 700; background: #10b981; border: none; display: flex; align-items: center; justify-content: center; gap: 0.4rem; border-radius: 8px; text-decoration: none; color: #fff;">
+                                <i data-lucide="download" style="width: 16px; height: 16px;"></i> Download Android APK (18.4 MB)
+                            </a>
+                        </div>
+
+                        <!-- Option 2: Instant PWA Home Screen App -->
+                        <div class="glass-panel" style="padding: 1.5rem; border-radius: 12px; display: flex; flex-direction: column; justify-content: space-between; border-top: 4px solid #6366f1;">
+                            <div>
+                                <div style="display: flex; align-items: center; gap: 0.5rem; margin-bottom: 0.75rem;">
+                                    <div style="background: rgba(99, 102, 241, 0.15); width: 42px; height: 42px; border-radius: 10px; display: flex; align-items: center; justify-content: center;">
+                                        <i data-lucide="layout" style="width: 22px; height: 22px; color: #6366f1;"></i>
+                                    </div>
+                                    <div>
+                                        <h3 style="margin: 0; font-size: 1.05rem; color: var(--text-main);">Instant PWA App</h3>
+                                        <span style="font-size: 0.72rem; color: #6366f1; font-weight: 600;">iOS & Android • No Store Needed</span>
+                                    </div>
+                                </div>
+                                <p style="font-size: 0.82rem; color: var(--text-muted); margin-bottom: 1rem;">
+                                    Install directly from your browser to your phone/tablet home screen with zero app store downloads. Full screen, fast loading, & instant push sync.
+                                </p>
+                            </div>
+                            <button id="pwaInstallBtn" class="btn btn-primary" style="width: 100%; padding: 0.65rem; font-size: 0.88rem; font-weight: 700; background: #6366f1; border: none; display: flex; align-items: center; justify-content: center; gap: 0.4rem; border-radius: 8px;">
+                                <i data-lucide="plus-square" style="width: 16px; height: 16px;"></i> Add App to Phone Home Screen
+                            </button>
+                        </div>
+
+                        <!-- Option 3: Scan QR Code to Open on Phone -->
+                        <div class="glass-panel" style="padding: 1.5rem; border-radius: 12px; display: flex; flex-direction: column; align-items: center; text-align: center; border-top: 4px solid #8b5cf6;">
+                            <div style="margin-bottom: 0.5rem;">
+                                <h3 style="margin: 0; font-size: 1.05rem; color: var(--text-main);">Scan QR to Pair Phone</h3>
+                                <span style="font-size: 0.72rem; color: #8b5cf6; font-weight: 600;">Open Mobile App Instantly</span>
+                            </div>
+                            <div style="background: #fff; padding: 0.6rem; border-radius: 10px; border: 1px solid var(--border-glass); margin-bottom: 0.6rem;">
+                                <img id="mobilePairingQrCode" src="https://api.qrserver.com/v1/create-qr-code/?size=130x130&data=http%3A%2F%2Flocalhost%3A5000" alt="Mobile Pairing QR" style="width: 120px; height: 120px; display: block;" />
+                            </div>
+                            <span style="font-size: 0.72rem; color: var(--text-muted);">Scan with phone camera to open live mobile app</span>
+                        </div>
+                    </div>
+
+                    <!-- Mobile Interactive Quantity & Scanner Sandbox -->
+                    <div class="glass-panel" style="padding: 1.5rem; border-radius: 12px;">
+                        <h2 style="font-size: 1.1rem; margin-top: 0; margin-bottom: 1rem; color: var(--text-main); display: flex; align-items: center; gap: 0.4rem;">
+                            <i data-lucide="box" style="width: 20px; height: 20px; color: var(--primary);"></i> Mobile Item Quantity & Order Checker Sandbox
+                        </h2>
+                        
+                        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1.5rem; align-items: start;">
+                            <div>
+                                <div style="font-size: 0.85rem; font-weight: 600; color: var(--text-main); margin-bottom: 0.5rem;">Quick Search / Scan Tag ID on Mobile Device:</div>
+                                <div style="display: flex; gap: 0.5rem; margin-bottom: 1rem;">
+                                    <input type="text" id="mobileSearchInput" placeholder="Enter Order ID or Scan Tag (e.g. 1001, ITM-MSJPTS3T)..." style="flex-grow: 1; padding: 0.5rem 0.8rem; font-size: 0.88rem; border-radius: 6px; border: 1px solid var(--border-glass); outline: none; background: #fff;" />
+                                    <button type="button" id="mobileSearchBtn" class="btn btn-primary" style="padding: 0.5rem 0.8rem; font-size: 0.85rem; display: flex; align-items: center; gap: 0.3rem;">
+                                        <i data-lucide="search" style="width: 14px; height: 14px;"></i> Check
+                                    </button>
+                                </div>
+
+                                <div id="mobileSearchResultCard" style="background: var(--bg-glass-solid); border: 1px solid var(--border-glass); border-radius: 10px; padding: 1rem;">
+                                    <div style="text-align: center; color: var(--text-muted); padding: 1rem; font-size: 0.82rem;">
+                                        Type an Order ID or scan a garment tag to check item breakdown, quantity counts, and department verification status.
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- Phone Frame Preview Mockup -->
+                            <div style="display: flex; justify-content: center;">
+                                <div style="width: 240px; border: 8px solid #222945; border-radius: 28px; background: #fff; box-shadow: 0 10px 25px rgba(0,0,0,0.15); overflow: hidden; font-family: sans-serif;">
+                                    <!-- Phone Notch & Speaker -->
+                                    <div style="background: #222945; height: 18px; width: 100%; display: flex; justify-content: center; align-items: center;">
+                                        <div style="width: 40px; height: 4px; background: #444; border-radius: 2px;"></div>
+                                    </div>
+                                    <!-- Phone Display Content -->
+                                    <div style="padding: 0.75rem; background: var(--bg-main); min-height: 340px;">
+                                        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 0.5rem; border-bottom: 1px solid rgba(0,0,0,0.08); padding-bottom: 0.4rem;">
+                                            <span style="font-weight: 700; font-size: 0.75rem; color: var(--primary);">📱 LaundryTrack Mobile</span>
+                                            <span style="font-size: 0.65rem; background: #10b981; color: #fff; padding: 0.1rem 0.3rem; border-radius: 4px;">Online</span>
+                                        </div>
+                                        <div style="background: #6366f1; color: #fff; padding: 0.5rem; border-radius: 6px; font-size: 0.72rem; margin-bottom: 0.5rem; text-align: center; font-weight: 600;">
+                                            📷 Tap to Scan Barcode / Tag
+                                        </div>
+                                        <div style="font-size: 0.7rem; color: var(--text-muted); margin-bottom: 0.3rem; font-weight: 600;">Department Quantity Counter:</div>
+                                        <div style="display: flex; flex-direction: column; gap: 0.3rem; font-size: 0.7rem;">
+                                            <div style="background: #fff; padding: 0.4rem; border-radius: 4px; display: flex; justify-content: space-between; border: 1px solid rgba(0,0,0,0.05);">
+                                                <span>Washer Dept</span> <strong>12 Pcs</strong>
+                                            </div>
+                                            <div style="background: #fff; padding: 0.4rem; border-radius: 4px; display: flex; justify-content: space-between; border: 1px solid rgba(0,0,0,0.05);">
+                                                <span>Ironing Dept</span> <strong>8 Pcs</strong>
+                                            </div>
+                                            <div style="background: #fff; padding: 0.4rem; border-radius: 4px; display: flex; justify-content: space-between; border: 1px solid rgba(0,0,0,0.05);">
+                                                <span>Packing Dept</span> <strong>5 Pcs</strong>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
             </div>
         </main>
     </div>
@@ -877,6 +1015,6 @@
         </button>
     </nav>
 
-    <script src="app.js?v=1785686700000"></script>
+    <script src="app.js?v=1785686800000"></script>
 </body>
 </html>
