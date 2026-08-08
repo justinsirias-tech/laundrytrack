@@ -4,7 +4,7 @@ const statuses = ['Received', 'Wash & Dry', 'Ironing', 'Packing', 'Ready', 'Deli
 const safeCreateIcons = () => {
     try {
         if (typeof lucide !== 'undefined' && typeof lucide.createIcons === 'function') {
-            safeCreateIcons();
+            lucide.createIcons();
         }
     } catch (e) {
         console.warn("Lucide icons notice:", e);
@@ -643,9 +643,44 @@ const applyTranslations = () => {
     // 3. Update toggle text
     const toggleText = document.getElementById('currentLangText');
     if (toggleText) {
-        toggleText.textContent = currentLanguage.toUpperCase();
+        if (currentLanguage === 'en') toggleText.textContent = 'EN';
+        else if (currentLanguage === 'th') toggleText.textContent = 'TH';
+        else if (currentLanguage === 'my') toggleText.textContent = 'MY';
     }
 };
+
+// Language Toggle Event Listener
+const langToggleBtn = document.getElementById('langToggleBtn');
+if (langToggleBtn) {
+    langToggleBtn.addEventListener('click', () => {
+        if (currentLanguage === 'en') {
+            currentLanguage = 'th';
+        } else if (currentLanguage === 'th') {
+            currentLanguage = 'my';
+        } else {
+            currentLanguage = 'en';
+        }
+        
+        try {
+            localStorage.setItem('tls_language', currentLanguage);
+        } catch (e) {
+            console.warn('Could not save tls_language to localStorage:', e);
+        }
+        
+        applyTranslations();
+        initItemTypeButtons();
+        initBrandButtons();
+        renderAdminItems();
+        renderAdminBrands();
+        refreshAllViews();
+        
+        showToast(
+            currentLanguage === 'th' ? 'เปลี่ยนภาษาเป็น ภาษาไทย แล้ว' :
+            (currentLanguage === 'my' ? 'မြန်မာဘာသာသို့ ပြောင်းလဲပြီးပါပြီ' : 'Language switched to English'),
+            'info'
+        );
+    });
+}
 
 // Utility functions
 const getItemSvgIcon = (type, colorHex = 'currentColor', size = 24) => {
