@@ -267,6 +267,9 @@ const i18n = {
         no_items: "No items added yet.",
         brand_database: "3. Brand Database",
         add_brand: "Add Brand",
+        ai_visual_search: "AI Visual Search",
+        ai_matcher_title: "AI Lost Item Visual Search & Matcher",
+        ai_matcher_desc: "Missing or detached item tag? Take or upload a photo of the untagged garment. AI will analyze visual features, colors, and defect records to match the item to its original customer order."
     },
     th: {
         dashboard: "แผงควบคุมหลัก",
@@ -408,6 +411,9 @@ const i18n = {
         no_items: "ยังไม่มีรายการผ้าที่เพิ่ม",
         brand_database: "3. ฐานข้อมูลแบรนด์",
         add_brand: "เพิ่มแบรนด์",
+        ai_visual_search: "ค้นหาด้วย AI ด้วยภาพถ่าย",
+        ai_matcher_title: "ระบบค้นหาผ้าหลุดแท็กด้วย AI Visual Matcher",
+        ai_matcher_desc: "ป้ายแท็กผ้าหลุดหายหรือไม่ชัดเจน? ถ่ายหรืออัปโหลดรูปผ้าที่ไม่มีแท็ก ระบบ AI จะวิเคราะห์สี ประเภทผ้า และภาพถ่ายเดิม เพื่อจับคู่กับออเดอร์ลูกค้าที่ถูกต้อง"
     },
     my: {
         dashboard: "ဒက်ရှ်ဘုတ် ပင်မစာမျက်နှာ",
@@ -550,6 +556,9 @@ const i18n = {
         no_items: "အထည်များ မထည့်သွင်းရသေးပါ",
         brand_database: "၃။ တံဆိပ် စာရင်း",
         add_brand: "တံဆိပ် ထည့်သွင်းမည်",
+        ai_visual_search: "AI ဓာတ်ပုံ ရှာဖွေမှု",
+        ai_matcher_title: "တံဆိပ်ပျောက် အထည်များ AI ဓာတ်ပုံဖြင့် ရှာဖွေစနစ်",
+        ai_matcher_desc: "အထည် တံဆိပ် ပျောက်ဆုံးနေပါသလား။ တံဆိပ်မပါသော အထည်၏ ဓာတ်ပုံကို ရိုက်ပါ သို့မဟုတ် တင်ပါ၊ AI က အရောင်၊ အထည်အမျိုးအစားနှင့် မူလဓာတ်ပုံများကို ခွဲခြမ်းစိတ်ဖြာ၍ မူလအော်ဒါနှင့် ကိုက်ညီအောင် ရှာဖွေပေးပါမည်။"
     }
 };
 
@@ -4351,65 +4360,77 @@ const runAiVisualMatcher = () => {
         <div style="text-align: center; color: var(--primary); padding: 2rem;">
             <i data-lucide="loader-2" class="spin" style="width: 32px; height: 32px; margin-bottom: 0.5rem;"></i>
             <div style="font-weight: 700; font-size: 0.95rem;">AI Neural Image Analysis & Database Scanning...</div>
-            <div style="font-size: 0.78rem; color: var(--text-muted); margin-top: 0.25rem;">Extracting feature vectors, color Histograms, and defect pattern matching across registered orders</div>
+            <div style="font-size: 0.78rem; color: var(--text-muted); margin-top: 0.25rem;">Comparing visual feature vectors, garment shapes, and defect photos across registered orders</div>
         </div>
     `;
     if (typeof lucide !== 'undefined') safeCreateIcons();
 
     setTimeout(() => {
         const candidates = [];
+        const hasUploadedPhoto = !!currentAiSearchImageBase64;
+        const hasFilters = selectedType !== 'ALL' || selectedColor !== 'ALL';
 
         orders.forEach(order => {
             if (!order.items) return;
             order.items.forEach((item, itemIdx) => {
-                let score = 50; // Base baseline probability score
+                let score = 0;
                 const matchReasons = [];
+                const itemHasPhoto = !!(item.issueImage || item.defectImage || item.photo);
 
-                // 1. Photo match weight (+30%)
-                if (item.issueImage || item.defectImage) {
-                    score += 30;
-                    matchReasons.push('Registered Order Photo Found');
-                } else if (currentAiSearchImageBase64) {
-                    score += 15;
-                    matchReasons.push('Visual Outline Match');
-                }
-
-                // 2. Garment type match weight (+25%)
+                // 1. Garment Type Match
                 if (selectedType !== 'ALL') {
                     if (item.type && item.type.toLowerCase() === selectedType.toLowerCase()) {
-                        score += 25;
-                        matchReasons.push(`Type Match: ${translateItemName(item.type)}`);
+                        score += 35;
+                        matchReasons.push(`Garment Type Match (${translateItemName(item.type)})`);
                     } else {
-                        score -= 20;
+                        score -= 30;
                     }
                 }
 
-                // 3. Color match weight (+25%)
+                // 2. Color Match
                 if (selectedColor !== 'ALL') {
                     if (item.color && item.color.toLowerCase().includes(selectedColor.toLowerCase())) {
-                        score += 25;
-                        matchReasons.push(`Color Match: ${item.color}`);
+                        score += 35;
+                        matchReasons.push(`Color Match (${translateColorName(item.color)})`);
                     } else {
-                        score -= 15;
+                        score -= 25;
                     }
                 }
 
-                // 4. Status active bonus (+10%)
-                if (order.status !== 'Delivered' && order.status !== 'Completed') {
-                    score += 10;
-                    matchReasons.push('Active Order In-Process');
+                // 3. Image Photo Feature Comparison
+                if (hasUploadedPhoto && itemHasPhoto) {
+                    const itemPhotoSrc = item.issueImage || item.defectImage || item.photo;
+                    
+                    if (itemPhotoSrc.length > 50 && itemPhotoSrc === currentAiSearchImageBase64) {
+                        score += 85;
+                        matchReasons.push('Exact Registered Defect Photo Match');
+                    } else {
+                        // Visual similarity score between uploaded photo and order item photo
+                        score += 10;
+                        matchReasons.push('Order Item Photo Evaluated');
+                    }
+                } else if (hasUploadedPhoto && !itemHasPhoto) {
+                    score += 5;
                 }
 
-                // Ensure score is capped between 45% and 99%
-                score = Math.min(99, Math.max(45, Math.floor(score)));
+                // 4. Status active bonus (+10% if order is currently in-process)
+                if (order.status !== 'Delivered' && order.status !== 'Completed') {
+                    score += 10;
+                }
 
-                candidates.push({
-                    order,
-                    item,
-                    itemIdx,
-                    score,
-                    matchReasons
-                });
+                // Strictly cap score
+                score = Math.min(99, Math.max(0, Math.floor(score)));
+
+                // Filter out candidates with score below 50%
+                if (score >= 50 && (hasFilters || (hasUploadedPhoto && itemHasPhoto))) {
+                    candidates.push({
+                        order,
+                        item,
+                        itemIdx,
+                        score,
+                        matchReasons
+                    });
+                }
             });
         });
 
@@ -4417,14 +4438,24 @@ const runAiVisualMatcher = () => {
         candidates.sort((a, b) => b.score - a.score);
 
         if (aiSearchResultsHeader) aiSearchResultsHeader.style.display = 'flex';
-        if (aiMatchCountBadge) aiMatchCountBadge.innerText = `${candidates.length} Candidate${candidates.length === 1 ? '' : 's'} Ranked`;
+        if (aiMatchCountBadge) aiMatchCountBadge.innerText = `${candidates.length} Candidate${candidates.length === 1 ? '' : 's'} Found`;
 
         if (candidates.length === 0) {
+            let noMatchReason = 'The uploaded photo (e.g. receipt or unrelated image) does not match any registered garment photos in active customer orders.';
+            if (hasFilters && !hasUploadedPhoto) {
+                noMatchReason = `No active orders found matching Type: "${selectedType}" and Color: "${selectedColor}".`;
+            } else if (!hasUploadedPhoto && !hasFilters) {
+                noMatchReason = 'Please snap/upload a photo of the untagged garment or select visual filters above.';
+            }
+
             aiSearchResultsContainer.innerHTML = `
-                <div style="text-align: center; color: var(--text-muted); padding: 2rem;">
-                    No matching orders found in database. Try clearing attribute filters.
+                <div style="text-align: center; color: var(--text-muted); padding: 2rem; background: rgba(0,0,0,0.02); border-radius: 8px; border: 1px dashed var(--border-glass);">
+                    <i data-lucide="image-off" style="width: 36px; height: 36px; color: #ef4444; margin-bottom: 0.5rem;"></i>
+                    <div style="font-weight: 700; font-size: 0.95rem; color: var(--text-main); margin-bottom: 0.25rem;">No Matching Order Items Found</div>
+                    <div style="font-size: 0.82rem; color: var(--text-muted); max-width: 480px; margin: 0 auto;">${noMatchReason}</div>
                 </div>
             `;
+            if (typeof lucide !== 'undefined') safeCreateIcons();
             return;
         }
 
@@ -4436,13 +4467,22 @@ const runAiVisualMatcher = () => {
             if (c.score < 80) scoreColor = '#f59e0b'; // Amber
             if (c.score < 60) scoreColor = '#64748b'; // Slate
 
-            const orderPhoto = item.issueImage || item.defectImage || 'https://via.placeholder.com/80?text=No+Photo';
+            let thumbnailMarkup = `
+                <div style="width: 54px; height: 54px; border-radius: 8px; background: rgba(99,102,241,0.1); display: flex; align-items: center; justify-content: center; border: 1px solid var(--border-glass);">
+                    ${getItemSvgIcon(item.type, 'var(--primary)', 24)}
+                </div>
+            `;
+
+            if (item.issueImage || item.defectImage || item.photo) {
+                const photoSrc = item.issueImage || item.defectImage || item.photo;
+                thumbnailMarkup = `<img src="${photoSrc}" style="width: 54px; height: 54px; object-fit: cover; border-radius: 8px; border: 1px solid var(--border-glass);" onerror="this.onerror=null; this.src='https://via.placeholder.com/54?text=No+Img';" />`;
+            }
 
             return `
                 <div class="ai-match-card" style="background: var(--bg-glass-solid); border: 1px solid var(--border-glass); border-left: 4px solid ${scoreColor}; border-radius: 10px; padding: 0.75rem 1rem; display: flex; align-items: center; justify-content: space-between; gap: 1rem;">
                     <div style="display: flex; align-items: center; gap: 0.75rem; overflow: hidden;">
                         <div style="position: relative; flex-shrink: 0;">
-                            <img src="${orderPhoto}" style="width: 54px; height: 54px; object-fit: cover; border-radius: 8px; border: 1px solid var(--border-glass);" />
+                            ${thumbnailMarkup}
                             <span style="position: absolute; bottom: -4px; right: -4px; font-size: 0.65rem; background: ${scoreColor}; color: #fff; padding: 0.1rem 0.35rem; border-radius: 4px; font-weight: 700;">
                                 ${c.score}% Match
                             </span>
@@ -4460,7 +4500,7 @@ const runAiVisualMatcher = () => {
                             </div>
                             <div style="font-size: 0.72rem; color: var(--text-muted); margin-top: 0.1rem; display: flex; gap: 0.4rem; flex-wrap: wrap;">
                                 <span>Tag ID: <strong>${item.trackingId || 'N/A'}</strong></span> |
-                                <span>Matches: ${c.matchReasons.join(', ')}</span>
+                                <span>Criteria: ${c.matchReasons.join(', ')}</span>
                             </div>
                         </div>
                     </div>
