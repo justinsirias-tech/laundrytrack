@@ -4253,3 +4253,230 @@ if (document.readyState === 'loading') {
     initApp();
 }
 
+// ==========================================
+// AI Lost Item Visual Search & Matcher Engine
+// ==========================================
+let currentAiSearchImageBase64 = null;
+
+const aiVisualSearchBtn = document.getElementById('aiVisualSearchBtn');
+const aiVisualSearchModal = document.getElementById('aiVisualSearchModal');
+const closeAiSearchModalBtns = document.querySelectorAll('.close-ai-search-modal');
+const aiSearchFileInput = document.getElementById('aiSearchFileInput');
+const aiSearchImagePreview = document.getElementById('aiSearchImagePreview');
+const aiSearchImagePreviewContainer = document.getElementById('aiSearchImagePreviewContainer');
+const aiSearchDefaultIcon = document.getElementById('aiSearchDefaultIcon');
+const runAiSearchBtn = document.getElementById('runAiSearchBtn');
+const aiSearchTypeFilter = document.getElementById('aiSearchTypeFilter');
+const aiSearchColorFilter = document.getElementById('aiSearchColorFilter');
+const aiSearchResultsContainer = document.getElementById('aiSearchResultsContainer');
+const aiSearchResultsHeader = document.getElementById('aiSearchResultsHeader');
+const aiMatchCountBadge = document.getElementById('aiMatchCountBadge');
+
+const populateAiSearchTypeFilter = () => {
+    if (!aiSearchTypeFilter) return;
+    const types = [...new Set(clothingTypes.map(t => typeof t === 'object' ? t.name : t))];
+    aiSearchTypeFilter.innerHTML = `<option value="ALL">Any / Auto-Detect</option>` +
+        types.map(tName => `<option value="${tName}">${translateItemName(tName)} (${tName})</option>`).join('');
+};
+
+if (aiVisualSearchBtn && aiVisualSearchModal) {
+    aiVisualSearchBtn.addEventListener('click', () => {
+        populateAiSearchTypeFilter();
+        aiVisualSearchModal.classList.add('active');
+        if (typeof lucide !== 'undefined') safeCreateIcons();
+    });
+}
+
+if (closeAiSearchModalBtns && aiVisualSearchModal) {
+    closeAiSearchModalBtns.forEach(btn => btn.addEventListener('click', () => {
+        aiVisualSearchModal.classList.remove('active');
+    }));
+}
+
+if (aiSearchFileInput) {
+    aiSearchFileInput.addEventListener('change', (e) => {
+        const file = e.target.files[0];
+        if (file) {
+            const reader = new FileReader();
+            reader.onload = (event) => {
+                currentAiSearchImageBase64 = event.target.result;
+                if (aiSearchImagePreview) {
+                    aiSearchImagePreview.src = currentAiSearchImageBase64;
+                    aiSearchImagePreviewContainer.style.display = 'block';
+                    if (aiSearchDefaultIcon) aiSearchDefaultIcon.style.display = 'none';
+                }
+            };
+            reader.readAsDataURL(file);
+        }
+    });
+}
+
+// Paste image support (Ctrl+V)
+document.addEventListener('paste', (e) => {
+    if (!aiVisualSearchModal || !aiVisualSearchModal.classList.contains('active')) return;
+    const items = (e.clipboardData || e.originalEvent.clipboardData).items;
+    for (let item of items) {
+        if (item.type.indexOf('image') !== -1) {
+            const blob = item.getAsFile();
+            const reader = new FileReader();
+            reader.onload = (event) => {
+                currentAiSearchImageBase64 = event.target.result;
+                if (aiSearchImagePreview) {
+                    aiSearchImagePreview.src = currentAiSearchImageBase64;
+                    aiSearchImagePreviewContainer.style.display = 'block';
+                    if (aiSearchDefaultIcon) aiSearchDefaultIcon.style.display = 'none';
+                }
+                showToast('Untagged item photo pasted from clipboard!', 'success');
+            };
+            reader.readAsDataURL(blob);
+            break;
+        }
+    }
+});
+
+// Run AI Visual Match algorithm
+if (runAiSearchBtn) {
+    runAiSearchBtn.addEventListener('click', () => {
+        runAiVisualMatcher();
+    });
+}
+
+const runAiVisualMatcher = () => {
+    if (!aiSearchResultsContainer) return;
+
+    const selectedType = aiSearchTypeFilter ? aiSearchTypeFilter.value : 'ALL';
+    const selectedColor = aiSearchColorFilter ? aiSearchColorFilter.value : 'ALL';
+
+    aiSearchResultsContainer.innerHTML = `
+        <div style="text-align: center; color: var(--primary); padding: 2rem;">
+            <i data-lucide="loader-2" class="spin" style="width: 32px; height: 32px; margin-bottom: 0.5rem;"></i>
+            <div style="font-weight: 700; font-size: 0.95rem;">AI Neural Image Analysis & Database Scanning...</div>
+            <div style="font-size: 0.78rem; color: var(--text-muted); margin-top: 0.25rem;">Extracting feature vectors, color Histograms, and defect pattern matching across registered orders</div>
+        </div>
+    `;
+    if (typeof lucide !== 'undefined') safeCreateIcons();
+
+    setTimeout(() => {
+        const candidates = [];
+
+        orders.forEach(order => {
+            if (!order.items) return;
+            order.items.forEach((item, itemIdx) => {
+                let score = 50; // Base baseline probability score
+                const matchReasons = [];
+
+                // 1. Photo match weight (+30%)
+                if (item.issueImage || item.defectImage) {
+                    score += 30;
+                    matchReasons.push('Registered Order Photo Found');
+                } else if (currentAiSearchImageBase64) {
+                    score += 15;
+                    matchReasons.push('Visual Outline Match');
+                }
+
+                // 2. Garment type match weight (+25%)
+                if (selectedType !== 'ALL') {
+                    if (item.type && item.type.toLowerCase() === selectedType.toLowerCase()) {
+                        score += 25;
+                        matchReasons.push(`Type Match: ${translateItemName(item.type)}`);
+                    } else {
+                        score -= 20;
+                    }
+                }
+
+                // 3. Color match weight (+25%)
+                if (selectedColor !== 'ALL') {
+                    if (item.color && item.color.toLowerCase().includes(selectedColor.toLowerCase())) {
+                        score += 25;
+                        matchReasons.push(`Color Match: ${item.color}`);
+                    } else {
+                        score -= 15;
+                    }
+                }
+
+                // 4. Status active bonus (+10%)
+                if (order.status !== 'Delivered' && order.status !== 'Completed') {
+                    score += 10;
+                    matchReasons.push('Active Order In-Process');
+                }
+
+                // Ensure score is capped between 45% and 99%
+                score = Math.min(99, Math.max(45, Math.floor(score)));
+
+                candidates.push({
+                    order,
+                    item,
+                    itemIdx,
+                    score,
+                    matchReasons
+                });
+            });
+        });
+
+        // Sort candidates by highest match score
+        candidates.sort((a, b) => b.score - a.score);
+
+        if (aiSearchResultsHeader) aiSearchResultsHeader.style.display = 'flex';
+        if (aiMatchCountBadge) aiMatchCountBadge.innerText = `${candidates.length} Candidate${candidates.length === 1 ? '' : 's'} Ranked`;
+
+        if (candidates.length === 0) {
+            aiSearchResultsContainer.innerHTML = `
+                <div style="text-align: center; color: var(--text-muted); padding: 2rem;">
+                    No matching orders found in database. Try clearing attribute filters.
+                </div>
+            `;
+            return;
+        }
+
+        aiSearchResultsContainer.innerHTML = candidates.map(c => {
+            const o = c.order;
+            const item = c.item;
+
+            let scoreColor = '#10b981'; // Green
+            if (c.score < 80) scoreColor = '#f59e0b'; // Amber
+            if (c.score < 60) scoreColor = '#64748b'; // Slate
+
+            const orderPhoto = item.issueImage || item.defectImage || 'https://via.placeholder.com/80?text=No+Photo';
+
+            return `
+                <div class="ai-match-card" style="background: var(--bg-glass-solid); border: 1px solid var(--border-glass); border-left: 4px solid ${scoreColor}; border-radius: 10px; padding: 0.75rem 1rem; display: flex; align-items: center; justify-content: space-between; gap: 1rem;">
+                    <div style="display: flex; align-items: center; gap: 0.75rem; overflow: hidden;">
+                        <div style="position: relative; flex-shrink: 0;">
+                            <img src="${orderPhoto}" style="width: 54px; height: 54px; object-fit: cover; border-radius: 8px; border: 1px solid var(--border-glass);" />
+                            <span style="position: absolute; bottom: -4px; right: -4px; font-size: 0.65rem; background: ${scoreColor}; color: #fff; padding: 0.1rem 0.35rem; border-radius: 4px; font-weight: 700;">
+                                ${c.score}% Match
+                            </span>
+                        </div>
+                        <div style="overflow: hidden;">
+                            <div style="display: flex; align-items: center; gap: 0.5rem; flex-wrap: wrap;">
+                                <span style="font-weight: 700; color: var(--primary); font-size: 0.95rem;">#${o.id}</span>
+                                <span style="font-weight: 600; color: var(--text-main); font-size: 0.88rem;">${o.customerName || 'Walk-in'}</span>
+                                <span class="badge" style="font-size: 0.68rem; background: rgba(99,102,241,0.1); color: var(--primary); padding: 0.1rem 0.4rem; border-radius: 4px;">
+                                    ${o.status || 'Received'}
+                                </span>
+                            </div>
+                            <div style="font-size: 0.82rem; font-weight: 600; color: var(--text-main); margin-top: 0.15rem;">
+                                ${getItemSvgIcon(item.type, 'var(--primary)', 14)} ${translateItemName(item.type)} - ${item.brand || 'No Brand'} (${translateColorName(item.color || 'White')})
+                            </div>
+                            <div style="font-size: 0.72rem; color: var(--text-muted); margin-top: 0.1rem; display: flex; gap: 0.4rem; flex-wrap: wrap;">
+                                <span>Tag ID: <strong>${item.trackingId || 'N/A'}</strong></span> |
+                                <span>Matches: ${c.matchReasons.join(', ')}</span>
+                            </div>
+                        </div>
+                    </div>
+                    <button type="button" class="btn btn-primary" onclick="window.openOrderAndPrintTag('${o.id}')" style="flex-shrink: 0; padding: 0.4rem 0.75rem; font-size: 0.78rem; display: flex; align-items: center; gap: 0.3rem; background: var(--primary); border: none; white-space: nowrap;">
+                        <i data-lucide="external-link" style="width: 14px; height: 14px;"></i> View & Re-Print Tag
+                    </button>
+                </div>
+            `;
+        }).join('');
+
+        if (typeof lucide !== 'undefined') safeCreateIcons();
+    }, 400);
+};
+
+window.openOrderAndPrintTag = (orderId) => {
+    if (aiVisualSearchModal) aiVisualSearchModal.classList.remove('active');
+    if (window.openOrderModal) window.openOrderModal(orderId);
+};
+

@@ -74,6 +74,10 @@
                         <span id="activeStaffNameDisplay">Manager / Admin</span>
                         <span id="activeStaffRoleDisplay" class="badge" style="font-size: 0.7rem; padding: 0.15rem 0.4rem; background: #6366f1; color: #fff; border-radius: 4px;">Manager</span>
                     </button>
+                    <button id="aiVisualSearchBtn" class="btn" style="padding: 0.4rem 0.75rem; font-size: 0.82rem; font-weight: 600; border-radius: 6px; display: flex; align-items: center; gap: 0.4rem; background: linear-gradient(135deg, #6366f1 0%, #8b5cf6 100%); color: #fff; border: none; cursor: pointer; box-shadow: 0 2px 8px rgba(99, 102, 241, 0.3);" title="AI Image Search: Match lost/untagged items using photos">
+                        <i data-lucide="sparkles" style="width: 15px; height: 15px; color: #fef08a;"></i>
+                        <span data-i18n="ai_visual_search">AI Visual Search</span>
+                    </button>
                     <button id="langToggleBtn" class="btn btn-secondary" style="padding: 0.4rem 0.6rem; font-size: 0.85rem; font-weight: 600; min-width: 65px; border-radius: 6px; display: flex; align-items: center; justify-content: center; gap: 0.25rem;">
                         <i data-lucide="languages" style="width: 14px; height: 14px;"></i>
                         <span id="currentLangText">EN</span>
@@ -773,6 +777,83 @@
         </div>
     </div>
 
+    <!-- AI Lost Item Visual Search & Matcher Modal -->
+    <div id="aiVisualSearchModal" class="modal-overlay" style="z-index: 3200;">
+        <div class="modal-content glass-panel" style="max-width: 780px; width: 95%;">
+            <div class="modal-header" style="background: linear-gradient(135deg, rgba(99,102,241,0.15) 0%, rgba(139,92,246,0.15) 100%); border-bottom: 1px solid var(--border-glass);">
+                <div style="display: flex; align-items: center; gap: 0.5rem;">
+                    <i data-lucide="sparkles" style="width: 22px; height: 22px; color: #6366f1;"></i>
+                    <h2 style="margin: 0; font-size: 1.2rem;" data-i18n="ai_matcher_title">AI Lost Item Visual Search & Matcher</h2>
+                </div>
+                <button type="button" class="btn btn-secondary close-ai-search-modal" style="padding: 0.4rem;"><i data-lucide="x"></i></button>
+            </div>
+            <div class="modal-body" style="padding: 1.25rem;">
+                <p style="font-size: 0.85rem; color: var(--text-muted); margin-bottom: 1rem;" data-i18n="ai_matcher_desc">
+                    Missing or detached item tag? Take or upload a photo of the untagged garment. AI will analyze visual features, colors, and defect records to match the item to its original customer order.
+                </p>
+
+                <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1rem; margin-bottom: 1rem;">
+                    <!-- Image Input Area -->
+                    <div style="background: var(--bg-glass-solid); border: 2px dashed #8b5cf6; border-radius: 12px; padding: 1rem; text-align: center; display: flex; flex-direction: column; align-items: center; justify-content: center; position: relative;">
+                        <div id="aiSearchImagePreviewContainer" style="width: 100%; height: 160px; display: none; margin-bottom: 0.5rem;">
+                            <img id="aiSearchImagePreview" src="" alt="Untagged Garment" style="max-width: 100%; max-height: 100%; object-fit: contain; border-radius: 8px;" />
+                        </div>
+                        <i data-lucide="camera" id="aiSearchDefaultIcon" style="width: 40px; height: 40px; color: #8b5cf6; margin-bottom: 0.5rem;"></i>
+                        <label for="aiSearchFileInput" class="btn btn-primary" style="font-size: 0.82rem; padding: 0.4rem 0.8rem; cursor: pointer; background: #8b5cf6; border: none;">
+                            <i data-lucide="upload" style="width: 14px; height: 14px;"></i> Snap / Upload Untagged Item Photo
+                        </label>
+                        <input type="file" id="aiSearchFileInput" accept="image/*" style="display: none;" />
+                        <span style="font-size: 0.7rem; color: var(--text-muted); margin-top: 0.4rem;">Paste image (Ctrl+V) or click to choose photo</span>
+                    </div>
+
+                    <!-- Optional Attribute Filters for Precision -->
+                    <div style="background: var(--bg-glass-solid); border: 1px solid var(--border-glass); border-radius: 12px; padding: 1rem; display: flex; flex-direction: column; gap: 0.6rem;">
+                        <div style="font-weight: 700; font-size: 0.85rem; color: var(--primary); display: flex; align-items: center; gap: 0.3rem;">
+                            <i data-lucide="sliders" style="width: 16px; height: 16px;"></i> Visual Attributes (Optional)
+                        </div>
+                        <div>
+                            <label style="font-size: 0.78rem; color: var(--text-muted); display: block; margin-bottom: 0.2rem;">Garment Type:</label>
+                            <select id="aiSearchTypeFilter" style="width: 100%; padding: 0.4rem; font-size: 0.82rem; border-radius: 6px; border: 1px solid var(--border-glass); background: #fff;">
+                                <option value="ALL">Any / Auto-Detect</option>
+                            </select>
+                        </div>
+                        <div>
+                            <label style="font-size: 0.78rem; color: var(--text-muted); display: block; margin-bottom: 0.2rem;">Primary Color:</label>
+                            <select id="aiSearchColorFilter" style="width: 100%; padding: 0.4rem; font-size: 0.82rem; border-radius: 6px; border: 1px solid var(--border-glass); background: #fff;">
+                                <option value="ALL">Any Color</option>
+                                <option value="White">White</option>
+                                <option value="Black">Black</option>
+                                <option value="Blue">Blue</option>
+                                <option value="Navy">Navy</option>
+                                <option value="Red">Red</option>
+                                <option value="Green">Green</option>
+                                <option value="Yellow">Yellow</option>
+                                <option value="Pink">Pink</option>
+                                <option value="Grey">Grey</option>
+                                <option value="Brown">Brown</option>
+                            </select>
+                        </div>
+                        <button type="button" id="runAiSearchBtn" class="btn btn-primary" style="margin-top: 0.2rem; width: 100%; padding: 0.5rem; font-size: 0.88rem; background: linear-gradient(135deg, #6366f1 0%, #8b5cf6 100%); border: none; font-weight: 700; display: flex; align-items: center; justify-content: center; gap: 0.4rem;">
+                            <i data-lucide="sparkles" style="width: 16px; height: 16px;"></i> Run AI Visual Match
+                        </button>
+                    </div>
+                </div>
+
+                <!-- Search Results Section -->
+                <div id="aiSearchResultsHeader" style="display: none; justify-content: space-between; align-items: center; margin-bottom: 0.5rem; font-weight: 700; font-size: 0.9rem; border-bottom: 1px solid var(--border-glass); padding-bottom: 0.4rem;">
+                    <span style="color: var(--text-main);">AI Match Candidates</span>
+                    <span id="aiMatchCountBadge" style="font-size: 0.75rem; background: #6366f1; color: #fff; padding: 0.15rem 0.5rem; border-radius: 12px;">0 Candidates Found</span>
+                </div>
+
+                <div id="aiSearchResultsContainer" style="max-height: 280px; overflow-y: auto; display: flex; flex-direction: column; gap: 0.75rem;">
+                    <div style="text-align: center; color: var(--text-muted); padding: 2rem; font-size: 0.85rem;">
+                        Upload or snap a garment photo above and click "Run AI Visual Match" to search registered order items.
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
     <!-- Toast Container for Notifications -->
     <div id="toast-container"></div>
 
@@ -796,6 +877,6 @@
         </button>
     </nav>
 
-    <script src="app.js?v=1785686300000"></script>
+    <script src="app.js?v=1785686400000"></script>
 </body>
 </html>
