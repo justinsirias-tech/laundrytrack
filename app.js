@@ -2633,18 +2633,35 @@ window.openOrderModal = async (orderId) => {
                 }
                 
                 let photoThumbnail = '';
-                if (item.issueImage || item.defectImage) {
-                    photoThumbnail = `<div style="margin-top: 0.5rem; display: flex; gap: 0.25rem; flex-wrap: wrap;">`;
-                    if (item.issueImage) {
-                        photoThumbnail += `<img src="${item.issueImage}" class="issue-image" style="cursor: zoom-in; max-width: 80px; max-height: 80px; border-radius: 4px; border: 1px solid var(--border-glass);" title="Click to enlarge"/>`;
+                const processPhotoField = (fieldVal, isDefect = false) => {
+                    if (!fieldVal || fieldVal === 'undefined' || fieldVal === 'null') return '';
+                    let thumbHtml = '';
+                    const style = `cursor: zoom-in; max-width: 80px; max-height: 80px; border-radius: 4px; border: ${isDefect ? '2px solid var(--status-red)' : '1px solid var(--border-glass)'}; margin-right: 4px; object-fit: cover;`;
+                    if (typeof fieldVal === 'string' && fieldVal.startsWith('[')) {
+                        try {
+                            const imgs = JSON.parse(fieldVal);
+                            imgs.forEach(img => {
+                                if (img && img !== 'undefined') {
+                                    thumbHtml += `<img src="${img}" class="issue-image ${isDefect ? 'defect-image' : ''}" style="${style}" title="Click to enlarge" onerror="this.style.display='none'"/>`;
+                                }
+                            });
+                            return thumbHtml;
+                        } catch (e) {}
                     }
-                    if (item.defectImage) {
-                        photoThumbnail += `<img src="${item.defectImage}" class="issue-image defect-image" style="cursor: zoom-in; max-width: 80px; max-height: 80px; border-radius: 4px; border: 2px solid var(--status-red);" title="Defect (Click to enlarge)"/>`;
-                    }
-                    photoThumbnail += `</div>`;
+                    return `<img src="${fieldVal}" class="issue-image ${isDefect ? 'defect-image' : ''}" style="${style}" title="Click to enlarge" onerror="this.style.display='none'"/>`;
+                };
+
+                const issueThumbs = processPhotoField(item.issueImage, false);
+                const defectThumbs = processPhotoField(item.defectImage, true);
+                if (issueThumbs || defectThumbs) {
+                    photoThumbnail = `<div style="margin-top: 0.5rem; display: flex; gap: 0.25rem; flex-wrap: wrap;">${issueThumbs}${defectThumbs}</div>`;
                 }
-                    
+
                 const itemQrUrl = `https://api.qrserver.com/v1/create-qr-code/?size=100x100&data=${encodeURIComponent(item.trackingId)}`;
+
+                const serviceTypeBadge = (item.serviceType && item.serviceType !== 'undefined' && item.serviceType !== 'Same as Order') 
+                    ? `<span style="font-size: 0.75rem; color: #fff; background: var(--primary); padding: 0.15rem 0.4rem; border-radius: 4px; margin-left: 0.4rem;">${t(item.serviceType)}</span>` 
+                    : '';
 
                 return `
                 <div class="added-item-row" style="background: var(--bg-glass-solid); border: 1px solid var(--border-glass); color: var(--text-main); display: flex; align-items: center; gap: 1rem; padding: 0.75rem 1rem; border-radius: 8px;">
@@ -2663,7 +2680,7 @@ window.openOrderModal = async (orderId) => {
                                 <div>
                                     <span class="added-item-title" style="color: ${item.colorHex}; font-weight: 600; font-size: 1rem;">
                                         ${translateItemName(item.type)} 
-                                        ${item.serviceType && item.serviceType !== 'Same as Order' ? `<span style="font-size: 0.75rem; color: #fff; background: var(--primary); padding: 0.15rem 0.4rem; border-radius: 4px; margin-left: 0.4rem;">${t(item.serviceType)}</span>` : ''}
+                                        ${serviceTypeBadge}
                                         <span style="font-size: 0.75rem; color: var(--primary); background: rgba(99, 102, 241, 0.1); padding: 0.15rem 0.4rem; border-radius: 4px; margin-left: 0.4rem; font-family: monospace;">${item.trackingId}</span>
                                     </span>
                                     <span class="added-item-meta" style="color: var(--text-muted); display: flex; align-items: center; gap: 0.5rem; flex-wrap: wrap; margin-top: 0.25rem;">
